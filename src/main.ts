@@ -4,12 +4,12 @@ import * as dotenv from 'dotenv';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { ValidationError, useContainer } from 'class-validator';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-// import { FRONTEND_URL } from './utils/constants/urls/url';
 import * as express from 'express';
 import * as path from 'path';
 import { Request, Response, NextFunction } from 'express';
 
-export const LOGO = process.env.API_URL + '/assets/img/elearn-light.png';
+const siteName = 'K-Progressed';
+export const LOGO = `${process.env.API_URL}/assets/img/${siteName.toLowerCase()}.png`;
 
 async function bootstrap() {
   dotenv.config();
@@ -35,10 +35,10 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const config = new DocumentBuilder()
-    .setTitle('Elearned')
-    .setDescription('Elearned API Description')
+    .setTitle(siteName)
+    .setDescription(`${siteName} API Description`)
     .setVersion('1.0')
-    .addTag('elearned.api')
+    .addTag(`${siteName.toLowerCase()}.api`)
     .addBearerAuth()
     .build();
 
