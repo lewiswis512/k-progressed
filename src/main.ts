@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as express from 'express';
 import * as path from 'path';
 import { Request, Response, NextFunction } from 'express';
+import * as bodyParser from 'body-parser';
 
 const siteName = 'K-Progressed';
 export const LOGO = `${process.env.API_URL}/assets/img/${siteName.toLowerCase()}.png`;
@@ -70,6 +71,9 @@ async function bootstrap() {
     }
     next();
   });
+
+  app.use(bodyParser.json({ limit: '100mb' }));
+  app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 
   await app.listen(port);
 }
