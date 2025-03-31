@@ -19,6 +19,7 @@ import {
   getHourMinute,
   getMinute,
   getMinuteAndSecond,
+  getSecond,
   getVideoDuration,
 } from '../../../utils/times/duration';
 import { UploadMulter } from '../../../utils/uploads/upload-multer';
@@ -238,7 +239,10 @@ export class CoursesService {
               lssn_title: lesson.lssn_title,
               lssn_video_link: lesson.lssn_video_link,
               lssn_is_free: lesson.lssn_is_free,
-              lssn_duration_in_min_sec: getMinuteAndSecond(duration),
+              lssn_duration_in_min_sec:
+                duration !== 0 && duration >= 60
+                  ? getMinuteAndSecond(duration)
+                  : getSecond(duration),
             };
           }),
         );
@@ -251,7 +255,11 @@ export class CoursesService {
           section,
           lessons: lessonsInSectionWithDuration,
           countLesson: lessonsInSection.length,
-          countDurationInMinute: getMinute(totalDurationLessonBySection),
+          countDurationInMinute:
+            totalDurationLessonBySection !== 0 &&
+            totalDurationLessonBySection >= 60
+              ? getMinuteAndSecond(totalDurationLessonBySection)
+              : getSecond(totalDurationLessonBySection),
         },
       ];
     }

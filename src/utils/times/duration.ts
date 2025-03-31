@@ -49,6 +49,20 @@ export const getMinuteAndSecond = (
   return `${minutes}:${seconds}`;
 };
 
+export const getSecond = (
+  duration: number | null = null,
+): string | number | null => {
+  if (duration === null) return null;
+
+  const seconds = Math.floor(duration % 60)
+    .toString()
+    .padStart(2, '0');
+
+  const secondLetter = duration > 0 ? `${seconds} seconds` : 0;
+
+  return secondLetter;
+};
+
 export const getVideoDurationByBuffer = async (
   filePath: string,
 ): Promise<number> => {
