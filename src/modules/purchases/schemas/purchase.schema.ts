@@ -97,6 +97,9 @@ export class Purchase extends AbstractDocument {
 
   @Prop({ type: Date, default: new Date().toISOString() })
   purch_date_at: Date;
+
+  @Prop({ type: Boolean, default: false })
+  purch_is_paid: Boolean;
 }
 
 export const PurchaseSchema = SchemaFactory.createForClass(Purchase);

@@ -38,4 +38,13 @@ export class PurchasesService {
       throw error;
     }
   }
+
+  async validatePurchase(id: string): Promise<Purchase> {
+    return await this.purchaseRepository.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      {
+        purch_is_paid: true,
+      },
+    );
+  }
 }

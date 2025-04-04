@@ -1,12 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { StripeService } from '../../../modules/payment/service/stripe.service';
-import {
-  IBillingDetail,
-  StripePaymentIntent,
-} from '../schemas/stripe-payment-intent.schema';
 import { StripePaymentIntentRepository } from '../repository/stripePaymentIntent.repository';
+import {
+  IBillingDetail
+} from '../schemas/stripe-payment-intent.schema';
 
 interface IPayInfoData {
   strp_paym_amount: number;

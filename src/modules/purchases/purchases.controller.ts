@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { StripeService } from '../../modules/payment/service/stripe.service';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { SavePurchaseDto } from './dto/save-purchase.dto';
@@ -26,5 +26,11 @@ export class PurchasesController extends StripeService {
   @Post()
   async add(@Body() savePurchaseDto: SavePurchaseDto) {
     return await this.purchaseService.store(savePurchaseDto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch(":id/validate")
+  async validatePurchase(@Param('id') id: string) {
+    return await this.purchaseService.validatePurchase(id);
   }
 }
