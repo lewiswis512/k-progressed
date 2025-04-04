@@ -8,6 +8,7 @@ export class LearningService {
   async getLearning(userId: string) {
     return await this.purchaseRepository.find({
       'user.id': userId,
+      purch_is_paid: true,
     });
   }
 }
