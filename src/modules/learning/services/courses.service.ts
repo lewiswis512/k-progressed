@@ -268,7 +268,10 @@ export class CoursesService {
       courseContents,
       totalSections,
       totalLessons,
-      totalDuration: getHourMinute(totalDuration),
+      totalDuration:
+        totalDuration !== 0 && totalDuration >= 60
+          ? getMinuteAndSecond(totalDuration)
+          : getSecond(totalDuration),
     };
   }
 }
