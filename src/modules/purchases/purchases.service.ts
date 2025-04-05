@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model, Types } from 'mongoose';
-import { SavePurchaseDto } from './dto/save-purchase.dto';
-import { Purchase } from './schemas/purchase.schema';
-import { PurchaseRepository } from './repository/purchase.repository';
+import { Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { IAddPurchase } from 'src/interfaces/purchases/IAddPurchase';
+import { PurchaseRepository } from './repository/purchase.repository';
+import { Purchase } from './schemas/purchase.schema';
+import { SavePurchase } from './dto/save-purchase.dto';
 
 @Injectable()
 export class PurchasesService {
@@ -22,7 +17,7 @@ export class PurchasesService {
     return await this.purchaseRepository.findById(new Types.ObjectId(id));
   }
 
-  async store(purchase: SavePurchaseDto) {
+  async store(purchase: SavePurchase) {
     const todayInTime = Date.now();
     const purchaseReference = `ref-${todayInTime}`;
 
