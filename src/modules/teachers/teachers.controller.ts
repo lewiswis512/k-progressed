@@ -22,6 +22,7 @@ import {
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { SaveTeacherDto } from './dto/save-teacher.dto';
 import { TeachersService } from './teachers.service';
+import { AddTeacherDto } from './dto/add-teacher.dto';
 
 @Controller('teachers')
 export class TeachersController {
@@ -55,8 +56,8 @@ export class TeachersController {
   @ApiBadRequestResponse({
     description: 'Bad request.',
   })
-  async add(@Req() req: any, @Body() saveTeacherDto: SaveTeacherDto) {
-    return await this.teachersService.store(req.user.id, saveTeacherDto);
+  async add(@Req() req: any, @Body() addTeacherDto: AddTeacherDto) {
+    return await this.teachersService.store(req.user.id, addTeacherDto);
   }
 
   @Patch(':id')
