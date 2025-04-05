@@ -90,12 +90,14 @@ export class CoursesService {
     const course: Course = await this.courseRepository.findOne({
       crs_slug: slug,
     });
+
     let courseWithAverageRating: ICourseWithAverageRating | {} = {};
     let averageRating: number = 0;
 
     const comments: Comment[] = await this.commentRepository.find({
-      course: course._id,
+      'course._id': course._id,
     });
+
     let totalCommentByCourse: number = comments.length;
 
     if (totalCommentByCourse !== 0) {
