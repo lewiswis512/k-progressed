@@ -11,4 +11,5 @@ export const VALID_VIDEO_MIME_TYPES: string[] = [
   'video/quicktime', // mov
   'video/x-msvideo', //avi
   'video/mpeg',
+  'application/octet-stream',
 ];
