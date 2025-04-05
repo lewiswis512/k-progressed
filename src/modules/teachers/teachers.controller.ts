@@ -20,9 +20,9 @@ import {
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { AuthGuard } from '../../common/guards/auth.guard';
-import { SaveTeacherDto } from './dto/save-teacher.dto';
+import { SaveTeacher } from './dto/save-teacher.dto';
 import { TeachersService } from './teachers.service';
-import { AddTeacherDto } from './dto/add-teacher.dto';
+import { AddTeacher } from './dto/add-teacher.dto';
 
 @Controller('teachers')
 export class TeachersController {
@@ -56,8 +56,8 @@ export class TeachersController {
   @ApiBadRequestResponse({
     description: 'Bad request.',
   })
-  async add(@Req() req: any, @Body() addTeacherDto: AddTeacherDto) {
-    return await this.teachersService.store(req.user.id, addTeacherDto);
+  async add(@Req() req: any, @Body() addTeacher: AddTeacher) {
+    return await this.teachersService.store(req.user.id, addTeacher);
   }
 
   @Patch(':id')
@@ -69,11 +69,8 @@ export class TeachersController {
   @ApiBadRequestResponse({
     description: 'Bad request.',
   })
-  async update(
-    @Param('id') id: string,
-    @Body() saveTeacherDto: SaveTeacherDto,
-  ) {
-    return await this.teachersService.update(id, saveTeacherDto);
+  async update(@Param('id') id: string, @Body() saveTeacher: SaveTeacher) {
+    return await this.teachersService.update(id, saveTeacher);
   }
 
   @Delete(':id')
