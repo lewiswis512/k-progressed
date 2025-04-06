@@ -167,11 +167,12 @@ export class CommentsService {
 
     if (parentCommentId !== null) {
       const commentParent = await this.findById(String(parentCommentId));
-      const commentReplyIndex = commentParent.replies.findIndex(
-        (reply) => reply._id,
+
+      const commentReply = commentParent.replies.find(
+        (reply) => String(reply._id) === id,
       );
-      commentParent.replies[commentReplyIndex].comm_content =
-        editCommentDto.comm_content;
+
+      commentReply.comm_content = editCommentDto.comm_content;
 
       return await this.commentRepository.findByIdAndUpdate(
         new Types.ObjectId(String(parentCommentId)),
