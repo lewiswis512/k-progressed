@@ -22,7 +22,6 @@ import {
   getVideoDuration,
 } from '../../../utils/times/duration';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
-import { UploaderContext } from '../../../utils/uploads/uploader-context';
 import { Comment } from '../../comments/schemas/comment.schema';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
@@ -30,6 +29,7 @@ import { CourseRepository } from '../repositories/course.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
+import { PhotoUploaderContext } from '../../../utils/uploads/photo-uploader-context';
 
 @Injectable()
 export class CoursesService {
@@ -129,7 +129,7 @@ export class CoursesService {
       crs_slug: slugify(createCourseDto.crs_title),
     };
 
-    const cloudinaryContext = new UploaderContext(
+    const cloudinaryContext = new PhotoUploaderContext(
       new CloudinaryUploadStrategy(),
     );
 
@@ -173,7 +173,7 @@ export class CoursesService {
         await this.cloudinaryUploadStrategy.delete(publicId);
       }
 
-      const cloudinaryContext = new UploaderContext(
+      const cloudinaryContext = new PhotoUploaderContext(
         new CloudinaryUploadStrategy(),
       );
       photoLink = await cloudinaryContext.upload(
