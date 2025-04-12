@@ -1,40 +1,35 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { existsSync } from 'fs';
 import { Types } from 'mongoose';
-import { join } from 'path';
 import slugify from 'slugify';
-import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
 import { IAddCourse } from '../../../interfaces/courses/IAddCourse';
 import { ICourseContents } from '../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
 import { IEditCourse } from '../../../interfaces/courses/IEditCourse';
 import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILessonInSectionWithDuration';
-import { IExpressMulterFile } from '../../../interfaces/medias/IExpressMulterFile';
+import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
 import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema';
 import { Section } from '../../../modules/learning/schemas/sections/section.schema';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
 import {
-  getHourMinute,
-  getMinute,
+  PATH_COURSES_CLOUDINARY,
+  PATH_UPLOAD_LESSON_VIDEOS,
+} from '../../../utils/constants/uploads/path-upload';
+import {
   getMinuteAndSecond,
   getSecond,
   getVideoDuration,
 } from '../../../utils/times/duration';
-import { UploadMulter } from '../../../utils/uploads/upload-multer';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { UploaderContext } from '../../../utils/uploads/uploader-context';
 import { Comment } from '../../comments/schemas/comment.schema';
-import {
-  PATH_UPLOAD_COURSE,
-  PATH_UPLOAD_LESSON_VIDEOS,
-} from '../../../utils/constants/uploads/path-upload';
-import { removeFileIfExist } from '../../../utils/files/removeFileIfExist';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
 import { CourseRepository } from '../repositories/course.repository';
-import { Course } from '../schemas/course.schema';
-import { SectionRepository } from '../repositories/section.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
+import { SectionRepository } from '../repositories/section.repository';
+import { Course } from '../schemas/course.schema';
 
 @Injectable()
 export class CoursesService {
@@ -44,6 +39,7 @@ export class CoursesService {
     private commentRepository: CommentRepository,
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
+    private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
   async findAll(): Promise<ICourseWithAverageRating[]> {
@@ -122,7 +118,7 @@ export class CoursesService {
     authorId: string,
     createCourseDto: CreateCourse,
     file: Express.Multer.File,
-  ): Promise<Course> {
+  ): Promise<any> {
     const author: User = await this.userRepository.findById(
       new Types.ObjectId(authorId),
     );
@@ -133,10 +129,17 @@ export class CoursesService {
       crs_slug: slugify(createCourseDto.crs_title),
     };
 
-    let photoLink: IExpressMulterFile = UploadMulter(file, PATH_UPLOAD_COURSE);
+    const cloudinaryContext = new UploaderContext(
+      new CloudinaryUploadStrategy(),
+    );
+
+    let photoLink: string = await cloudinaryContext.upload(
+      file.buffer,
+      PATH_COURSES_CLOUDINARY,
+    );
 
     if (photoLink) {
-      data = { ...data, crs_photo: photoLink.filename };
+      data = { ...data, crs_photo: photoLink };
     } else {
       data = { ...data, crs_photo: null };
     }
@@ -162,12 +165,21 @@ export class CoursesService {
     if (file === undefined) {
       photoLink = course.crs_photo;
     } else {
-      if (existsSync(join(PATH_UPLOAD_COURSE, course.crs_photo))) {
-        removeFileIfExist(PATH_UPLOAD_COURSE, course.crs_photo);
+      if (course.crs_photo) {
+        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+          course.crs_photo,
+        );
+
+        await this.cloudinaryUploadStrategy.delete(publicId);
       }
 
-      let photo: IExpressMulterFile = UploadMulter(file, PATH_UPLOAD_COURSE);
-      photoLink = photo.filename;
+      const cloudinaryContext = new UploaderContext(
+        new CloudinaryUploadStrategy(),
+      );
+      photoLink = await cloudinaryContext.upload(
+        file.buffer,
+        PATH_COURSES_CLOUDINARY,
+      );
     }
 
     let data: IEditCourse = {
@@ -190,8 +202,12 @@ export class CoursesService {
       );
     }
 
-    if (existsSync(join(PATH_UPLOAD_COURSE, course.crs_photo))) {
-      removeFileIfExist(PATH_UPLOAD_COURSE, course.crs_photo);
+    if (course.crs_photo) {
+      const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+        course.crs_photo,
+      );
+
+      await this.cloudinaryUploadStrategy.delete(publicId);
     }
 
     this.courseRepository.findByIdAndDelete(new Types.ObjectId(id));
