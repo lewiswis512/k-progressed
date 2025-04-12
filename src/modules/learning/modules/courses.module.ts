@@ -19,6 +19,7 @@ import { CommentRepository } from '../../../modules/comments/repository/comment.
 import { User, UserSchema } from '../../../modules/users/schemas/user.schema';
 import { SectionRepository } from '../repositories/section.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { LessonRepository } from '../repositories/lesson.repository';
     CommentRepository,
     SectionRepository,
     LessonRepository,
+    CloudinaryUploadStrategy,
   ],
 })
 export class CoursesModule {}

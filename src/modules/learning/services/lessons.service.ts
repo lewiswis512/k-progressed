@@ -11,7 +11,7 @@ import {
   PATH_UPLOAD_LESSON_VIDEOS,
 } from '../../../utils/constants/uploads/path-upload';
 import { removeFileIfExist } from '../../../utils/files/removeFileIfExist';
-import { UploadMulter } from '../../../utils/uploads/upload-multer';
+import { UploadMulter } from '../../../utils/uploads/multer';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { Lesson } from '../schemas/lessons/lesson.schema';
