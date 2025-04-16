@@ -6,9 +6,10 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Teacher } from './schemas/teacher.schema';
 import mongoose, { Model } from 'mongoose';
-import { SaveTeacherDto } from './dto/save-teacher.dto';
+import { SaveTeacher } from './dto/save-teacher.dto';
 import { User } from '../users/schemas/user.schema';
 import { UserTypeEnum } from '../../utils/enums/user-type.enum';
+import { AddTeacher } from './dto/add-teacher.dto';
 
 @Injectable()
 export class TeachersService {
@@ -39,7 +40,7 @@ export class TeachersService {
     return teacher;
   }
 
-  async store(userId: string, addTeacher: SaveTeacherDto) {
+  async store(userId: string, addTeacher: AddTeacher) {
     let data = { ...addTeacher, user_id: userId };
 
     const teacher = await this.teacherModel.create(data);
@@ -57,7 +58,7 @@ export class TeachersService {
     return teacher;
   }
 
-  async update(id: string, teacher: SaveTeacherDto) {
+  async update(id: string, teacher: SaveTeacher) {
     await this.findById(id);
 
     return this.teacherModel.findByIdAndUpdate(id, teacher, { new: true });

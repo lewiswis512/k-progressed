@@ -4,11 +4,13 @@ import * as dotenv from 'dotenv';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { ValidationError, useContainer } from 'class-validator';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { FRONTEND_URL } from './utils/constants/urls/url';
 import * as express from 'express';
 import * as path from 'path';
+import { Request, Response, NextFunction } from 'express';
+import * as bodyParser from 'body-parser';
 
-export const LOGO = process.env.API_URL + '/assets/img/elearn-light.png';
+const siteName = 'K-Progressed';
+export const LOGO = `${process.env.API_URL}/assets/img/${siteName.toLowerCase()}.png`;
 
 async function bootstrap() {
   dotenv.config();
@@ -16,7 +18,7 @@ async function bootstrap() {
   const port = process.env.PORT || 4000;
 
   app.setGlobalPrefix('/api');
-  app.enableCors({ origin: [FRONTEND_URL] });
+  app.enableCors({ origin: [process.env.FRONTEND_URL] });
   app.useGlobalPipes(
     new ValidationPipe({
       exceptionFactory: (validationErrors: ValidationError[] = []) => {
@@ -34,10 +36,10 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const config = new DocumentBuilder()
-    .setTitle('Elearned')
-    .setDescription('Elearned API Description')
+    .setTitle(siteName)
+    .setDescription(`${siteName} API Description`)
     .setVersion('1.0')
-    .addTag('elearned.api')
+    .addTag(`${siteName.toLowerCase()}.api`)
     .addBearerAuth()
     .build();
 
@@ -62,6 +64,16 @@ async function bootstrap() {
       path.resolve(__dirname, '../src/assets/img/elearn-light.png'),
     ),
   );
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path === '/') {
+      return res.redirect('/api');
+    }
+    next();
+  });
+
+  app.use(bodyParser.json({ limit: '100mb' }));
+  app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 
   await app.listen(port);
 }

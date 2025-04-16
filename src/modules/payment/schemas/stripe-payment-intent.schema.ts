@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Schema as MongooseSchema } from 'mongoose';
+import { AbstractDocument } from 'src/common/document/abstract.document';
 
 export interface IBillingDetail {
   name: string;
@@ -22,34 +23,34 @@ export const BillingDetailsSchema = new MongooseSchema({
 });
 
 @Schema({
-  timestamps: true,
+  collection: 'stripe-payment-intents',
 })
-export class StripePaymentIntent {
-  @Prop({ required: true })
+export class StripePaymentIntent extends AbstractDocument {
+  @Prop({ type: Number, required: true })
   strp_paym_amount: number;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   strp_paym_currency: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   strp_paym_status: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   strp_paym_type: string;
 
-  @Prop({ required: true })
+  @Prop({ type: Number, required: true })
   strp_paym_exp_month: number;
 
-  @Prop({ required: true })
+  @Prop({ type: Number, required: true })
   strp_paym_exp_year: number;
 
   @Prop({ type: BillingDetailsSchema, required: true })
   strp_paym_billing_details: IBillingDetail;
 
-  @Prop()
+  @Prop({ type: String })
   strp_customer_id: string;
 
-  @Prop()
+  @Prop({ type: String })
   purchase_id: string;
 }
 

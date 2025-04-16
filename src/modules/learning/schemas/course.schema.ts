@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { AbstractDocument } from 'src/common/document/abstract.document';
+import { AbstractDocument } from '../../../common/document/abstract.document';
 import { User } from '../../users/schemas/user.schema';
 import { LevelEnum } from '../../../utils/enums/level.enum';
 
@@ -8,31 +8,31 @@ import { LevelEnum } from '../../../utils/enums/level.enum';
   collection: 'courses',
 })
 export class Course extends AbstractDocument {
-  @Prop({ trim: true, required: true })
+  @Prop({ type: String, trim: true, required: true })
   crs_title: string;
 
-  @Prop({ trim: true, required: true })
+  @Prop({ type: String, trim: true, required: true })
   crs_slug: string;
 
-  @Prop({ trim: true, required: true })
+  @Prop({ type: String, trim: true, required: true })
   crs_description: string;
 
-  @Prop({ required: true })
+  @Prop({ type: Number, required: true })
   crs_price: number;
 
-  @Prop({ default: 0 })
+  @Prop({ type: Number, default: 0 })
   crs_new_price: number;
 
-  @Prop({ default: false })
+  @Prop({ type: Boolean, default: false })
   crs_isPaid: boolean;
 
-  @Prop()
+  @Prop({ type: String })
   crs_photo: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   author: Omit<User, 'usr_password'>;
 
-  @Prop({ type: String, enum: LevelEnum })
+  @Prop({ type: Number, enum: LevelEnum })
   level_id: LevelEnum;
 
   createdAt: Date;

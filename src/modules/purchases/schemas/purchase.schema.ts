@@ -1,11 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Schema as SchemaMongoose } from 'mongoose';
-import { AbstractDocument } from 'src/common/document/abstract.document';
+import { AbstractDocument } from '../../../common/document/abstract.document';
 import { PaymentMethodEnum } from '../../../utils/enums/payment-method.enum';
 
 export interface ICourse {
   id: string;
   title: string;
+  slug: string;
   image: string;
   price: number;
   qty: number;
@@ -51,24 +52,54 @@ const UserInfoSchema = new SchemaMongoose({
   },
 });
 
+const CourseInfoSchema = new SchemaMongoose({
+  id: {
+    type: String,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  slug: {
+    type: String,
+    required: true,
+  },
+  image: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: String,
+    required: true,
+  },
+  qty: {
+    type: Number,
+    required: true,
+  },
+});
+
 @Schema({
   collection: 'purchases',
 })
 export class Purchase extends AbstractDocument {
-  @Prop({ trim: true, required: true })
+  @Prop({ type: String, trim: true, required: true })
   purch_reference: string;
 
-  @Prop({ type: String, enum: PaymentMethodEnum })
+  @Prop({ type: Number, enum: PaymentMethodEnum })
   payment_method: PaymentMethodEnum;
 
   @Prop({ type: UserInfoSchema })
   user: IUserInfo;
 
-  @Prop()
+  @Prop({ type: [CourseInfoSchema] })
   purchaseItems: ICourse[];
 
-  @Prop({ default: new Date().toISOString() })
+  @Prop({ type: Date, default: new Date().toISOString() })
   purch_date_at: Date;
+
+  @Prop({ type: Boolean, default: false })
+  purch_is_paid: Boolean;
 }
 
 export const PurchaseSchema = SchemaFactory.createForClass(Purchase);

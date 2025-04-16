@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PurchaseRepository } from 'src/modules/purchases/repository/purchase.repository';
+import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
 
 @Injectable()
 export class LearningService {
@@ -8,6 +8,7 @@ export class LearningService {
   async getLearning(userId: string) {
     return await this.purchaseRepository.find({
       'user.id': userId,
+      purch_is_paid: true,
     });
   }
 }

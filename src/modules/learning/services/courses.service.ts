@@ -1,39 +1,35 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { existsSync } from 'fs';
 import { Types } from 'mongoose';
-import { join } from 'path';
 import slugify from 'slugify';
-import { CommentRepository } from 'src/modules/comments/repository/comment.repository';
-import { IAddCourse } from 'src/interfaces/courses/IAddCourse';
-import { ICourseContents } from 'src/interfaces/courses/ICourseContents';
-import { ICourseContentsWithTotalSectionsLessonsDuration } from 'src/interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
-import { ICourseWithAverageRating } from 'src/interfaces/courses/ICourseWithAverageRating';
-import { IEditCourse } from 'src/interfaces/courses/IEditCourse';
-import { ILessonInSectionWithDuration } from 'src/interfaces/lessons/ILessonInSectionWithDuration';
-import { IExpressMulterFile } from 'src/interfaces/medias/IExpressMulterFile';
-import { Lesson } from 'src/modules/learning/schemas/lessons/lesson.schema';
-import { Section } from 'src/modules/learning/schemas/sections/section.schema';
-import { UserRepository } from 'src/modules/users/repository/user.repository';
-import { User } from 'src/modules/users/schemas/user.schema';
+import { IAddCourse } from '../../../interfaces/courses/IAddCourse';
+import { ICourseContents } from '../../../interfaces/courses/ICourseContents';
+import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
+import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
+import { IEditCourse } from '../../../interfaces/courses/IEditCourse';
+import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILessonInSectionWithDuration';
+import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
+import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema';
+import { Section } from '../../../modules/learning/schemas/sections/section.schema';
+import { UserRepository } from '../../../modules/users/repository/user.repository';
+import { User } from '../../../modules/users/schemas/user.schema';
 import {
-  getHourMinute,
-  getMinute,
-  getMinuteAndSecond,
-  getVideoDuration,
-} from 'src/utils/times/duration';
-import { UploadMulter } from 'src/utils/uploads/upload-multer';
-import { Comment } from '../../comments/schemas/comment.schema';
-import {
-  PATH_UPLOAD_COURSE,
+  PATH_COURSES_CLOUDINARY,
   PATH_UPLOAD_LESSON_VIDEOS,
 } from '../../../utils/constants/uploads/path-upload';
-import { removeFileIfExist } from '../../../utils/files/removeFileIfExist';
+import {
+  getMinuteAndSecond,
+  getSecond,
+  getVideoDuration,
+} from '../../../utils/times/duration';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { Comment } from '../../comments/schemas/comment.schema';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
 import { CourseRepository } from '../repositories/course.repository';
-import { Course } from '../schemas/course.schema';
-import { SectionRepository } from '../repositories/section.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
+import { SectionRepository } from '../repositories/section.repository';
+import { Course } from '../schemas/course.schema';
+import { PhotoUploaderContext } from '../../../utils/uploads/photo-uploader-context';
 
 @Injectable()
 export class CoursesService {
@@ -43,6 +39,7 @@ export class CoursesService {
     private commentRepository: CommentRepository,
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
+    private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
   async findAll(): Promise<ICourseWithAverageRating[]> {
@@ -89,12 +86,14 @@ export class CoursesService {
     const course: Course = await this.courseRepository.findOne({
       crs_slug: slug,
     });
+
     let courseWithAverageRating: ICourseWithAverageRating | {} = {};
     let averageRating: number = 0;
 
     const comments: Comment[] = await this.commentRepository.find({
-      course: course._id,
+      'course._id': course._id,
     });
+
     let totalCommentByCourse: number = comments.length;
 
     if (totalCommentByCourse !== 0) {
@@ -119,7 +118,7 @@ export class CoursesService {
     authorId: string,
     createCourseDto: CreateCourse,
     file: Express.Multer.File,
-  ): Promise<Course> {
+  ): Promise<any> {
     const author: User = await this.userRepository.findById(
       new Types.ObjectId(authorId),
     );
@@ -130,10 +129,17 @@ export class CoursesService {
       crs_slug: slugify(createCourseDto.crs_title),
     };
 
-    let photoLink: IExpressMulterFile = UploadMulter(file, PATH_UPLOAD_COURSE);
+    const cloudinaryContext = new PhotoUploaderContext(
+      new CloudinaryUploadStrategy(),
+    );
+
+    let photoLink: string = await cloudinaryContext.upload(
+      file.buffer,
+      PATH_COURSES_CLOUDINARY,
+    );
 
     if (photoLink) {
-      data = { ...data, crs_photo: photoLink.filename };
+      data = { ...data, crs_photo: photoLink };
     } else {
       data = { ...data, crs_photo: null };
     }
@@ -159,12 +165,21 @@ export class CoursesService {
     if (file === undefined) {
       photoLink = course.crs_photo;
     } else {
-      if (existsSync(join(PATH_UPLOAD_COURSE, course.crs_photo))) {
-        removeFileIfExist(PATH_UPLOAD_COURSE, course.crs_photo);
+      if (course.crs_photo) {
+        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+          course.crs_photo,
+        );
+
+        await this.cloudinaryUploadStrategy.delete(publicId);
       }
 
-      let photo: IExpressMulterFile = UploadMulter(file, PATH_UPLOAD_COURSE);
-      photoLink = photo.filename;
+      const cloudinaryContext = new PhotoUploaderContext(
+        new CloudinaryUploadStrategy(),
+      );
+      photoLink = await cloudinaryContext.upload(
+        file.buffer,
+        PATH_COURSES_CLOUDINARY,
+      );
     }
 
     let data: IEditCourse = {
@@ -187,8 +202,12 @@ export class CoursesService {
       );
     }
 
-    if (existsSync(join(PATH_UPLOAD_COURSE, course.crs_photo))) {
-      removeFileIfExist(PATH_UPLOAD_COURSE, course.crs_photo);
+    if (course.crs_photo) {
+      const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+        course.crs_photo,
+      );
+
+      await this.cloudinaryUploadStrategy.delete(publicId);
     }
 
     this.courseRepository.findByIdAndDelete(new Types.ObjectId(id));
@@ -227,9 +246,8 @@ export class CoursesService {
       let lessonsInSectionWithDuration: ILessonInSectionWithDuration[] =
         await Promise.all(
           [...lessonsInSection].map(async (lesson) => {
-            let duration = await getVideoDuration(
-              `${PATH_UPLOAD_LESSON_VIDEOS}/${lesson.lssn_video_link}`,
-            );
+            let duration: number = await getVideoDuration(lesson.lssn_video_link);
+
             totalDurationLessonBySection += Number(duration);
 
             return {
@@ -237,11 +255,10 @@ export class CoursesService {
               lssn_title: lesson.lssn_title,
               lssn_video_link: lesson.lssn_video_link,
               lssn_is_free: lesson.lssn_is_free,
-              lssn_duration_in_min_sec: getMinuteAndSecond(
-                await getVideoDuration(
-                  `${PATH_UPLOAD_LESSON_VIDEOS}/${lesson.lssn_video_link}`,
-                ),
-              ),
+              lssn_duration_in_min_sec:
+                duration !== 0 && duration >= 60
+                  ? getMinuteAndSecond(duration)
+                  : getSecond(duration),
             };
           }),
         );
@@ -254,7 +271,11 @@ export class CoursesService {
           section,
           lessons: lessonsInSectionWithDuration,
           countLesson: lessonsInSection.length,
-          countDurationInMinute: getMinute(totalDurationLessonBySection),
+          countDurationInMinute:
+            totalDurationLessonBySection !== 0 &&
+            totalDurationLessonBySection >= 60
+              ? getMinuteAndSecond(totalDurationLessonBySection)
+              : getSecond(totalDurationLessonBySection),
         },
       ];
     }
@@ -263,7 +284,10 @@ export class CoursesService {
       courseContents,
       totalSections,
       totalLessons,
-      totalDuration: getHourMinute(totalDuration),
+      totalDuration:
+        totalDuration !== 0 && totalDuration >= 60
+          ? getMinuteAndSecond(totalDuration)
+          : getSecond(totalDuration),
     };
   }
 }

@@ -1,29 +1,27 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { existsSync } from 'fs';
 import { Types } from 'mongoose';
-import { join } from 'path';
-import { IAddLesson } from 'src/interfaces/lessons/IAddLesson';
-import { IEditLesson } from 'src/interfaces/lessons/IEditLesson';
-import { IExpressMulterFile } from 'src/interfaces/medias/IExpressMulterFile';
-import { getPhotoFilenameAfterVideoUpload } from 'src/utils/files/getPhotoAfterVideoUpload';
+import { IAddLesson } from '../../../interfaces/lessons/IAddLesson';
+import { IEditLesson } from '../../../interfaces/lessons/IEditLesson';
+import { ISectionLessons } from '../../../interfaces/lessons/ISectionLessons';
 import {
-  PATH_UPLOAD_LESSON_PHOTOS,
-  PATH_UPLOAD_LESSON_VIDEOS,
+  PATH_LESSON_PHOTOS_CLOUDINARY,
+  PATH_LESSONS_CLOUDINARY,
 } from '../../../utils/constants/uploads/path-upload';
-import { removeFileIfExist } from '../../../utils/files/removeFileIfExist';
-import { UploadMulter } from '../../../utils/uploads/upload-multer';
+import { videoScreenShot } from '../../../utils/files/video-screen-shot';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { VideoUploaderContext } from '../../../utils/uploads/video-uploader-context';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
-import { Lesson } from '../schemas/lessons/lesson.schema';
-import { ISectionLessons } from 'src/interfaces/lessons/ISectionLessons';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
+import { Lesson } from '../schemas/lessons/lesson.schema';
 
 @Injectable()
 export class LessonsService {
   constructor(
     private lessonRepository: LessonRepository,
     private sectionRepository: SectionRepository,
+    private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
   async findAll(): Promise<Lesson[]> {
@@ -38,17 +36,20 @@ export class LessonsService {
     addLesson: AddLesson,
     file: Express.Multer.File,
   ): Promise<Lesson> {
-    const video: IExpressMulterFile = UploadMulter(
-      file,
-      PATH_UPLOAD_LESSON_VIDEOS,
+    const videoCloudinaryContext = new VideoUploaderContext(
+      new CloudinaryUploadStrategy(),
     );
-    const videoLink: string = video.filename;
-    const prefixFilename: string = 'lssn-pht';
-    const lessonPhotoFilename: string = await getPhotoFilenameAfterVideoUpload(
-      video,
-      prefixFilename,
-      PATH_UPLOAD_LESSON_PHOTOS,
+
+    let { secure_url: videoLink } = await videoCloudinaryContext.uploadVideo(
+      file.buffer,
+      PATH_LESSONS_CLOUDINARY,
     );
+
+    const lessonPhotoFilename: string =
+      await this.cloudinaryUploadStrategy.takeScreenshot(
+        videoLink,
+        PATH_LESSON_PHOTOS_CLOUDINARY,
+      );
 
     const sectionData = await this.sectionRepository.findById(
       new Types.ObjectId(addLesson.section_id),
@@ -93,31 +94,35 @@ export class LessonsService {
       lessonPhotoFilename = lesson.lssn_video_photo;
       videoLink = lesson.lssn_video_link;
     } else {
-      if (
-        lesson.lssn_video_link &&
-        existsSync(join(PATH_UPLOAD_LESSON_VIDEOS, lesson.lssn_video_link))
-      ) {
-        removeFileIfExist(PATH_UPLOAD_LESSON_VIDEOS, lesson.lssn_video_link);
+      if (lesson.lssn_video_link) {
+        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+          lesson.lssn_video_link,
+        );
+
+        await this.cloudinaryUploadStrategy.delete(publicId);
       }
 
-      if (
-        lesson.lssn_video_photo &&
-        existsSync(join(PATH_UPLOAD_LESSON_PHOTOS, lesson.lssn_video_photo))
-      ) {
-        removeFileIfExist(PATH_UPLOAD_LESSON_PHOTOS, lesson.lssn_video_photo);
+      if (lesson.lssn_video_photo) {
+        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+          lesson.lssn_video_photo,
+        );
+
+        await this.cloudinaryUploadStrategy.delete(publicId);
       }
 
-      const video: IExpressMulterFile = UploadMulter(
-        file,
-        PATH_UPLOAD_LESSON_VIDEOS,
+      const videoCloudinaryContext = new VideoUploaderContext(
+        new CloudinaryUploadStrategy(),
       );
-      const prefixFilename: string = 'lssn-pht';
-      lessonPhotoFilename = await getPhotoFilenameAfterVideoUpload(
-        video,
-        prefixFilename,
-        PATH_UPLOAD_LESSON_PHOTOS,
+
+      let { secure_url: videoLink } = await videoCloudinaryContext.uploadVideo(
+        file.buffer,
+        PATH_LESSONS_CLOUDINARY,
       );
-      videoLink = video.filename;
+
+      lessonPhotoFilename = await this.cloudinaryUploadStrategy.takeScreenshot(
+        videoLink,
+        PATH_LESSON_PHOTOS_CLOUDINARY,
+      );
     }
 
     let data: IEditLesson = {
@@ -141,18 +146,20 @@ export class LessonsService {
       );
     }
 
-    if (
-      lesson.lssn_video_link &&
-      existsSync(join(PATH_UPLOAD_LESSON_VIDEOS, lesson.lssn_video_link))
-    ) {
-      removeFileIfExist(PATH_UPLOAD_LESSON_VIDEOS, lesson.lssn_video_link);
+    if (lesson.lssn_video_link) {
+      const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+        lesson.lssn_video_link,
+      );
+
+      await this.cloudinaryUploadStrategy.delete(publicId);
     }
 
-    if (
-      lesson.lssn_video_photo &&
-      existsSync(join(PATH_UPLOAD_LESSON_PHOTOS, lesson.lssn_video_photo))
-    ) {
-      removeFileIfExist(PATH_UPLOAD_LESSON_PHOTOS, lesson.lssn_video_photo);
+    if (lesson.lssn_video_photo) {
+      const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+        lesson.lssn_video_photo,
+      );
+
+      await this.cloudinaryUploadStrategy.delete(publicId);
     }
 
     await this.lessonRepository.findByIdAndDelete(new Types.ObjectId(id));

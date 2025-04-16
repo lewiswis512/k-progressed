@@ -8,17 +8,18 @@ import { Comment, CommentSchema } from '../../comments/schemas/comment.schema';
 import {
   Section,
   sectionSchema,
-} from 'src/modules/learning/schemas/sections/section.schema';
+} from '../../../modules/learning/schemas/sections/section.schema';
 import {
   Lesson,
   LessonSchema,
-} from 'src/modules/learning/schemas/lessons/lesson.schema';
+} from '../../../modules/learning/schemas/lessons/lesson.schema';
 import { CourseRepository } from '../repositories/course.repository';
-import { UserRepository } from 'src/modules/users/repository/user.repository';
-import { CommentRepository } from 'src/modules/comments/repository/comment.repository';
-import { User, UserSchema } from 'src/modules/users/schemas/user.schema';
+import { UserRepository } from '../../../modules/users/repository/user.repository';
+import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
+import { User, UserSchema } from '../../../modules/users/schemas/user.schema';
 import { SectionRepository } from '../repositories/section.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { LessonRepository } from '../repositories/lesson.repository';
     CommentRepository,
     SectionRepository,
     LessonRepository,
+    CloudinaryUploadStrategy,
   ],
 })
 export class CoursesModule {}
