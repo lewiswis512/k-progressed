@@ -195,18 +195,23 @@ export class CommentsService {
       );
     }
 
-    const comments: Comment[] = await this.commentRepository.find({
-      parentComment: id,
+    const childComments: Comment[] = await this.commentRepository.find({
+      parent_comment: id,
     });
 
-    if (comments.length > 0) {
-      const commentsId: Types.ObjectId[] = comments.map(
-        (comment) => comment._id,
+    if (childComments.length > 0) {
+      const childCommentIds: Types.ObjectId[] = childComments.map(
+        (child) => child._id,
       );
+
       await this.commentRepository.deleteMany({
-        _id: {
-          $in: commentsId,
-        },
+        _id: { $in: childCommentIds },
+      });
+    }
+
+    if (comment.parent_comment) {
+      await this.commentRepository.findByIdAndUpdate(comment.parent_comment, {
+        $pull: { replies: comment._id },
       });
     }
 
