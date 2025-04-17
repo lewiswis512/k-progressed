@@ -27,11 +27,12 @@ import { AddCommentCourse } from './dto/add-comment-course.dto';
 import { AddCommentLesson } from './dto/add-comment-lesson.dto';
 import { EditCommentCourse } from './dto/edit-comment-course.dto';
 import { EditCommentLesson } from './dto/edit-comment-lesson.dto';
+import { Comment as CommentDocument } from './schemas/comment.schema';
 
 @Controller('comments')
 export class CommentsController {
   constructor(private commentsService: CommentsService) {}
-
+  
   @Get('by/course/:courseId')
   @ApiOkResponse({
     description: 'The comments by course have been successfully retrieved.',

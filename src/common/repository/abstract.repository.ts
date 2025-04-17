@@ -1,5 +1,11 @@
 import { Logger, NotFoundException } from '@nestjs/common';
-import { FilterQuery, Model, Types, UpdateQuery } from 'mongoose';
+import {
+  FilterQuery,
+  Model,
+  Types,
+  UpdateQuery,
+  UpdateWriteOpResult,
+} from 'mongoose';
 import { AbstractDocument } from '../document/abstract.document';
 
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
@@ -66,6 +72,17 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     );
 
     return updatedDocument as TDocument | null;
+  }
+
+  async updateMany(
+    filterQuery: FilterQuery<TDocument>,
+    data: UpdateQuery<TDocument>,
+  ): Promise<UpdateWriteOpResult> {
+    const updatedDocument = await this.model.updateMany(filterQuery, data, {
+      new: true,
+    });
+
+    return updatedDocument;
   }
 
   async findByIdAndDelete(id: Types.ObjectId): Promise<void> {

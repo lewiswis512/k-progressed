@@ -187,7 +187,8 @@ export class CommentsService {
   }
 
   async delete(id: string, authorId: string): Promise<void> {
-    const comment: Comment = await this.findById(id);
+    let comment: Comment = await this.findById(id);
+    console.log({ comment });
 
     if (String(comment.author._id) !== authorId) {
       throw new ForbiddenException(
@@ -195,27 +196,23 @@ export class CommentsService {
       );
     }
 
-    const childComments: Comment[] = await this.commentRepository.find({
-      parent_comment: id,
-    });
+    if (comment.parent_comment) {
+      const parentCommentId = comment.parent_comment;
 
-    if (childComments.length > 0) {
-      const childCommentIds: Types.ObjectId[] = childComments.map(
-        (child) => child._id,
+      const parentComment = await this.findById(String(parentCommentId));
+      const updatedReplies = parentComment.replies.filter(
+        (replyComment) => String(replyComment._id) !== String(comment._id),
       );
 
-      await this.commentRepository.deleteMany({
-        _id: { $in: childCommentIds },
+      await this.commentRepository.findByIdAndUpdate(parentCommentId, {
+        replies: updatedReplies,
       });
-    }
 
-    if (comment.parent_comment) {
-      await this.commentRepository.findByIdAndUpdate(comment.parent_comment, {
-        $pull: { replies: comment._id },
-      });
+      return await this.commentRepository.findByIdAndDelete(comment._id);
+    } else {
+      await this.commentRepository.deleteMany({ parent_comment: comment._id });
+      return this.commentRepository.findByIdAndDelete(new Types.ObjectId(id));
     }
-
-    return this.commentRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 
   async like(id: string, likeByUserId: string): Promise<Comment> {
