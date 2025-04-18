@@ -82,11 +82,21 @@ export class CoursesService {
     return this.courseRepository.findById(new Types.ObjectId(id));
   }
 
+  async findByIdWithRating(id: string): Promise<ICourseWithAverageRating> {
+    const course: Course = await this.courseRepository.findById(new Types.ObjectId(id));
+
+    return this.getCourseWithRating(course);
+  }
+
   async findBySlug(slug: string): Promise<ICourseWithAverageRating> {
     const course: Course = await this.courseRepository.findOne({
       crs_slug: slug,
     });
 
+    return this.getCourseWithRating(course);
+  }
+
+  async getCourseWithRating(course: Course) {
     let courseWithAverageRating: ICourseWithAverageRating | {} = {};
     let averageRating: number = 0;
 

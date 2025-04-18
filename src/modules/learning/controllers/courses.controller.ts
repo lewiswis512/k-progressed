@@ -57,8 +57,8 @@ export class CoursesController {
   @ApiNotFoundResponse({
     description: 'The course is not found.',
   })
-  async showById(@Param('id') id: string): Promise<Course> {
-    return await this.courseService.findById(id);
+  async showById(@Param('id') id: string): Promise<ICourseWithAverageRating> {
+    return await this.courseService.findByIdWithRating(id);
   }
 
   @Get('view/:slug')
