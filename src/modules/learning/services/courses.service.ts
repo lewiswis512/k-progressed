@@ -44,38 +44,17 @@ export class CoursesService {
 
   async findAll(): Promise<ICourseWithAverageRating[]> {
     let courses: Course[] = await this.courseRepository.find();
-    let courseWithAverageRating: ICourseWithAverageRating[] = [];
+    let coursesWithAverageRating: ICourseWithAverageRating[] = [];
 
     for (const course of courses) {
-      const comments: Comment[] = await this.commentRepository.find({
-        course: course._id,
-      });
-
-      let averageRating: number = 0;
-      let totalCommentByCourse: number = comments.length;
-
-      if (totalCommentByCourse !== 0) {
-        let totalRatingByCourse: number = comments.reduce(
-          (accumulator: number, comment: Comment) =>
-            accumulator + Number(comment.comm_rating),
-          0,
-        );
-        averageRating =
-          Number(totalRatingByCourse) / Number(totalCommentByCourse);
-        averageRating = Number(averageRating.toFixed(1));
-      }
-
-      courseWithAverageRating = [
-        ...courseWithAverageRating,
-        {
-          course,
-          averageRating,
-          totalCommentByCourse,
-        },
+      const courseWithRating: ICourseWithAverageRating = await this.getCourseWithRating(course);
+      coursesWithAverageRating = [
+        ...coursesWithAverageRating,
+        courseWithRating,
       ];
     }
 
-    return courseWithAverageRating;
+    return coursesWithAverageRating;
   }
 
   async findById(id: string): Promise<Course> {
@@ -83,7 +62,9 @@ export class CoursesService {
   }
 
   async findByIdWithRating(id: string): Promise<ICourseWithAverageRating> {
-    const course: Course = await this.courseRepository.findById(new Types.ObjectId(id));
+    const course: Course = await this.courseRepository.findById(
+      new Types.ObjectId(id),
+    );
 
     return this.getCourseWithRating(course);
   }
@@ -256,7 +237,9 @@ export class CoursesService {
       let lessonsInSectionWithDuration: ILessonInSectionWithDuration[] =
         await Promise.all(
           [...lessonsInSection].map(async (lesson) => {
-            let duration: number = await getVideoDuration(lesson.lssn_video_link);
+            let duration: number = await getVideoDuration(
+              lesson.lssn_video_link,
+            );
 
             totalDurationLessonBySection += Number(duration);
 
