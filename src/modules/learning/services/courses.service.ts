@@ -5,7 +5,7 @@ import { IAddCourse } from '../../../interfaces/courses/IAddCourse';
 import { ICourseContents } from '../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
-import { IEditCourse } from '../../../interfaces/courses/IEditCourse';
+import { ISaveCourse } from '../../../interfaces/courses/ISaveCourse';
 import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILessonInSectionWithDuration';
 import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
 import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema';
@@ -13,8 +13,7 @@ import { Section } from '../../../modules/learning/schemas/sections/section.sche
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
 import {
-  PATH_COURSES_CLOUDINARY,
-  PATH_UPLOAD_LESSON_VIDEOS,
+  PATH_COURSES_CLOUDINARY
 } from '../../../utils/constants/uploads/path-upload';
 import {
   getMinuteAndSecond,
@@ -22,6 +21,7 @@ import {
   getVideoDuration,
 } from '../../../utils/times/duration';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { PhotoUploaderContext } from '../../../utils/uploads/photo-uploader-context';
 import { Comment } from '../../comments/schemas/comment.schema';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
@@ -29,7 +29,6 @@ import { CourseRepository } from '../repositories/course.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
-import { PhotoUploaderContext } from '../../../utils/uploads/photo-uploader-context';
 
 @Injectable()
 export class CoursesService {
@@ -173,7 +172,7 @@ export class CoursesService {
       );
     }
 
-    let data: IEditCourse = {
+    let data: ISaveCourse = {
       ...editCourseDto,
       crs_photo: photoLink,
     };
