@@ -85,6 +85,14 @@ export class SectionsService {
       );
     }
 
+    const lessons: Lesson[] = await this.lessonRepository.find({
+      'section._id': new Types.ObjectId(section._id),
+    });
+
+    if (lessons.length > 0) {
+      this.lessonRepository.deleteMany(lessons);
+    }
+
     await this.sectionRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 }

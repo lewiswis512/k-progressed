@@ -12,9 +12,7 @@ import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema'
 import { Section } from '../../../modules/learning/schemas/sections/section.schema';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
-import {
-  PATH_COURSES_CLOUDINARY
-} from '../../../utils/constants/uploads/path-upload';
+import { PATH_COURSES_CLOUDINARY } from '../../../utils/constants/uploads/path-upload';
 import {
   getMinuteAndSecond,
   getSecond,
@@ -201,7 +199,22 @@ export class CoursesService {
       await this.cloudinaryUploadStrategy.delete(publicId);
     }
 
+    const sections: Section[] = await this.sectionRepository.find({
+      'course._id': new Types.ObjectId(id),
+    });
+
+    for (const section of sections) {
+      const lessons: Lesson[] = await this.lessonRepository.find({
+        'section._id': new Types.ObjectId(section._id),
+      });
+
+      if (lessons.length > 0) {
+        this.lessonRepository.deleteMany(lessons);
+      }
+    }
+
     this.sectionRepository.deleteMany({ 'course._id': id });
+
     this.courseRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 
