@@ -13,8 +13,7 @@ import { Section } from '../../../modules/learning/schemas/sections/section.sche
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
 import {
-  PATH_COURSES_CLOUDINARY,
-  PATH_UPLOAD_LESSON_VIDEOS,
+  PATH_COURSES_CLOUDINARY
 } from '../../../utils/constants/uploads/path-upload';
 import {
   getMinuteAndSecond,
@@ -47,7 +46,8 @@ export class CoursesService {
     let coursesWithAverageRating: ICourseWithAverageRating[] = [];
 
     for (const course of courses) {
-      const courseWithRating: ICourseWithAverageRating = await this.getCourseWithRating(course);
+      const courseWithRating: ICourseWithAverageRating =
+        await this.getCourseWithRating(course);
       coursesWithAverageRating = [
         ...coursesWithAverageRating,
         courseWithRating,
@@ -201,6 +201,7 @@ export class CoursesService {
       await this.cloudinaryUploadStrategy.delete(publicId);
     }
 
+    this.sectionRepository.deleteMany({ 'course._id': id });
     this.courseRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 
