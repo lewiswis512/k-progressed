@@ -86,6 +86,19 @@ export class CoursesController {
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
     return this.courseService.getContent(id);
   }
+  
+  // @Get('view-lessons/:id')
+  // @ApiOkResponse({
+  //   description: 'The lessons content have been successfully retrieved.',
+  // })
+  // @ApiNotFoundResponse({
+  //   description: 'The lessons content is not found.',
+  // })
+  // async viewLessons(
+  //   @Param('id') id: string,
+  // ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
+  //   return this.courseService.viewLessons(id);
+  // }
 
   @Post()
   @ApiBearerAuth()
