@@ -10,6 +10,7 @@ import {
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { LessonsController } from '../controllers/lessons.controller';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
 
 @Module({
   imports: [
@@ -25,7 +26,12 @@ import { LessonsController } from '../controllers/lessons.controller';
       { name: Section.name, schema: sectionSchema },
     ]),
   ],
-  providers: [LessonsService, LessonRepository, SectionRepository],
+  providers: [
+    LessonsService,
+    LessonRepository,
+    SectionRepository,
+    CloudinaryUploadStrategy,
+  ],
   controllers: [LessonsController],
 })
 export class LessonsModule {}

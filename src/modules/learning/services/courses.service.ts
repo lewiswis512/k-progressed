@@ -5,7 +5,7 @@ import { IAddCourse } from '../../../interfaces/courses/IAddCourse';
 import { ICourseContents } from '../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
-import { IEditCourse } from '../../../interfaces/courses/IEditCourse';
+import { ISaveCourse } from '../../../interfaces/courses/ISaveCourse';
 import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILessonInSectionWithDuration';
 import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
 import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema';
@@ -21,7 +21,7 @@ import {
   getVideoDuration,
 } from '../../../utils/times/duration';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
-import { UploaderContext } from '../../../utils/uploads/uploader-context';
+import { PhotoUploaderContext } from '../../../utils/uploads/photo-uploader-context';
 import { Comment } from '../../comments/schemas/comment.schema';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
@@ -120,7 +120,7 @@ export class CoursesService {
       crs_slug: slugify(createCourseDto.crs_title),
     };
 
-    const cloudinaryContext = new UploaderContext(
+    const cloudinaryContext = new PhotoUploaderContext(
       new CloudinaryUploadStrategy(),
     );
 
@@ -164,7 +164,7 @@ export class CoursesService {
         await this.cloudinaryUploadStrategy.delete(publicId);
       }
 
-      const cloudinaryContext = new UploaderContext(
+      const cloudinaryContext = new PhotoUploaderContext(
         new CloudinaryUploadStrategy(),
       );
       photoLink = await cloudinaryContext.upload(
@@ -173,7 +173,7 @@ export class CoursesService {
       );
     }
 
-    let data: IEditCourse = {
+    let data: ISaveCourse = {
       ...editCourseDto,
       crs_photo: photoLink,
     };

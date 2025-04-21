@@ -20,9 +20,6 @@ export class Course extends AbstractDocument {
   @Prop({ type: Number, required: true })
   crs_price: number;
 
-  @Prop({ type: Number, default: 0 })
-  crs_new_price: number;
-
   @Prop({ type: Boolean, default: false })
   crs_isPaid: boolean;
 
