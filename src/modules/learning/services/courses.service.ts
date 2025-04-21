@@ -218,14 +218,11 @@ export class CoursesService {
     this.courseRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 
-  private async getCourseSections(
-    courseId: Types.ObjectId,
-    authorId: Types.ObjectId,
-  ): Promise<Section[]> {
+  private async getCourseSections(course: Course): Promise<Section[]> {
     return await this.sectionRepository.find({
       course: {
-        _id: courseId,
-        author: authorId,
+        _id: course._id,
+        author: course.author._id,
       },
     });
   }
@@ -239,35 +236,37 @@ export class CoursesService {
   private async getLessonsInSectionWithDuration(
     totalDurationLessonBySection: number,
     lessonsInSection: Lesson[],
+    isFree: boolean,
   ): Promise<ILessonInSectionWithDuration[]> {
     return await Promise.all(
       [...lessonsInSection].map(async (lesson) => {
         let duration = 0;
 
         if (!lesson.lssn_is_free && lesson.lssn_video_link) {
-          duration = await getVideoDuration(lesson.lssn_video_link);
+          totalDurationLessonBySection = await getVideoDuration(
+            lesson.lssn_video_link,
+          );
         }
 
-        //let duration: number = await getVideoDuration(lesson.lssn_video_link);
-
-        // totalDurationLessonBySection += Number(duration);
+        totalDurationLessonBySection += duration;
 
         return {
           _id: lesson._id,
           lssn_title: lesson.lssn_title,
           lssn_is_free: lesson.lssn_is_free,
-          // lssn_video_link: lesson.lssn_video_link,
-          lssn_video_link: lesson.lssn_is_free ? '' : lesson.lssn_video_link,
+          lssn_video_link: isFree === false ? "" : lesson.lssn_video_link,
           lssn_duration_in_min_sec:
-            duration !== 0 && duration >= 60
-              ? getMinuteAndSecond(duration)
-              : getSecond(duration),
+            totalDurationLessonBySection !== 0 &&
+            totalDurationLessonBySection >= 60
+              ? getMinuteAndSecond(totalDurationLessonBySection)
+              : getSecond(totalDurationLessonBySection),
         };
       }),
     );
   }
 
   private async getCourseContentInfo(
+    isFree: boolean,
     totalLessons: number,
     totalDuration: number,
     courseContents: ICourseContents[],
@@ -277,12 +276,11 @@ export class CoursesService {
     totalDuration: number;
     courseContents: ICourseContents[];
   }> {
-    // let totalDurationLessonBySection: number = 0;
     let lessonsInSection: Lesson[] = await this.getLessonsSection(section);
     totalLessons += lessonsInSection.length;
 
     const lessonsInSectionWithDuration =
-      await this.getLessonsInSectionWithDuration(0, lessonsInSection);
+      await this.getLessonsInSectionWithDuration(0, lessonsInSection, isFree);
 
     const totalDurationLessonBySection = lessonsInSectionWithDuration.reduce(
       (acc, lesson) => {
@@ -295,26 +293,17 @@ export class CoursesService {
       0,
     );
 
-    // let lessonsInSectionWithDuration: ILessonInSectionWithDuration[] =
-    //   await this.getLessonsInSectionWithDuration(
-    //     totalDurationLessonBySection,
-    //     lessonsInSection,
-    //   );
-
     totalDuration += totalDurationLessonBySection;
-    courseContents = [
-      ...courseContents,
-      {
-        section,
-        lessons: lessonsInSectionWithDuration,
-        countLesson: lessonsInSection.length,
-        countDurationInMinute:
-          totalDurationLessonBySection !== 0 &&
-          totalDurationLessonBySection >= 60
-            ? getMinuteAndSecond(totalDurationLessonBySection)
-            : getSecond(totalDurationLessonBySection),
-      },
-    ];
+
+    courseContents.push({
+      section,
+      lessons: lessonsInSectionWithDuration,
+      countLesson: lessonsInSection.length,
+      countDurationInMinute:
+        totalDurationLessonBySection >= 60
+          ? getMinuteAndSecond(totalDurationLessonBySection)
+          : getSecond(totalDurationLessonBySection),
+    });
 
     return {
       totalLessons,
@@ -325,13 +314,11 @@ export class CoursesService {
 
   async getContent(
     courseId: string,
+    isFree: boolean,
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
-    const course = await this.findById(courseId);
+    const course: Course = await this.findById(courseId);
     let courseContents: ICourseContents[] = [];
-    const sections: Section[] = await this.getCourseSections(
-      course._id,
-      course.author._id,
-    );
+    const sections: Section[] = await this.getCourseSections(course);
 
     const totalSections: number = sections.length;
     let totalLessons: number = 0;
@@ -343,6 +330,7 @@ export class CoursesService {
       );
 
       const courseContentInfo = await this.getCourseContentInfo(
+        isFree,
         totalLessons,
         totalDuration,
         courseContents,
@@ -352,26 +340,6 @@ export class CoursesService {
       totalLessons = courseContentInfo.totalLessons;
       totalDuration = courseContentInfo.totalDuration;
       courseContents = courseContentInfo.courseContents;
-
-      // courseContents = [
-      //   ...courseContents,
-      //   {
-      //     section,
-      //     lessons: courseContentInfo.courseContents.lessons,
-      //     countLesson: courseContentInfo.totalLessons,
-      //     countDurationInMinute: courseContentInfo.totalDuration,
-      //   },
-      // ];
-
-      return {
-        courseContents,
-        totalSections,
-        totalLessons,
-        totalDuration:
-          totalDuration >= 60
-            ? getMinuteAndSecond(totalDuration)
-            : getSecond(totalDuration),
-      };
     }
 
     return {
@@ -384,10 +352,4 @@ export class CoursesService {
           : getSecond(totalDuration),
     };
   }
-
-  // async viewLessons(
-  //   courseId: string,
-  // ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
-
-  // }
 }
