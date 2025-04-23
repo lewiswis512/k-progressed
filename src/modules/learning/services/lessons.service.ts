@@ -15,6 +15,21 @@ import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Lesson } from '../schemas/lessons/lesson.schema';
 import { Section } from '../schemas/sections/section.schema';
+import {
+  getMinuteAndSecond,
+  getSecond,
+  getVideoDuration,
+} from 'src/utils/times/duration';
+
+export interface IFreeLesson {
+  _id: Types.ObjectId;
+  lssn_title: string;
+  lssn_video_link?: string;
+  lssn_video_photo?: string;
+  lssn_is_free: boolean;
+  section: ISectionLessons;
+  duration: string | number | null;
+}
 
 @Injectable()
 export class LessonsService {
@@ -32,16 +47,41 @@ export class LessonsService {
     return this.lessonRepository.findById(new Types.ObjectId(id));
   }
 
-  async getFree(courseId: string): Promise<Lesson[]> {
-    const sections: Section[] = await this.sectionRepository.find({ "course._id": courseId });
-    let lessons: Lesson[] = [];
+  async getFree(courseId: string): Promise<IFreeLesson[]> {
+    const sections: Section[] = await this.sectionRepository.find({
+      'course._id': courseId,
+    });
+    let freeLessons: IFreeLesson[] = [];
 
     for (const section of sections) {
-      const lesson = await this.lessonRepository.find({ "section._id": section._id, lssn_is_free: true });
-      lessons = [...lessons, ...lesson];
+      const lessons = await this.lessonRepository.find({
+        'section._id': section._id,
+        lssn_is_free: true,
+      });
+
+      for (const lesson of lessons) {
+        const durationInSeconds = await getVideoDuration(
+          lesson.lssn_video_link,
+        );
+
+        const formattedDuration =
+          durationInSeconds != 0 && durationInSeconds >= 60
+            ? getMinuteAndSecond(durationInSeconds)
+            : getSecond(durationInSeconds);
+
+        freeLessons.push({
+          _id: lesson._id,
+          lssn_title: lesson.lssn_title,
+          lssn_video_link: lesson.lssn_video_link,
+          lssn_video_photo: lesson.lssn_video_photo,
+          lssn_is_free: lesson.lssn_is_free,
+          section: lesson.section as ISectionLessons,
+          duration: formattedDuration,
+        });
+      }
     }
 
-    return lessons;
+    return freeLessons;
   }
 
   async store(

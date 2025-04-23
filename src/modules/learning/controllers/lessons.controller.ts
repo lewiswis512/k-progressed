@@ -29,7 +29,7 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
-import { LessonsService } from '../services/lessons.service';
+import { IFreeLesson, LessonsService } from '../services/lessons.service';
 import { AuthGuard } from '../../../common/guards/auth.guard';
 import { Lesson } from '../schemas/lessons/lesson.schema';
 import { VALID_VIDEO_MIME_TYPES } from '../../../utils/constants/files/mime-types';
@@ -69,7 +69,7 @@ export class LessonsController {
   @ApiProperty({
     description: 'The free lessons have been successfully retrieved.',
   })
-  async getFree(@Param('courseId') courseId: string) {
+  async getFree(@Param('courseId') courseId: string): Promise<IFreeLesson[]> {
     return await this.lessonsService.getFree(courseId);
   }
 
