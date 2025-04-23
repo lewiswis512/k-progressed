@@ -25,6 +25,7 @@ import {
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiProperty,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
@@ -61,6 +62,14 @@ export class LessonsController {
   })
   async show(@Param('id') id: string): Promise<Lesson> {
     return await this.lessonsService.findById(id);
+  }
+
+  @Get(':courseId')
+  @ApiProperty({
+    description: 'The free lessons have been successfully retrieved.',
+  })
+  async getFree(@Param('courseId') courseId: string) {
+    return await this.lessonsService.getFree(courseId);
   }
 
   @Post()

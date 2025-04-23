@@ -7,7 +7,6 @@ import {
   PATH_LESSON_PHOTOS_CLOUDINARY,
   PATH_LESSONS_CLOUDINARY,
 } from '../../../utils/constants/uploads/path-upload';
-import { videoScreenShot } from '../../../utils/files/video-screen-shot';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
 import { VideoUploaderContext } from '../../../utils/uploads/video-uploader-context';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
@@ -15,6 +14,7 @@ import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Lesson } from '../schemas/lessons/lesson.schema';
+import { Section } from '../schemas/sections/section.schema';
 
 @Injectable()
 export class LessonsService {
@@ -30,6 +30,18 @@ export class LessonsService {
 
   async findById(id: string): Promise<Lesson> {
     return this.lessonRepository.findById(new Types.ObjectId(id));
+  }
+
+  async getFree(courseId: string): Promise<Lesson[]> {
+    const sections: Section[] = await this.sectionRepository.find({ "course._id": courseId });
+    let lessons: Lesson[] = [];
+
+    for (const section of sections) {
+      const lesson = await this.lessonRepository.find({ "section._id": section._id, lssn_is_free: true });
+      lessons = [...lessons, ...lesson];
+    }
+
+    return lessons;
   }
 
   async store(
