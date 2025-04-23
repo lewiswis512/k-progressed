@@ -64,7 +64,7 @@ export class LessonsController {
     return await this.lessonsService.findById(id);
   }
 
-  @Get(':courseId')
+  @Get('free/:courseId')
   @ApiProperty({
     description: 'The free lessons have been successfully retrieved.',
   })
