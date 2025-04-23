@@ -39,11 +39,11 @@ import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
 
 @Controller('lessons')
-@ApiBearerAuth()
 export class LessonsController {
   constructor(private lessonsService: LessonsService) {}
 
   @Get()
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The lessons have been successfully retrieved.',
@@ -53,6 +53,7 @@ export class LessonsController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The lesson have been successfully retrieved.',
@@ -73,6 +74,7 @@ export class LessonsController {
   }
 
   @Post()
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiConsumes('multipart/form-data')
@@ -107,6 +109,7 @@ export class LessonsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiConsumes('multipart/form-data')
@@ -146,6 +149,7 @@ export class LessonsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard)
   @ApiNoContentResponse({
