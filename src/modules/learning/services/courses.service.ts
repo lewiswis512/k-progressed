@@ -27,6 +27,8 @@ import { CourseRepository } from '../repositories/course.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
+import { pagination } from '../../../utils/pagination';
+import { ICoursePagination } from '../interfaces/ICoursePagination';
 
 @Injectable()
 export class CoursesService {
@@ -39,7 +41,7 @@ export class CoursesService {
     private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
-  async findAll(): Promise<ICourseWithAverageRating[]> {
+  async findAll(page: number, limit: number): Promise<ICoursePagination> {
     let courses: Course[] = await this.courseRepository.find();
     let coursesWithAverageRating: ICourseWithAverageRating[] = [];
 
@@ -52,7 +54,19 @@ export class CoursesService {
       ];
     }
 
-    return coursesWithAverageRating;
+    const paginatedData: ICourseWithAverageRating[] = pagination(
+      coursesWithAverageRating,
+      page,
+      limit,
+    );
+
+    return {
+      page,
+      limit,
+      total: coursesWithAverageRating.length,
+      totalPages: Math.ceil(coursesWithAverageRating.length / limit),
+      data: paginatedData,
+    };
   }
 
   async findById(id: string): Promise<Course> {
@@ -254,7 +268,7 @@ export class CoursesService {
           _id: lesson._id,
           lssn_title: lesson.lssn_title,
           lssn_is_free: lesson.lssn_is_free,
-          lssn_video_link: isFree === false ? "" : lesson.lssn_video_link,
+          lssn_video_link: isFree === false ? '' : lesson.lssn_video_link,
           lssn_duration_in_min_sec:
             totalDurationLessonBySection !== 0 &&
             totalDurationLessonBySection >= 60

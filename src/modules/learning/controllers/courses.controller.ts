@@ -9,6 +9,7 @@ import {
   ParseFilePipeBuilder,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -37,6 +38,8 @@ import { EditCourse } from '../dtos/courses/edit-course.dto';
 import { Course } from '../schemas/course.schema';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
+import { PaginationDto } from '../../../shared/pagination/pagination.dto';
+import { ICoursePagination } from '../interfaces/ICoursePagination';
 
 @Controller('courses')
 export class CoursesController {
@@ -46,8 +49,10 @@ export class CoursesController {
   @ApiOkResponse({
     description: 'The courses have been successfully retrieved.',
   })
-  async list(): Promise<ICourseWithAverageRating[]> {
-    return await this.courseService.findAll();
+  async list(@Query() query: PaginationDto): Promise<ICoursePagination> {
+    const { page, limit } = query;
+
+    return await this.courseService.findAll(page, limit);
   }
 
   @Get('show/:id')
@@ -86,7 +91,7 @@ export class CoursesController {
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
     return this.courseService.getContent(id, false);
   }
-  
+
   @Get('view-lessons/:id')
   @ApiOkResponse({
     description: 'The lessons content have been successfully retrieved.',
