@@ -256,7 +256,7 @@ export class CoursesService {
       [...lessonsInSection].map(async (lesson) => {
         let duration = 0;
 
-        if (!lesson.lssn_is_free && lesson.lssn_video_link) {
+        if (lesson.lssn_video_link) {
           totalDurationLessonBySection = await getVideoDuration(
             lesson.lssn_video_link,
           );
