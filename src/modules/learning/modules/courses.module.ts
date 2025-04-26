@@ -20,6 +20,11 @@ import { User, UserSchema } from '../../../modules/users/schemas/user.schema';
 import { SectionRepository } from '../repositories/section.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
+import {
+  Purchase,
+  PurchaseSchema,
+} from '../../../modules/purchases/schemas/purchase.schema';
 
 @Module({
   imports: [
@@ -29,6 +34,7 @@ import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
       { name: Comment.name, schema: CommentSchema },
       { name: Section.name, schema: sectionSchema },
       { name: Lesson.name, schema: LessonSchema },
+      { name: Purchase.name, schema: PurchaseSchema },
     ]),
     JwtModule.registerAsync({
       useFactory: async () => ({
@@ -46,6 +52,7 @@ import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
     CommentRepository,
     SectionRepository,
     LessonRepository,
+    PurchaseRepository,
     CloudinaryUploadStrategy,
   ],
 })

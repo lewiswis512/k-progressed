@@ -8,6 +8,13 @@ import {
 } from 'mongoose';
 import { AbstractDocument } from '../document/abstract.document';
 
+type Aggregation =
+  | { $match: { [key: string]: any } }
+  | { $unwind: string }
+  | { $group: { _id: string } }
+  | { $project: { [key: string]: any } }
+  | { $count: string };
+
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   protected abstract readonly logger: Logger;
 
@@ -35,6 +42,10 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     }
 
     return document;
+  }
+
+  async aggregate(aggregation: Aggregation[]): Promise<any[]> {
+    return await this.model.aggregate(aggregation);
   }
 
   async create(document: Partial<TDocument>): Promise<TDocument> {

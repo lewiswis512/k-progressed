@@ -29,6 +29,7 @@ import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
 import { pagination } from '../../../utils/pagination';
 import { ICoursePagination } from '../interfaces/ICoursePagination';
+import { PurchaseRepository } from 'src/modules/purchases/repository/purchase.repository';
 
 @Injectable()
 export class CoursesService {
@@ -38,6 +39,7 @@ export class CoursesService {
     private commentRepository: CommentRepository,
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
+    private purchaseRepository: PurchaseRepository,
     private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
@@ -92,10 +94,30 @@ export class CoursesService {
   async getCourseWithRating(course: Course) {
     let courseWithAverageRating: ICourseWithAverageRating | {} = {};
     let averageRating: number = 0;
+    const courseId = course._id;
 
     const comments: Comment[] = await this.commentRepository.find({
-      'course._id': course._id,
+      'course._id': courseId,
     });
+
+    const getCountParticipants = await this.purchaseRepository.aggregate([
+      { $match: { purch_is_paid: true } },
+      { $unwind: '$purchaseItems' },
+      { $match: { 'purchaseItems.id': courseId.toString() } },
+      {
+        $group: {
+          _id: '$user.id',
+        },
+      },
+      {
+        $count: 'countParticipants',
+      },
+    ]);
+
+    const countParticipants =
+      getCountParticipants && getCountParticipants[0]
+        ? getCountParticipants[0].countParticipants
+        : 0;
 
     let totalCommentByCourse: number = comments.length;
 
@@ -114,6 +136,7 @@ export class CoursesService {
       course,
       averageRating,
       totalCommentByCourse,
+      countParticipants,
     };
   }
 

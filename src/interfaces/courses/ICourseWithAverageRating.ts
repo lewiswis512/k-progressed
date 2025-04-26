@@ -4,4 +4,5 @@ export interface ICourseWithAverageRating {
   course: ICourse;
   averageRating: number;
   totalCommentByCourse: number;
+  countParticipants: number;
 }
