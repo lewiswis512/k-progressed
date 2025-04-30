@@ -5,6 +5,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Teacher, TeacherSchema } from './schemas/teacher.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
+import { TeacherRepository } from './repositories/teacher.repository';
+import { UserRepository } from '../users/repository/user.repository';
 
 @Module({
   imports: [
@@ -17,10 +19,10 @@ import { User, UserSchema } from '../users/schemas/user.schema';
     }),
     MongooseModule.forFeature([
       { name: Teacher.name, schema: TeacherSchema },
-      { name: User.name, schema: UserSchema }
-    ])
+      { name: User.name, schema: UserSchema },
+    ]),
   ],
   controllers: [TeachersController],
-  providers: [TeachersService]
+  providers: [TeachersService, TeacherRepository, UserRepository],
 })
 export class TeachersModule {}

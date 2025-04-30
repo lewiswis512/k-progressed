@@ -1,19 +1,20 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { User } from '../../users/schemas/user.schema';
 import mongoose from 'mongoose';
+import { AbstractDocument } from '../../../common/document/abstract.document';
+import { User } from '../../users/schemas/user.schema';
 
 @Schema({
-  timestamps: true,
+  collection: 'teachers',
 })
-export class Teacher {
+export class Teacher extends AbstractDocument {
   @Prop({ type: String, trim: true })
   tchr_biography: string;
 
   @Prop({ type: String, trim: true })
-  tchr_domain: string;
+  tchr_title: string;
 
   @Prop({ type: mongoose.Schema.ObjectId, ref: 'User' })
-  user_id: User;
+  user_id: Partial<User>;
 }
 
 export const TeacherSchema = SchemaFactory.createForClass(Teacher);

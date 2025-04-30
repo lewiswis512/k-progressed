@@ -3,23 +3,24 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Teacher } from './schemas/teacher.schema';
-import mongoose, { Model } from 'mongoose';
-import { SaveTeacher } from './dto/save-teacher.dto';
-import { User } from '../users/schemas/user.schema';
+import mongoose, { Types } from 'mongoose';
 import { UserTypeEnum } from '../../utils/enums/user-type.enum';
+import { UserRepository } from '../users/repository/user.repository';
 import { AddTeacher } from './dto/add-teacher.dto';
+import { SaveTeacher } from './dto/save-teacher.dto';
+import { TeacherRepository } from './repositories/teacher.repository';
+import { RoleEnum } from 'src/utils/enums/role.enum';
+import { Teacher } from './schemas/teacher.schema';
 
 @Injectable()
 export class TeachersService {
   constructor(
-    @InjectModel(Teacher.name) private teacherModel: Model<Teacher>,
-    @InjectModel(User.name) private userModel: Model<Teacher>,
+    private userRepository: UserRepository,
+    private teacherRepository: TeacherRepository,
   ) {}
 
   async findAll() {
-    return this.teacherModel.find().sort({ _id: -1 });
+    return this.teacherRepository.find();
   }
 
   async findById(id: string) {
@@ -31,7 +32,9 @@ export class TeachersService {
       );
     }
 
-    const teacher = await this.teacherModel.findById(id);
+    const teacher = await this.teacherRepository.findById(
+      new Types.ObjectId(id),
+    );
 
     if (!teacher) {
       throw new NotFoundException('Teacher not found');
@@ -40,18 +43,31 @@ export class TeachersService {
     return teacher;
   }
 
-  async store(userId: string, addTeacher: AddTeacher) {
-    let data = { ...addTeacher, user_id: userId };
+  async findByUserId(userId: string) {
+    return this.teacherRepository.findOne({ user_id: userId });
+  }
 
-    const teacher = await this.teacherModel.create(data);
+  async store(userId: string, addTeacher: AddTeacher) {
+    let data: Partial<Teacher> = {
+      ...addTeacher,
+      user_id: new Types.ObjectId(userId),
+    };
+
+    const teacher = await this.teacherRepository.create(data);
 
     if (teacher) {
-      const user = await this.userModel.findById(userId);
+      const user = await this.userRepository.findById(
+        new Types.ObjectId(userId),
+      );
 
       if (user) {
-        await this.userModel.findByIdAndUpdate(userId, {
-          usr_type: UserTypeEnum.TEACHER,
-        });
+        await this.userRepository.findByIdAndUpdate(
+          new Types.ObjectId(userId),
+          {
+            usr_type: UserTypeEnum.TEACHER,
+            usr_role: RoleEnum.ADMIN,
+          },
+        );
       }
     }
 
@@ -61,12 +77,15 @@ export class TeachersService {
   async update(id: string, teacher: SaveTeacher) {
     await this.findById(id);
 
-    return this.teacherModel.findByIdAndUpdate(id, teacher, { new: true });
+    return this.teacherRepository.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      teacher,
+    );
   }
 
   async delete(id: string) {
     await this.findById(id);
 
-    return this.teacherModel.findByIdAndDelete(id);
+    return this.teacherRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 }

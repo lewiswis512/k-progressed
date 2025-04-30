@@ -11,9 +11,9 @@ export class SaveTeacher {
   tchr_biography: string;
 
   @ApiProperty({
-    example: 'Software ingeneer',
-    description: "Teacher's domain",
+    example: 'Trainer',
+    description: "Teacher's title",
   })
-  @IsNotEmpty({ message: 'Domain is required' })
-  tchr_domain: string;
+  @IsNotEmpty({ message: 'Title is required' })
+  tchr_title: string;
 }
