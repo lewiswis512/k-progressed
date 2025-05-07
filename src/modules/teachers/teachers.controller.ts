@@ -47,6 +47,17 @@ export class TeachersController {
     return await this.teachersService.findById(id);
   }
 
+  @Get('by/:userId')
+  @ApiOkResponse({
+    description: 'The teacher have been successfully retrieved.',
+  })
+  @ApiNotFoundResponse({
+    description: 'The teacher is not found.',
+  })
+  async findByUserId(@Param('userId') userId: string) {
+    return await this.teachersService.findByUserId(userId);
+  }
+
   @Post()
   @ApiBearerAuth()
   @UseGuards(AuthGuard)

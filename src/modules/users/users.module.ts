@@ -7,6 +7,7 @@ import { UsersController } from './users.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UserResetRepository } from './repository/user-reset.repository';
 import { UserRepository } from './repository/user.repository';
+import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary';
 
 @Module({
   imports: [
@@ -22,7 +23,12 @@ import { UserRepository } from './repository/user.repository';
       }),
     }),
   ],
-  providers: [UsersService, UserRepository, UserResetRepository],
+  providers: [
+    UsersService,
+    UserRepository,
+    UserResetRepository,
+    CloudinaryUploadStrategy,
+  ],
   exports: [UsersService],
   controllers: [UsersController],
 })

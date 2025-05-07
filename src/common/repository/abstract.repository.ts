@@ -44,6 +44,14 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     return document;
   }
 
+  async findOneOrNull(
+    filterQuery: FilterQuery<TDocument>,
+  ): Promise<TDocument | null> {
+    const document = await this.model.findOne(filterQuery);
+
+    return document;
+  }
+
   async aggregate(aggregation: Aggregation[]): Promise<any[]> {
     return await this.model.aggregate(aggregation);
   }

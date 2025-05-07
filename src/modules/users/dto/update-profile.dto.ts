@@ -11,4 +11,12 @@ export class UpdateProfile {
 
   @ApiProperty({ example: 'Dupont', description: "user's lastname" })
   usr_lastname?: string;
+
+  @ApiProperty({
+    description: "user's photo",
+    type: 'string',
+    format: 'binary',
+    required: false,
+  })
+  file?: Express.Multer.File;
 }
