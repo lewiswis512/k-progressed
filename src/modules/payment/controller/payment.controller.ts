@@ -11,7 +11,6 @@ export class PaymentController {
   @ApiExcludeEndpoint()
   @Post('address')
   async saveAddress(@Body() savePaymentAddressDto: SavePaymentAddressDto) {
-    console.log(null);
   }
 
   @ApiExcludeEndpoint()
