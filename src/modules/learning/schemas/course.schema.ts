@@ -32,8 +32,8 @@ export class Course extends AbstractDocument {
   @Prop({ type: Number, enum: LevelEnum })
   level_id: LevelEnum;
 
-  createdAt: Date;
-  updatedAt: Date;
+  @Prop({ type: Boolean, default: false })
+  crs_isApprouved: boolean;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
