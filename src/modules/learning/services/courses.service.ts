@@ -30,11 +30,13 @@ import { Course } from '../schemas/course.schema';
 import { pagination } from '../../../utils/pagination';
 import { ICoursePagination } from '../interfaces/ICoursePagination';
 import { PurchaseRepository } from 'src/modules/purchases/repository/purchase.repository';
+import { CategoryRepository } from '../repositories/category.repository';
 
 @Injectable()
 export class CoursesService {
   constructor(
     private courseRepository: CourseRepository,
+    private categoryRepository: CategoryRepository,
     private userRepository: UserRepository,
     private commentRepository: CommentRepository,
     private sectionRepository: SectionRepository,
@@ -43,8 +45,75 @@ export class CoursesService {
     private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
-  async findAll(page: number, limit: number): Promise<ICoursePagination> {
-    let courses: Course[] = await this.courseRepository.find();
+  async findAll(
+    keyword: string,
+    page: number,
+    limit: number,
+  ): Promise<ICoursePagination> {
+    const keywordToSearch = keyword ? new RegExp(keyword, 'i') : null;
+    let courses: Course[];
+
+    if (keywordToSearch) {
+      courses = await this.courseRepository.aggregate([
+        {
+          $lookup: {
+            from: 'categories',
+            foreignField: '_id',
+            localField: 'category',
+            as: 'category',
+          },
+        },
+        {
+          $unwind: '$category',
+        },
+        // {
+        //   $lookup: {
+        //     from: 'teachers',
+        //     foreignField: '_id',
+        //     localField: 'teacher',
+        //     as: 'teacher',
+        //   },
+        // },
+        // {
+        //   $unwind: '$teacher',
+        // },
+        // {
+        //   $lookup: {
+        //     from: 'users',
+        //     foreignField: '_id',
+        //     localField: 'teacher.user_id',
+        //     as: 'teacher.user',
+        //   },
+        // },
+        // {
+        //   $unwind: '$teacher.user',
+        // },
+        {
+          $match: {
+            $or: [
+              {
+                crs_title: { $regex: keywordToSearch },
+              },
+              {
+                'category.ctgr_name': { $regex: keywordToSearch },
+              },
+              // {
+              //   'teacher.user.usr_username': { $regex: keywordToSearch },
+              // },
+              // {
+              //   'teacher.user.usr_firstname': { $regex: keywordToSearch },
+              // },
+              // {
+              //   'teacher.user.usr_lastname': { $regex: keywordToSearch },
+              // },
+            ],
+          },
+        },
+      ]);
+    } else {
+      courses = await this.courseRepository.find();
+    }
+
     let coursesWithAverageRating: ICourseWithAverageRating[] = [];
 
     for (const course of courses) {
@@ -149,10 +218,15 @@ export class CoursesService {
       new Types.ObjectId(authorId),
     );
 
+    const category = await this.categoryRepository.findById(
+      new Types.ObjectId(createCourseDto.category_id),
+    );
+
     let data: IAddCourse = {
       ...createCourseDto,
       author,
       crs_slug: slugify(createCourseDto.crs_title),
+      category,
     };
 
     const cloudinaryContext = new PhotoUploaderContext(
@@ -208,9 +282,14 @@ export class CoursesService {
       );
     }
 
+    const category = await this.categoryRepository.findById(
+      new Types.ObjectId(editCourseDto.category_id),
+    );
+
     let data: ISaveCourse = {
       ...editCourseDto,
       crs_photo: photoLink,
+      category,
     };
 
     return this.courseRepository.findByIdAndUpdate(

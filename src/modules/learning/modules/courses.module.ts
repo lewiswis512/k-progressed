@@ -25,11 +25,14 @@ import {
   Purchase,
   PurchaseSchema,
 } from '../../../modules/purchases/schemas/purchase.schema';
+import { CategoryRepository } from '../repositories/category.repository';
+import { Category, CategorySchema } from '../schemas/category.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Course.name, schema: CourseSchema },
+      { name: Category.name, schema: CategorySchema },
       { name: User.name, schema: UserSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: Section.name, schema: sectionSchema },
@@ -48,6 +51,7 @@ import {
   providers: [
     CoursesService,
     CourseRepository,
+    CategoryRepository,
     UserRepository,
     CommentRepository,
     SectionRepository,

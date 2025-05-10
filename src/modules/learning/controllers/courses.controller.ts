@@ -40,6 +40,7 @@ import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interf
 import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
 import { PaginationDto } from '../../../shared/pagination/pagination.dto';
 import { ICoursePagination } from '../interfaces/ICoursePagination';
+import { SearchDto } from 'src/shared/search/search.dto';
 
 @Controller('courses')
 export class CoursesController {
@@ -49,10 +50,13 @@ export class CoursesController {
   @ApiOkResponse({
     description: 'The courses have been successfully retrieved.',
   })
-  async list(@Query() query: PaginationDto): Promise<ICoursePagination> {
-    const { page, limit } = query;
+  async list(
+    @Query() search: SearchDto,
+    @Query() pagination: PaginationDto,
+  ): Promise<ICoursePagination> {
+    const { page, limit } = pagination;
 
-    return await this.courseService.findAll(page, limit);
+    return await this.courseService.findAll(search.q, page, limit);
   }
 
   @Get('show/:id')

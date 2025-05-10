@@ -8,12 +8,40 @@ import {
 } from 'mongoose';
 import { AbstractDocument } from '../document/abstract.document';
 
+type AggregationPipelineStage =
+  | { $match: { [key: string]: any } }
+  | { $project: { [key: string]: any } }
+  | { $group: { [key: string]: any } }
+  | { $sort: { [key: string]: 1 | -1 } }
+  | { $unwind: string }
+  | { $limit: number }
+  | { $skip: number }
+  | { $addFields: { [key: string]: any } }
+  | { $set: { [key: string]: any } }
+  | { $replaceRoot: { newRoot: any } };
+
 type Aggregation =
   | { $match: { [key: string]: any } }
-  | { $unwind: string }
+  | { $unwind: string | { path: string; preserveNullAndEmptyArrays?: boolean } }
   | { $group: { _id: string } }
   | { $project: { [key: string]: any } }
-  | { $count: string };
+  | { $count: string }
+  | {
+      $lookup: {
+        from: string;
+        localField: string;
+        foreignField: string;
+        as: string;
+      };
+    }
+  | {
+      $lookup: {
+        from: string;
+        let?: Record<string, unknown>;
+        pipeline: AggregationPipelineStage[];
+        as: string;
+      };
+    };
 
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   protected abstract readonly logger: Logger;
