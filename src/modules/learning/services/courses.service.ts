@@ -29,14 +29,16 @@ import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
 import { pagination } from '../../../utils/pagination';
 import { ICoursePagination } from '../interfaces/ICoursePagination';
-import { PurchaseRepository } from 'src/modules/purchases/repository/purchase.repository';
+import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
 import { CategoryRepository } from '../repositories/category.repository';
+import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
 
 @Injectable()
 export class CoursesService {
   constructor(
     private courseRepository: CourseRepository,
     private categoryRepository: CategoryRepository,
+    private teacherRepository: TeacherRepository,
     private userRepository: UserRepository,
     private commentRepository: CommentRepository,
     private sectionRepository: SectionRepository,
@@ -66,28 +68,28 @@ export class CoursesService {
         {
           $unwind: '$category',
         },
-        // {
-        //   $lookup: {
-        //     from: 'teachers',
-        //     foreignField: '_id',
-        //     localField: 'teacher',
-        //     as: 'teacher',
-        //   },
-        // },
-        // {
-        //   $unwind: '$teacher',
-        // },
-        // {
-        //   $lookup: {
-        //     from: 'users',
-        //     foreignField: '_id',
-        //     localField: 'teacher.user_id',
-        //     as: 'teacher.user',
-        //   },
-        // },
-        // {
-        //   $unwind: '$teacher.user',
-        // },
+        {
+          $lookup: {
+            from: 'teachers',
+            foreignField: '_id',
+            localField: 'teacher',
+            as: 'teacher',
+          },
+        },
+        {
+          $unwind: '$teacher',
+        },
+        {
+          $lookup: {
+            from: 'users',
+            foreignField: '_id',
+            localField: 'teacher.user_id',
+            as: 'teacher.user',
+          },
+        },
+        {
+          $unwind: '$teacher.user',
+        },
         {
           $match: {
             $or: [
@@ -97,15 +99,15 @@ export class CoursesService {
               {
                 'category.ctgr_name': { $regex: keywordToSearch },
               },
-              // {
-              //   'teacher.user.usr_username': { $regex: keywordToSearch },
-              // },
-              // {
-              //   'teacher.user.usr_firstname': { $regex: keywordToSearch },
-              // },
-              // {
-              //   'teacher.user.usr_lastname': { $regex: keywordToSearch },
-              // },
+              {
+                'teacher.user.usr_username': { $regex: keywordToSearch },
+              },
+              {
+                'teacher.user.usr_firstname': { $regex: keywordToSearch },
+              },
+              {
+                'teacher.user.usr_lastname': { $regex: keywordToSearch },
+              },
             ],
           },
         },
@@ -222,11 +224,16 @@ export class CoursesService {
       new Types.ObjectId(createCourseDto.category_id),
     );
 
+    const teacher = await this.teacherRepository.findById(
+      new Types.ObjectId(createCourseDto.teacher_id),
+    );
+
     let data: IAddCourse = {
       ...createCourseDto,
       author,
       crs_slug: slugify(createCourseDto.crs_title),
       category,
+      teacher,
     };
 
     const cloudinaryContext = new PhotoUploaderContext(
@@ -286,10 +293,15 @@ export class CoursesService {
       new Types.ObjectId(editCourseDto.category_id),
     );
 
+    const teacher = await this.teacherRepository.findById(
+      new Types.ObjectId(editCourseDto.teacher_id),
+    );
+
     let data: ISaveCourse = {
       ...editCourseDto,
       crs_photo: photoLink,
       category,
+      teacher,
     };
 
     return this.courseRepository.findByIdAndUpdate(

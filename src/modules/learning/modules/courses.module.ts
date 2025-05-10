@@ -27,12 +27,15 @@ import {
 } from '../../../modules/purchases/schemas/purchase.schema';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Category, CategorySchema } from '../schemas/category.schema';
+import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
+import { Teacher, TeacherSchema } from '../../../modules/teachers/schemas/teacher.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Course.name, schema: CourseSchema },
       { name: Category.name, schema: CategorySchema },
+      { name: Teacher.name, schema: TeacherSchema },
       { name: User.name, schema: UserSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: Section.name, schema: sectionSchema },
@@ -52,6 +55,7 @@ import { Category, CategorySchema } from '../schemas/category.schema';
     CoursesService,
     CourseRepository,
     CategoryRepository,
+    TeacherRepository,
     UserRepository,
     CommentRepository,
     SectionRepository,

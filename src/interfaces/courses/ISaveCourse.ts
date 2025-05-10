@@ -1,6 +1,6 @@
-import { Types } from 'mongoose';
-import { Category } from '../../modules/learning/schemas/category.schema';
 import { LevelEnum } from '../../utils/enums/level.enum';
+import { Category } from '../../modules/learning/schemas/category.schema';
+import { Teacher } from '../../modules/teachers/schemas/teacher.schema';
 
 export interface ISaveCourse {
   crs_title: string;
@@ -11,4 +11,5 @@ export interface ISaveCourse {
   level_id: LevelEnum;
   crs_photo?: string;
   category: Category;
+  teacher: Teacher;
 }
