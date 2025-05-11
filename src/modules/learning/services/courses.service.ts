@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import slugify from 'slugify';
 import { Aggregation } from '../../../common/repository/abstract.repository';
@@ -158,17 +162,65 @@ export class CoursesService {
   }
 
   async findByIdWithRating(id: string): Promise<ICourseWithAverageRating> {
-    const course: Course = await this.courseRepository.findById(
-      new Types.ObjectId(id),
-    );
+    const [course] = await this.courseRepository.aggregate([
+      { $project: { __v: 0 } },
+      { $match: { _id: new Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+    ]);
+
+    if (!course) {
+      throw new NotFoundException(`Course not found`);
+    }
 
     return this.getCourseWithRating(course);
   }
 
   async findBySlug(slug: string): Promise<ICourseWithAverageRating> {
-    const course: Course = await this.courseRepository.findOne({
-      crs_slug: slug,
-    });
+    const [course] = await this.courseRepository.aggregate([
+      { $project: { __v: 0 } },
+      { $match: { crs_slug: slug } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+    ]);
+
+    if (!course) {
+      throw new NotFoundException(`Course not found`);
+    }
 
     return this.getCourseWithRating(course);
   }
