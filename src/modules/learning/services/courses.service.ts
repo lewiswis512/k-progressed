@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import slugify from 'slugify';
+import { Aggregation } from '../../../common/repository/abstract.repository';
 import { IAddCourse } from '../../../interfaces/courses/IAddCourse';
 import { ICourseContents } from '../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
@@ -10,9 +11,12 @@ import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILesso
 import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
 import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema';
 import { Section } from '../../../modules/learning/schemas/sections/section.schema';
+import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
+import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
 import { PATH_COURSES_CLOUDINARY } from '../../../utils/constants/uploads/path-upload';
+import { pagination } from '../../../utils/pagination';
 import {
   getMinuteAndSecond,
   getSecond,
@@ -23,15 +27,12 @@ import { PhotoUploaderContext } from '../../../utils/uploads/photo-uploader-cont
 import { Comment } from '../../comments/schemas/comment.schema';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
+import { ICoursePagination } from '../interfaces/ICoursePagination';
+import { CategoryRepository } from '../repositories/category.repository';
 import { CourseRepository } from '../repositories/course.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
-import { pagination } from '../../../utils/pagination';
-import { ICoursePagination } from '../interfaces/ICoursePagination';
-import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
-import { CategoryRepository } from '../repositories/category.repository';
-import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
 
 @Injectable()
 export class CoursesService {
@@ -53,129 +54,77 @@ export class CoursesService {
     limit: number,
   ): Promise<ICoursePagination> {
     const keywordToSearch = keyword ? new RegExp(keyword, 'i') : null;
-    let courses: Course[];
+    const courseAggregation: Aggregation[] = [
+      { $project: { __v: 0 } },
+      {
+        $lookup: {
+          from: 'categories',
+          foreignField: '_id',
+          localField: 'category',
+          pipeline: [{ $project: { _id: 0, ctgr_name: 1 } }],
+          as: 'category',
+        },
+      },
+      { $unwind: '$category' },
+      {
+        $lookup: {
+          from: 'teachers',
+          foreignField: '_id',
+          localField: 'teacher',
+          pipeline: [
+            { $project: { _id: 0, tchr_title: 1, tchr_biography: 1 } },
+          ],
+          as: 'teacher',
+        },
+      },
+      { $unwind: '$teacher' },
+      {
+        $lookup: {
+          from: 'users',
+          foreignField: '_id',
+          localField: 'author',
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+    ];
 
     if (keywordToSearch) {
-      courses = await this.courseRepository.aggregate([
-        {
-          $project: { __v: 0 },
+      courseAggregation.push({
+        $match: {
+          $or: [
+            { crs_title: { $regex: keywordToSearch } },
+            {
+              'category.ctgr_name': { $regex: keywordToSearch },
+            },
+            {
+              'author.usr_username': { $regex: keywordToSearch },
+            },
+            {
+              'author.usr_firstname': { $regex: keywordToSearch },
+            },
+            {
+              'author.usr_lastname': { $regex: keywordToSearch },
+            },
+            {
+              'teacher.tchr_title': { $regex: keywordToSearch },
+            },
+          ],
         },
-        {
-          $lookup: {
-            from: 'categories',
-            foreignField: '_id',
-            localField: 'category',
-            pipeline: [{ $project: { _id: 0, ctgr_name: 1 } }],
-            as: 'category',
-          },
-        },
-        { $unwind: '$category' },
-        {
-          $lookup: {
-            from: 'teachers',
-            foreignField: '_id',
-            localField: 'teacher',
-            pipeline: [
-              { $project: { _id: 0, tchr_title: 1, tchr_biography: 1 } },
-            ],
-            as: 'teacher',
-          },
-        },
-        {
-          $unwind: '$teacher',
-        },
-        {
-          $lookup: {
-            from: 'users',
-            foreignField: '_id',
-            localField: 'author',
-            pipeline: [
-              {
-                $project: {
-                  _id: 0,
-                  usr_username: 1,
-                  usr_firstname: 1,
-                  usr_lastname: 1,
-                },
-              },
-            ],
-            as: 'author',
-          },
-        },
-        {
-          $match: {
-            $or: [
-              {
-                crs_title: { $regex: keywordToSearch },
-              },
-              {
-                'category.ctgr_name': { $regex: keywordToSearch },
-              },
-              {
-                'author.usr_username': { $regex: keywordToSearch },
-              },
-              {
-                'author.usr_firstname': { $regex: keywordToSearch },
-              },
-              {
-                'author.usr_lastname': { $regex: keywordToSearch },
-              },
-              {
-                'teacher.tchr_title': { $regex: keywordToSearch },
-              },
-            ],
-          },
-        },
-      ]);
-    } else {
-      courses = await this.courseRepository.aggregate([
-        {
-          $project: { __v: 0 },
-        },
-        {
-          $lookup: {
-            from: 'categories',
-            foreignField: '_id',
-            localField: 'category',
-            pipeline: [{ $project: { _id: 0, ctgr_name: 1 } }],
-            as: 'category',
-          },
-        },
-        { $unwind: '$category' },
-        {
-          $lookup: {
-            from: 'teachers',
-            foreignField: '_id',
-            localField: 'teacher',
-            pipeline: [
-              { $project: { _id: 0, tchr_title: 1, tchr_biography: 1 } },
-            ],
-            as: 'teacher',
-          },
-        },
-        {
-          $unwind: '$teacher',
-        },
-        {
-          $lookup: {
-            from: 'users',
-            foreignField: '_id',
-            localField: 'author',
-            pipeline: [
-              {
-                $project: {
-                  _id: 0,
-                  usr_username: 1,
-                  usr_firstname: 1,
-                  usr_lastname: 1,
-                },
-              },
-            ],
-            as: 'author',
-          },
-        },
-      ]);
+      });
     }
+
+    const courses: Course[] =
+      await this.courseRepository.aggregate(courseAggregation);
 
     let coursesWithAverageRating: ICourseWithAverageRating[] = [];
 

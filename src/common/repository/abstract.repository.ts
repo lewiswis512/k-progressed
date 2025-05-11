@@ -20,7 +20,7 @@ type AggregationPipelineStage =
   | { $set: { [key: string]: any } }
   | { $replaceRoot: { newRoot: any } };
 
-type Aggregation =
+export type Aggregation =
   | { $match: { [key: string]: any } }
   | { $unwind: string | { path: string; preserveNullAndEmptyArrays?: boolean } }
   | { $group: { _id: string } }
@@ -43,7 +43,7 @@ type Aggregation =
       };
     }
   | { $addFields: { [key: string]: any } };
-  
+
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   protected abstract readonly logger: Logger;
 
