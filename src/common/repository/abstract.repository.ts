@@ -41,8 +41,9 @@ type Aggregation =
         pipeline: AggregationPipelineStage[];
         as: string;
       };
-    };
-
+    }
+  | { $addFields: { [key: string]: any } };
+  
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   protected abstract readonly logger: Logger;
 

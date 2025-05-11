@@ -58,21 +58,26 @@ export class CoursesService {
     if (keywordToSearch) {
       courses = await this.courseRepository.aggregate([
         {
+          $project: { __v: 0 },
+        },
+        {
           $lookup: {
             from: 'categories',
             foreignField: '_id',
             localField: 'category',
+            pipeline: [{ $project: { _id: 0, ctgr_name: 1 } }],
             as: 'category',
           },
         },
-        {
-          $unwind: '$category',
-        },
+        { $unwind: '$category' },
         {
           $lookup: {
             from: 'teachers',
             foreignField: '_id',
             localField: 'teacher',
+            pipeline: [
+              { $project: { _id: 0, tchr_title: 1, tchr_biography: 1 } },
+            ],
             as: 'teacher',
           },
         },
@@ -83,12 +88,19 @@ export class CoursesService {
           $lookup: {
             from: 'users',
             foreignField: '_id',
-            localField: 'teacher.user_id',
-            as: 'teacher.user',
+            localField: 'author',
+            pipeline: [
+              {
+                $project: {
+                  _id: 0,
+                  usr_username: 1,
+                  usr_firstname: 1,
+                  usr_lastname: 1,
+                },
+              },
+            ],
+            as: 'author',
           },
-        },
-        {
-          $unwind: '$teacher.user',
         },
         {
           $match: {
@@ -100,20 +112,69 @@ export class CoursesService {
                 'category.ctgr_name': { $regex: keywordToSearch },
               },
               {
-                'teacher.user.usr_username': { $regex: keywordToSearch },
+                'author.usr_username': { $regex: keywordToSearch },
               },
               {
-                'teacher.user.usr_firstname': { $regex: keywordToSearch },
+                'author.usr_firstname': { $regex: keywordToSearch },
               },
               {
-                'teacher.user.usr_lastname': { $regex: keywordToSearch },
+                'author.usr_lastname': { $regex: keywordToSearch },
+              },
+              {
+                'teacher.tchr_title': { $regex: keywordToSearch },
               },
             ],
           },
         },
       ]);
     } else {
-      courses = await this.courseRepository.find();
+      courses = await this.courseRepository.aggregate([
+        {
+          $project: { __v: 0 },
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            foreignField: '_id',
+            localField: 'category',
+            pipeline: [{ $project: { _id: 0, ctgr_name: 1 } }],
+            as: 'category',
+          },
+        },
+        { $unwind: '$category' },
+        {
+          $lookup: {
+            from: 'teachers',
+            foreignField: '_id',
+            localField: 'teacher',
+            pipeline: [
+              { $project: { _id: 0, tchr_title: 1, tchr_biography: 1 } },
+            ],
+            as: 'teacher',
+          },
+        },
+        {
+          $unwind: '$teacher',
+        },
+        {
+          $lookup: {
+            from: 'users',
+            foreignField: '_id',
+            localField: 'author',
+            pipeline: [
+              {
+                $project: {
+                  _id: 0,
+                  usr_username: 1,
+                  usr_firstname: 1,
+                  usr_lastname: 1,
+                },
+              },
+            ],
+            as: 'author',
+          },
+        },
+      ]);
     }
 
     let coursesWithAverageRating: ICourseWithAverageRating[] = [];
