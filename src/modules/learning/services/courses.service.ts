@@ -96,6 +96,7 @@ export class CoursesService {
           as: 'author',
         },
       },
+      { $unwind: '$author' },
     ];
 
     if (keywordToSearch) {

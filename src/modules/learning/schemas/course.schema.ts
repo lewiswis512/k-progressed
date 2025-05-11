@@ -25,17 +25,17 @@ export class Course extends AbstractDocument {
   @Prop({ type: Boolean, default: false })
   crs_isPaid: boolean;
 
-  @Prop({ type: String })
+  @Prop({ type: String, default: '' })
   crs_photo: string;
-
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  author: Omit<User, 'usr_password'>;
 
   @Prop({ type: Number, enum: LevelEnum })
   level_id: LevelEnum;
 
   @Prop({ type: Boolean, default: false })
   crs_isApprouved: boolean;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  author: User;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
   category: Category;
