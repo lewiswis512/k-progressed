@@ -90,7 +90,6 @@ export class CoursesService {
           pipeline: [
             {
               $project: {
-                _id: 0,
                 usr_username: 1,
                 usr_firstname: 1,
                 usr_lastname: 1,
