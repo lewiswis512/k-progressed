@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SaveCourseDto } from './save-course.dto';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateCourse extends SaveCourseDto {
   @ApiProperty({
@@ -16,6 +16,7 @@ export class CreateCourse extends SaveCourseDto {
     example: '681af23bfd9ba8296ce97a69',
     description: 'Teacher Id',
   })
+  @IsOptional()
   @IsNotEmpty({ message: 'Teacher Id is required' })
   teacher_id: string;
 }

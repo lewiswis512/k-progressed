@@ -34,6 +34,7 @@ export class SaveCourseDto {
     description: 'Course Price',
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Price is required' })
   @Transform(
     ({ value }) => {
       if (value === '' || value === null) {

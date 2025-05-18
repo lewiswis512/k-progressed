@@ -286,9 +286,9 @@ export class CoursesService {
       new Types.ObjectId(createCourseDto.category_id),
     );
 
-    const teacher = await this.teacherRepository.findById(
-      new Types.ObjectId(createCourseDto.teacher_id),
-    );
+    const teacher = await this.teacherRepository.findOne({
+      user_id: author._id,
+    });
 
     let data: IAddCourse = {
       ...createCourseDto,
@@ -351,14 +351,17 @@ export class CoursesService {
       );
     }
 
+    const author: User = await this.userRepository.findById(
+      new Types.ObjectId(authorId),
+    );
+
     const category = await this.categoryRepository.findById(
       new Types.ObjectId(editCourseDto.category_id),
     );
 
-    const teacher = await this.teacherRepository.findById(
-      new Types.ObjectId(editCourseDto.teacher_id),
-    );
-
+    const teacher = await this.teacherRepository.findOne({
+      user_id: author._id,
+    });
     let data: ISaveCourse = {
       ...editCourseDto,
       crs_photo: photoLink,
