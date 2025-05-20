@@ -37,6 +37,7 @@ import { CourseRepository } from '../repositories/course.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
+import { updatePhoto } from '../../../utils/files/update-photo';
 
 @Injectable()
 export class CoursesService {
@@ -323,6 +324,7 @@ export class CoursesService {
     authorId: string,
   ): Promise<Course> {
     const course: Course = await this.findById(id);
+
     if (String(course.author) !== authorId) {
       throw new ForbiddenException(
         "You can't update a course who don't belong to you",
@@ -334,34 +336,46 @@ export class CoursesService {
     if (file === undefined) {
       photoLink = course.crs_photo;
     } else {
-      if (course.crs_photo) {
-        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
-          course.crs_photo,
-        );
+      photoLink = await updatePhoto({
+        photoPath: course.crs_photo,
+        uploadPath: PATH_COURSES_CLOUDINARY,
+        fileInput: file.buffer,
+        photoUploadStrategy: new CloudinaryUploadStrategy(),
+      });
 
-        await this.cloudinaryUploadStrategy.delete(publicId);
-      }
+      // const cloudinaryContext = new PhotoUploaderContext(
+      //   new CloudinaryUploadStrategy(),
+      // );
 
-      const cloudinaryContext = new PhotoUploaderContext(
-        new CloudinaryUploadStrategy(),
-      );
-      photoLink = await cloudinaryContext.upload(
-        file.buffer,
-        PATH_COURSES_CLOUDINARY,
-      );
+      // if (course.crs_photo) {
+      //   const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
+      //     course.crs_photo,
+      //   );
+
+      //   await this.cloudinaryUploadStrategy.delete(publicId);
+      // }
+
+      // photoLink = await cloudinaryContext.upload(
+      //   file.buffer,
+      //   PATH_COURSES_CLOUDINARY,
+      // );
     }
 
     const author: User = await this.userRepository.findById(
       new Types.ObjectId(authorId),
     );
 
+    const categoryId: string =
+      editCourseDto.category_id || course.category._id.toString();
+
     const category = await this.categoryRepository.findById(
-      new Types.ObjectId(editCourseDto.category_id),
+      new Types.ObjectId(categoryId),
     );
 
     const teacher = await this.teacherRepository.findOne({
       user_id: author._id,
     });
+
     let data: ISaveCourse = {
       ...editCourseDto,
       crs_photo: photoLink,
@@ -385,7 +399,7 @@ export class CoursesService {
     }
 
     if (course.crs_photo) {
-      const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
         course.crs_photo,
       );
 

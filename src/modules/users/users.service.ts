@@ -51,7 +51,7 @@ export class UsersService {
       photoLink = user.usr_photo;
     } else {
       if (user.usr_photo) {
-        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+        const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
           user.usr_photo,
         );
 

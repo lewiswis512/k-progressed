@@ -97,7 +97,7 @@ export class CloudinaryUploadStrategy
     }
   }
 
-  getCloudinaryPublicId(url: string): string {
+  getPublicIdFromUrl(url: string): string {
     const urlSpitted = url.split('/');
     const uploadFolder = urlSpitted[urlSpitted.length - 2];
     const filename = urlSpitted[urlSpitted.length - 1].split('.')[0];
