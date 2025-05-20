@@ -14,14 +14,14 @@ export const updatePhoto = async ({
   uploadPath,
   photoUploadStrategy,
 }: IUpdatePhoto) => {
-  const cloudinaryContext = new PhotoUploaderContext(photoUploadStrategy);
+  const context = new PhotoUploaderContext(photoUploadStrategy);
 
   if (photoPath) {
     const publicId = photoUploadStrategy.getPublicIdFromUrl(photoPath);
     await photoUploadStrategy.delete(publicId);
   }
 
-  const newPhoto = await cloudinaryContext.upload(fileInput, uploadPath);
+  const newPhoto = await context.upload(fileInput, uploadPath);
 
   return newPhoto;
 };

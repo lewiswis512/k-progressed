@@ -38,6 +38,7 @@ import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
 import { updatePhoto } from '../../../utils/files/update-photo';
+import { uploadPhoto } from 'src/utils/files/upload-photo';
 
 @Injectable()
 export class CoursesService {
@@ -299,14 +300,11 @@ export class CoursesService {
       teacher,
     };
 
-    const cloudinaryContext = new PhotoUploaderContext(
-      new CloudinaryUploadStrategy(),
-    );
-
-    let photoLink: string = await cloudinaryContext.upload(
-      file.buffer,
-      PATH_COURSES_CLOUDINARY,
-    );
+    let photoLink: string = await uploadPhoto({
+      fileInput: file.buffer,
+      uploadPath: PATH_COURSES_CLOUDINARY,
+      photoUploadStrategy: new CloudinaryUploadStrategy(),
+    });
 
     if (photoLink) {
       data = { ...data, crs_photo: photoLink };
@@ -342,23 +340,6 @@ export class CoursesService {
         fileInput: file.buffer,
         photoUploadStrategy: new CloudinaryUploadStrategy(),
       });
-
-      // const cloudinaryContext = new PhotoUploaderContext(
-      //   new CloudinaryUploadStrategy(),
-      // );
-
-      // if (course.crs_photo) {
-      //   const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-      //     course.crs_photo,
-      //   );
-
-      //   await this.cloudinaryUploadStrategy.delete(publicId);
-      // }
-
-      // photoLink = await cloudinaryContext.upload(
-      //   file.buffer,
-      //   PATH_COURSES_CLOUDINARY,
-      // );
     }
 
     const author: User = await this.userRepository.findById(
