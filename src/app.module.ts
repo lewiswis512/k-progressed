@@ -15,6 +15,7 @@ import { UsersModule } from './modules/users/users.module';
 import { IsUniqueConstraint } from './common/pipes/unique-field/isUniqueConstraint';
 import { LearningModule } from './modules/learning/modules/learning.module';
 import { CategoriesModule } from './modules/learning/modules/category.module';
+import { MongooseRepository } from './common/repository/mongo.repository';
 
 @Module({
   imports: [
@@ -36,6 +37,6 @@ import { CategoriesModule } from './modules/learning/modules/category.module';
     LearningModule,
   ],
   controllers: [AppController],
-  providers: [AppService, IsUniqueConstraint],
+  providers: [AppService, IsUniqueConstraint, MongooseRepository],
 })
 export class AppModule {}

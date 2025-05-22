@@ -1,37 +1,31 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import {
-  GoneException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
-import { IRegistration } from '../../interfaces/users/IRegistration';
-import { StripeCustomer } from '../../modules/payment/schemas/stripe-customer.schema';
-import { UserResetRepository } from '../../modules/users/repository/user-reset.repository';
-import { UserRepository } from '../../modules/users/repository/user.repository';
-import { UsersService } from '../../modules/users/users.service';
-import { resetPasswordTemplate } from '../../templates/reset-password';
-import { hashPassword } from '../../utils/auths/hashPassword';
-import { validatePassword } from '../../utils/auths/validatePassword';
-import { SUBJECT_RESET_PASSWORD } from '../../utils/constants/mailing/email';
-import { TOKEN_AUTH_EXPIRED_AT } from '../../utils/constants/token/token-expiration';
-import { formatDateTime } from '../../utils/dates/format-datetime';
-import { generateToken } from '../../utils/randoms/generateToken';
-import { UserReset } from '../users/schemas/user-reset.schema';
-import { User } from '../users/schemas/user.schema';
-import { ForgotPassword } from './dto/forgot-password.dto';
-import { Registration } from './dto/registration.dto';
-import { SignIn } from './dto/singIn.dto';
-import { StripeCustomerService } from './stripe-customer.service';
+import { IRegistration } from '../../../interfaces/users/IRegistration';
+import { StripeCustomer } from '../../payment/schemas/stripe-customer.schema';
+import { UserResetRepository } from '../../users/repository/user-reset.repository';
+import { UserRepository } from '../../users/repository/user.repository';
+import { resetPasswordTemplate } from '../../../templates/reset-password';
+import { hashPassword } from '../../../utils/auths/hashPassword';
+import { validatePassword } from '../../../utils/auths/validatePassword';
+import { SUBJECT_RESET_PASSWORD } from '../../../utils/constants/mailing/email';
+import { TOKEN_AUTH_EXPIRED_AT } from '../../../utils/constants/token/token-expiration';
+import { generateToken } from '../../../utils/randoms/generateToken';
+import { UserReset } from '../../users/schemas/user-reset.schema';
+import { User } from '../../users/schemas/user.schema';
+import { Registration } from '../dto/registration.dto';
+import { SignIn } from '../dto/singIn.dto';
+import { StripeCustomerService } from '../stripe-customer.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private mailerService: MailerService,
-    private usersService: UsersService,
     private readonly userRepository: UserRepository,
     private readonly userResetRepository: UserResetRepository,
     private stripeCustomerService: StripeCustomerService,
@@ -130,41 +124,5 @@ export class AuthService {
     };
 
     return await this.userResetRepository.create(data);
-  }
-
-  async forgotPassword(
-    token: string,
-    forgotPasswordDto: ForgotPassword,
-    res: Response,
-  ): Promise<Response> {
-    const { email, password } = forgotPasswordDto;
-    const isTokenValid: UserReset = await this.checkTokenValidity(email, token);
-    const user: User = await this.userRepository.findOne({ usr_email: email });
-
-    this.checkTokenExpiration(isTokenValid.usr_rest_expired_at);
-
-    await this.usersService.changePassword(user._id, password);
-    await this.usersService.deleteEmailTokenForgetPassword(email, token);
-
-    return res.status(200).json({ status: 'success' });
-  }
-
-  async checkTokenValidity(email: string, token: string) {
-    const isTokenValid = await this.usersService.checkEmailTokenForgetPassword(
-      email,
-      token,
-    );
-
-    if (isTokenValid === null) {
-      throw new InternalServerErrorException('Token may be not valid');
-    }
-
-    return isTokenValid;
-  }
-
-  checkTokenExpiration(usr_rest_expired_at: Date) {
-    if (formatDateTime(new Date()) > formatDateTime(usr_rest_expired_at)) {
-      throw new GoneException('the reset token has expired');
-    }
   }
 }
