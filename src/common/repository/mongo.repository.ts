@@ -16,6 +16,6 @@ export class MongooseRepository implements IRepository {
     const model = new ModelSchema(this.connection, collectionName).generate();
     const result = await model.findOne({ [field]: value }).select(field);
 
-    return !result;
+    return result ? true : false;
   }
 }

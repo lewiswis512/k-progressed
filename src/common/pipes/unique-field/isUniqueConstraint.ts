@@ -4,7 +4,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { MongooseRepository } from 'src/common/repository/mongo.repository';
+import { MongooseRepository } from '../../../common/repository/mongo.repository';
 import { IsUniqueConstraintInput } from './IsUnique';
 
 @ValidatorConstraint({ name: 'is-already-exist-constraint', async: true })
@@ -19,11 +19,13 @@ export class IsUniqueConstraint implements ValidatorConstraintInterface {
     const { collectionProperty, collectionName }: IsUniqueConstraintInput =
       validationArguments.constraints[0];
 
-    return await this.mongooseRepository.exists(
+    const isChecked = await this.mongooseRepository.exists(
       collectionName,
       collectionProperty,
       value,
     );
+
+    return !isChecked;
   }
 
   defaultMessage?(validationArguments?: ValidationArguments): string {
