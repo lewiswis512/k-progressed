@@ -14,7 +14,9 @@ export class MongooseRepository implements IRepository {
     value: string,
   ): Promise<boolean> {
     const model = new ModelSchema(this.connection, collectionName).generate();
-    const result = await model.findOne({ [field]: value }).select(field);
+    const result = await model
+      .findOne({ [field]: new RegExp(`^${value}$`, 'i') })
+      .select(field);
 
     return result ? true : false;
   }
