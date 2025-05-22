@@ -25,7 +25,7 @@ import { StripeCustomerService } from './stripe-customer.service';
 import { ForgotPassword } from './dto/forgot-password.dto';
 import { Response } from 'express';
 import { UsersService } from '../../modules/users/users.service';
-// import moment from 'moment';
+import { formatDateTime } from '../../utils/dates/format-datetime';
 
 const moment = require('moment').default || require('moment');
 
@@ -145,33 +145,33 @@ export class AuthService {
     res: Response,
   ): Promise<Response> {
     const { email, password } = forgotPasswordDto;
-    const isChecked = await this.usersService.checkEmailTokenForgetPassword(
-      email,
-      token,
-    );
-
-    if (isChecked === null) {
-      throw new InternalServerErrorException('Token may be not valid');
-    }
-
-    const user: User = await this.userRepository.findOne({
-      usr_email: email,
-    });
-
-    if (!user) {
-      throw new NotFoundException('User is not found');
-    }
-
-    if (
-      moment().format('YYYY-MM-DD h:mm') >
-      moment(isChecked.usr_rest_expired_at).format('YYYY-MM-DD h:mm')
-    ) {
-      throw new GoneException('the reset token has expired');
-    }
+    const isTokenValid: UserReset = await this.checkTokenValidity(email, token);
+    const user: User = await this.userRepository.findOne({ usr_email: email });
+    
+    this.checkTokenExpiration(isTokenValid.usr_rest_expired_at);
 
     await this.usersService.changePassword(user._id, password);
     await this.usersService.deleteEmailTokenForgetPassword(email, token);
 
     return res.status(200).json({ status: 'success' });
+  }
+
+  async checkTokenValidity(email: string, token: string) {
+    const isTokenValid = await this.usersService.checkEmailTokenForgetPassword(
+      email,
+      token,
+    );
+
+    if (isTokenValid === null) {
+      throw new InternalServerErrorException('Token may be not valid');
+    }
+
+    return isTokenValid;
+  }
+
+  checkTokenExpiration(usr_rest_expired_at: Date) {
+    if (formatDateTime(new Date()) > formatDateTime(usr_rest_expired_at)) {
+      throw new GoneException('the reset token has expired');
+    }
   }
 }
