@@ -21,7 +21,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   constructor(protected readonly model: Model<TDocument>) {}
 
   async find(filterQuery?: FilterQuery<TDocument>): Promise<TDocument[]> {
-    return await this.model.find(filterQuery).sort({ createdAt: -1 });
+    return await this.model.find(filterQuery).sort({ created_at: -1 });
   }
 
   async findById(id: Types.ObjectId): Promise<TDocument> {
