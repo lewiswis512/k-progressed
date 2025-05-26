@@ -8,6 +8,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { UserResetRepository } from './repository/user-reset.repository';
 import { UserRepository } from './repository/user.repository';
 import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary';
+import { MongooseRepository } from '../../common/repository/mongo.repository';
+import { CheckingController } from './controllers/checking.controller';
 
 @Module({
   imports: [
@@ -28,8 +30,9 @@ import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary';
     UserRepository,
     UserResetRepository,
     CloudinaryUploadStrategy,
+    MongooseRepository,
   ],
   exports: [UsersService],
-  controllers: [UsersController],
+  controllers: [UsersController, CheckingController],
 })
 export class UsersModule {}

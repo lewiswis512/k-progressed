@@ -1,40 +1,31 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import {
-  GoneException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { IRegistration } from '../../interfaces/users/IRegistration';
-import { StripeCustomer } from '../../modules/payment/schemas/stripe-customer.schema';
-import { resetPasswordTemplate } from '../../templates/reset-password';
-import { UserResetRepository } from '../../modules/users/repository/user-reset.repository';
-import { UserRepository } from '../../modules/users/repository/user.repository';
-import { SUBJECT_RESET_PASSWORD } from '../../utils/constants/mailing/email';
-import { TOKEN_AUTH_EXPIRED_AT } from '../../utils/constants/token/token-expiration';
-import { generateToken } from '../../utils/randoms/generateToken';
-import { UserReset } from '../users/schemas/user-reset.schema';
-import { User } from '../users/schemas/user.schema';
-import { hashPassword } from '../../utils/auths/hashPassword';
-import { validatePassword } from '../../utils/auths/validatePassword';
-import { Registration } from './dto/registration.dto';
-import { SignIn } from './dto/singIn.dto';
-import { StripeCustomerService } from './stripe-customer.service';
-import { ForgotPassword } from './dto/forgot-password.dto';
-import { Response } from 'express';
-import { UsersService } from '../../modules/users/users.service';
-// import moment from 'moment';
-
-const moment = require('moment').default || require('moment');
+import { IRegistration } from '../../../interfaces/users/IRegistration';
+import { StripeCustomer } from '../../payment/schemas/stripe-customer.schema';
+import { UserResetRepository } from '../../users/repository/user-reset.repository';
+import { UserRepository } from '../../users/repository/user.repository';
+import { resetPasswordTemplate } from '../../../templates/reset-password';
+import { hashPassword } from '../../../utils/auths/hashPassword';
+import { validatePassword } from '../../../utils/auths/validatePassword';
+import { SUBJECT_RESET_PASSWORD } from '../../../utils/constants/mailing/email';
+import { TOKEN_AUTH_EXPIRED_AT } from '../../../utils/constants/token/token-expiration';
+import { generateToken } from '../../../utils/randoms/generateToken';
+import { UserReset } from '../../users/schemas/user-reset.schema';
+import { User } from '../../users/schemas/user.schema';
+import { Registration } from '../dto/registration.dto';
+import { SignIn } from '../dto/singIn.dto';
+import { StripeCustomerService } from '../stripe-customer.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     private mailerService: MailerService,
-    private usersService: UsersService,
     private readonly userRepository: UserRepository,
     private readonly userResetRepository: UserResetRepository,
     private stripeCustomerService: StripeCustomerService,
@@ -106,10 +97,6 @@ export class AuthService {
       usr_email: email,
     });
 
-    if (!user) {
-      throw new NotFoundException('The email does not exist in plateform');
-    }
-
     user.usr_password = null;
 
     const token: string = generateToken(40);
@@ -137,41 +124,5 @@ export class AuthService {
     };
 
     return await this.userResetRepository.create(data);
-  }
-
-  async forgotPassword(
-    token: string,
-    forgotPasswordDto: ForgotPassword,
-    res: Response,
-  ): Promise<Response> {
-    const { email, password } = forgotPasswordDto;
-    const isChecked = await this.usersService.checkEmailTokenForgetPassword(
-      email,
-      token,
-    );
-
-    if (isChecked === null) {
-      throw new InternalServerErrorException('Token may be not valid');
-    }
-
-    const user: User = await this.userRepository.findOne({
-      usr_email: email,
-    });
-
-    if (!user) {
-      throw new NotFoundException('User is not found');
-    }
-
-    if (
-      moment().format('YYYY-MM-DD h:mm') >
-      moment(isChecked.usr_rest_expired_at).format('YYYY-MM-DD h:mm')
-    ) {
-      throw new GoneException('the reset token has expired');
-    }
-
-    await this.usersService.changePassword(user._id, password);
-    await this.usersService.deleteEmailTokenForgetPassword(email, token);
-
-    return res.status(200).json({ status: 'success' });
   }
 }

@@ -40,6 +40,8 @@ import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interf
 import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
 import { PaginationDto } from '../../../shared/pagination/pagination.dto';
 import { ICoursePagination } from '../interfaces/ICoursePagination';
+import { SearchDto } from '../../../shared/search/search.dto';
+import { ImageFile } from '../../../common/decorators/image-file.decorator';
 
 @Controller('courses')
 export class CoursesController {
@@ -49,10 +51,13 @@ export class CoursesController {
   @ApiOkResponse({
     description: 'The courses have been successfully retrieved.',
   })
-  async list(@Query() query: PaginationDto): Promise<ICoursePagination> {
-    const { page, limit } = query;
+  async list(
+    @Query() search: SearchDto,
+    @Query() pagination: PaginationDto,
+  ): Promise<ICoursePagination> {
+    const { page, limit } = pagination;
 
-    return await this.courseService.findAll(page, limit);
+    return await this.courseService.findAll(search.q, page, limit);
   }
 
   @Get('show/:id')
@@ -123,16 +128,7 @@ export class CoursesController {
   async add(
     @Req() req: any,
     @Body() createCourseDto: CreateCourse,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addValidator(
-          new CustomUploadFileTypeValidatorOptions({
-            fileType: VALID_IMAGE_MIME_TYPES,
-          }),
-        )
-        .addMaxSizeValidator({ maxSize: MAX_SIZE_IN_BYTES_UPLOAD_PHOTO })
-        .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-    )
+    @ImageFile({ fileIsRequired: true })
     file: Express.Multer.File,
   ): Promise<Course> {
     return await this.courseService.store(req.user.id, createCourseDto, file);
@@ -157,19 +153,7 @@ export class CoursesController {
     @Param('id') id: string,
     @Req() req: any,
     @Body() editCourseDto: EditCourse,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addValidator(
-          new CustomUploadFileTypeValidatorOptions({
-            fileType: VALID_IMAGE_MIME_TYPES,
-          }),
-        )
-        .addMaxSizeValidator({ maxSize: MAX_SIZE_IN_BYTES_UPLOAD_PHOTO })
-        .build({
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          fileIsRequired: false,
-        }),
-    )
+    @ImageFile({ fileIsRequired: false })
     file: Express.Multer.File,
   ): Promise<Course> {
     return await this.courseService.update(

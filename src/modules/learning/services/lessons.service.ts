@@ -147,7 +147,7 @@ export class LessonsService {
       videoLink = lesson.lssn_video_link;
     } else {
       if (lesson.lssn_video_link) {
-        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+        const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
           lesson.lssn_video_link,
         );
 
@@ -155,7 +155,7 @@ export class LessonsService {
       }
 
       if (lesson.lssn_video_photo) {
-        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+        const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
           lesson.lssn_video_photo,
         );
 
@@ -199,7 +199,7 @@ export class LessonsService {
     }
 
     if (lesson.lssn_video_link) {
-      const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
         lesson.lssn_video_link,
       );
 
@@ -207,7 +207,7 @@ export class LessonsService {
     }
 
     if (lesson.lssn_video_photo) {
-      const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
         lesson.lssn_video_photo,
       );
 

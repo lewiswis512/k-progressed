@@ -34,6 +34,7 @@ export class SaveCourseDto {
     description: 'Course Price',
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Price is required' })
   @Transform(
     ({ value }) => {
       if (value === '' || value === null) {
@@ -65,4 +66,12 @@ export class SaveCourseDto {
   @IsOptional()
   @IsNotEmpty()
   level_id: LevelEnum;
+
+  @ApiProperty({
+    example: '681af23bfd9ba6796ce97a69',
+    description: 'Category Id',
+  })
+  @IsOptional()
+  @IsNotEmpty({ message: 'Category Id is required' })
+  category_id: string;
 }

@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import { AbstractDocument } from '../../../common/document/abstract.document';
 import { User } from '../../users/schemas/user.schema';
 import { LevelEnum } from '../../../utils/enums/level.enum';
+import { Category } from './category.schema';
+import { Teacher } from '../../../modules/teachers/schemas/teacher.schema';
 
 @Schema({
   collection: 'courses',
@@ -23,17 +25,23 @@ export class Course extends AbstractDocument {
   @Prop({ type: Boolean, default: false })
   crs_isPaid: boolean;
 
-  @Prop({ type: String })
+  @Prop({ type: String, default: '' })
   crs_photo: string;
-
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  author: Omit<User, 'usr_password'>;
 
   @Prop({ type: Number, enum: LevelEnum })
   level_id: LevelEnum;
 
-  createdAt: Date;
-  updatedAt: Date;
+  @Prop({ type: Boolean, default: false })
+  crs_isApprouved: boolean;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  author: User;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
+  category: Category;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' })
+  teacher: Teacher;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

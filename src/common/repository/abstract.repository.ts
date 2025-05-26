@@ -8,12 +8,41 @@ import {
 } from 'mongoose';
 import { AbstractDocument } from '../document/abstract.document';
 
-type Aggregation =
+type AggregationPipelineStage =
   | { $match: { [key: string]: any } }
+  | { $project: { [key: string]: any } }
+  | { $group: { [key: string]: any } }
+  | { $sort: { [key: string]: 1 | -1 } }
   | { $unwind: string }
+  | { $limit: number }
+  | { $skip: number }
+  | { $addFields: { [key: string]: any } }
+  | { $set: { [key: string]: any } }
+  | { $replaceRoot: { newRoot: any } };
+
+export type Aggregation =
+  | { $match: { [key: string]: any } }
+  | { $unwind: string | { path: string; preserveNullAndEmptyArrays?: boolean } }
   | { $group: { _id: string } }
   | { $project: { [key: string]: any } }
-  | { $count: string };
+  | { $count: string }
+  | {
+      $lookup: {
+        from: string;
+        localField: string;
+        foreignField: string;
+        as: string;
+      };
+    }
+  | {
+      $lookup: {
+        from: string;
+        let?: Record<string, unknown>;
+        pipeline: AggregationPipelineStage[];
+        as: string;
+      };
+    }
+  | { $addFields: { [key: string]: any } };
 
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   protected abstract readonly logger: Logger;
@@ -40,6 +69,14 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     if (!document) {
       throw new NotFoundException(`${this.model.modelName} not found`);
     }
+
+    return document;
+  }
+
+  async findOneOrNull(
+    filterQuery: FilterQuery<TDocument>,
+  ): Promise<TDocument | null> {
+    const document = await this.model.findOne(filterQuery);
 
     return document;
   }

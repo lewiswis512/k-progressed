@@ -1,6 +1,11 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import slugify from 'slugify';
+import { Aggregation } from '../../../common/repository/abstract.repository';
 import { IAddCourse } from '../../../interfaces/courses/IAddCourse';
 import { ICourseContents } from '../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
@@ -10,9 +15,12 @@ import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILesso
 import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
 import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema';
 import { Section } from '../../../modules/learning/schemas/sections/section.schema';
+import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
+import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
 import { PATH_COURSES_CLOUDINARY } from '../../../utils/constants/uploads/path-upload';
+import { pagination } from '../../../utils/pagination';
 import {
   getMinuteAndSecond,
   getSecond,
@@ -23,18 +31,21 @@ import { PhotoUploaderContext } from '../../../utils/uploads/photo-uploader-cont
 import { Comment } from '../../comments/schemas/comment.schema';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
+import { ICoursePagination } from '../interfaces/ICoursePagination';
+import { CategoryRepository } from '../repositories/category.repository';
 import { CourseRepository } from '../repositories/course.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
-import { pagination } from '../../../utils/pagination';
-import { ICoursePagination } from '../interfaces/ICoursePagination';
-import { PurchaseRepository } from 'src/modules/purchases/repository/purchase.repository';
+import { updatePhoto } from '../../../utils/files/update-photo';
+import { uploadPhoto } from 'src/utils/files/upload-photo';
 
 @Injectable()
 export class CoursesService {
   constructor(
     private courseRepository: CourseRepository,
+    private categoryRepository: CategoryRepository,
+    private teacherRepository: TeacherRepository,
     private userRepository: UserRepository,
     private commentRepository: CommentRepository,
     private sectionRepository: SectionRepository,
@@ -43,8 +54,84 @@ export class CoursesService {
     private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
-  async findAll(page: number, limit: number): Promise<ICoursePagination> {
-    let courses: Course[] = await this.courseRepository.find();
+  async findAll(
+    keyword: string,
+    page: number,
+    limit: number,
+  ): Promise<ICoursePagination> {
+    const keywordToSearch = keyword ? new RegExp(keyword, 'i') : null;
+    const courseAggregation: Aggregation[] = [
+      { $project: { __v: 0 } },
+      {
+        $lookup: {
+          from: 'categories',
+          foreignField: '_id',
+          localField: 'category',
+          pipeline: [{ $project: { _id: 0, ctgr_name: 1 } }],
+          as: 'category',
+        },
+      },
+      { $unwind: '$category' },
+      {
+        $lookup: {
+          from: 'teachers',
+          foreignField: '_id',
+          localField: 'teacher',
+          pipeline: [
+            { $project: { _id: 0, tchr_title: 1, tchr_biography: 1 } },
+          ],
+          as: 'teacher',
+        },
+      },
+      { $unwind: '$teacher' },
+      {
+        $lookup: {
+          from: 'users',
+          foreignField: '_id',
+          localField: 'author',
+          pipeline: [
+            {
+              $project: {
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+    ];
+
+    if (keywordToSearch) {
+      courseAggregation.push({
+        $match: {
+          $or: [
+            { crs_title: { $regex: keywordToSearch } },
+            {
+              'category.ctgr_name': { $regex: keywordToSearch },
+            },
+            {
+              'author.usr_username': { $regex: keywordToSearch },
+            },
+            {
+              'author.usr_firstname': { $regex: keywordToSearch },
+            },
+            {
+              'author.usr_lastname': { $regex: keywordToSearch },
+            },
+            {
+              'teacher.tchr_title': { $regex: keywordToSearch },
+            },
+          ],
+        },
+      });
+    }
+
+    const courses: Course[] =
+      await this.courseRepository.aggregate(courseAggregation);
+
     let coursesWithAverageRating: ICourseWithAverageRating[] = [];
 
     for (const course of courses) {
@@ -76,17 +163,65 @@ export class CoursesService {
   }
 
   async findByIdWithRating(id: string): Promise<ICourseWithAverageRating> {
-    const course: Course = await this.courseRepository.findById(
-      new Types.ObjectId(id),
-    );
+    const [course] = await this.courseRepository.aggregate([
+      { $project: { __v: 0 } },
+      { $match: { _id: new Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+    ]);
+
+    if (!course) {
+      throw new NotFoundException(`Course not found`);
+    }
 
     return this.getCourseWithRating(course);
   }
 
   async findBySlug(slug: string): Promise<ICourseWithAverageRating> {
-    const course: Course = await this.courseRepository.findOne({
-      crs_slug: slug,
-    });
+    const [course] = await this.courseRepository.aggregate([
+      { $project: { __v: 0 } },
+      { $match: { crs_slug: slug } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+    ]);
+
+    if (!course) {
+      throw new NotFoundException(`Course not found`);
+    }
 
     return this.getCourseWithRating(course);
   }
@@ -149,20 +284,27 @@ export class CoursesService {
       new Types.ObjectId(authorId),
     );
 
+    const category = await this.categoryRepository.findById(
+      new Types.ObjectId(createCourseDto.category_id),
+    );
+
+    const teacher = await this.teacherRepository.findOne({
+      user_id: author._id,
+    });
+
     let data: IAddCourse = {
       ...createCourseDto,
       author,
       crs_slug: slugify(createCourseDto.crs_title),
+      category,
+      teacher,
     };
 
-    const cloudinaryContext = new PhotoUploaderContext(
-      new CloudinaryUploadStrategy(),
-    );
-
-    let photoLink: string = await cloudinaryContext.upload(
-      file.buffer,
-      PATH_COURSES_CLOUDINARY,
-    );
+    let photoLink: string = await uploadPhoto({
+      fileInput: file.buffer,
+      uploadPath: PATH_COURSES_CLOUDINARY,
+      photoUploadStrategy: new CloudinaryUploadStrategy(),
+    });
 
     if (photoLink) {
       data = { ...data, crs_photo: photoLink };
@@ -180,6 +322,7 @@ export class CoursesService {
     authorId: string,
   ): Promise<Course> {
     const course: Course = await this.findById(id);
+
     if (String(course.author) !== authorId) {
       throw new ForbiddenException(
         "You can't update a course who don't belong to you",
@@ -191,26 +334,34 @@ export class CoursesService {
     if (file === undefined) {
       photoLink = course.crs_photo;
     } else {
-      if (course.crs_photo) {
-        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
-          course.crs_photo,
-        );
-
-        await this.cloudinaryUploadStrategy.delete(publicId);
-      }
-
-      const cloudinaryContext = new PhotoUploaderContext(
-        new CloudinaryUploadStrategy(),
-      );
-      photoLink = await cloudinaryContext.upload(
-        file.buffer,
-        PATH_COURSES_CLOUDINARY,
-      );
+      photoLink = await updatePhoto({
+        photoPath: course.crs_photo,
+        uploadPath: PATH_COURSES_CLOUDINARY,
+        fileInput: file.buffer,
+        photoUploadStrategy: new CloudinaryUploadStrategy(),
+      });
     }
+
+    const author: User = await this.userRepository.findById(
+      new Types.ObjectId(authorId),
+    );
+
+    const categoryId: string =
+      editCourseDto.category_id || course.category._id.toString();
+
+    const category = await this.categoryRepository.findById(
+      new Types.ObjectId(categoryId),
+    );
+
+    const teacher = await this.teacherRepository.findOne({
+      user_id: author._id,
+    });
 
     let data: ISaveCourse = {
       ...editCourseDto,
       crs_photo: photoLink,
+      category,
+      teacher,
     };
 
     return this.courseRepository.findByIdAndUpdate(
@@ -229,7 +380,7 @@ export class CoursesService {
     }
 
     if (course.crs_photo) {
-      const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
         course.crs_photo,
       );
 

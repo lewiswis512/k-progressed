@@ -12,9 +12,10 @@ import {
 import { UserReset, UserResetSchema } from '../users/schemas/user-reset.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { StripeCustomerRepository } from '../../modules/users/repository/stripe-customer.repository';
 import { UserResetRepository } from '../../modules/users/repository/user-reset.repository';
+import { ForgotPasswordService } from './services/forgot-password.service';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { UserResetRepository } from '../../modules/users/repository/user-reset.r
   controllers: [AuthController],
   providers: [
     AuthService,
+    ForgotPasswordService,
     StripeCustomerService,
     UserRepository,
     StripeCustomerRepository,

@@ -188,7 +188,6 @@ export class CommentsService {
 
   async delete(id: string, authorId: string): Promise<void> {
     let comment: Comment = await this.findById(id);
-    console.log({ comment });
 
     if (String(comment.author._id) !== authorId) {
       throw new ForbiddenException(

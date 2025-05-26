@@ -2,15 +2,19 @@ import { Body, Controller, Param, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { UserReset } from '../../modules/users/schemas/user-reset.schema';
 import { User } from '../../modules/users/schemas/user.schema';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { ForgotPassword } from './dto/forgot-password.dto';
 import { Registration } from './dto/registration.dto';
 import { ResetPassword } from './dto/reset-password.dto';
 import { SignIn } from './dto/singIn.dto';
+import { ForgotPasswordService } from './services/forgot-password.service';
 
 @Controller('')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private forgotPasswordService: ForgotPasswordService,
+  ) {}
 
   @Post('login')
   signIn(@Body() signInDto: SignIn): Promise<{ accessToken: string }> {
@@ -33,6 +37,10 @@ export class AuthController {
     @Body() forgotPasswordDto: ForgotPassword,
     @Res() res: Response,
   ): Promise<Response> {
-    return this.authService.forgotPassword(token, forgotPasswordDto, res);
+    return this.forgotPasswordService.forgotPassword(
+      token,
+      forgotPasswordDto,
+      res,
+    );
   }
 }

@@ -10,6 +10,7 @@ import { UpdateProfile } from './dto/update-profile.dto';
 import { PhotoUploaderContext } from '../../utils/uploads/photo-uploader-context';
 import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary';
 import { PATH_USERS_CLOUDINARY } from '../../utils/constants/uploads/path-upload';
+import { MongooseRepository } from '../../common/repository/mongo.repository';
 
 @Injectable()
 export class UsersService {
@@ -17,6 +18,7 @@ export class UsersService {
     private userRepository: UserRepository,
     private userResetRepository: UserResetRepository,
     private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
+    private MongooseRepository: MongooseRepository,
   ) {}
 
   async findAll() {
@@ -51,7 +53,7 @@ export class UsersService {
       photoLink = user.usr_photo;
     } else {
       if (user.usr_photo) {
-        const publicId = this.cloudinaryUploadStrategy.getCloudinaryPublicId(
+        const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
           user.usr_photo,
         );
 
@@ -105,5 +107,9 @@ export class UsersService {
       usr_rest_email: email,
       usr_rest_token: token,
     });
+  }
+
+  async isAlreadySaved(collectionName: string, field: string, value: string) {
+    return await this.MongooseRepository.exists(collectionName, field, value);
   }
 }

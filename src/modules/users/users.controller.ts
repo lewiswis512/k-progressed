@@ -15,11 +15,11 @@ import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { CustomUploadFileTypeValidatorOptions } from '../../common/validators/files/CustomUploadFileTypeValidator';
+import { VALID_IMAGE_MIME_TYPES } from '../../utils/constants/files/mime-types';
+import { MAX_SIZE_IN_BYTES_UPLOAD_PHOTO } from '../../utils/constants/uploads/max-size-upload';
 import { ChangePassword } from '../auth/dto/change-password.dto';
 import { UpdateProfile } from './dto/update-profile.dto';
 import { UsersService } from './users.service';
-import { VALID_IMAGE_MIME_TYPES } from '../../utils/constants/files/mime-types';
-import { MAX_SIZE_IN_BYTES_UPLOAD_PHOTO } from '../../utils/constants/uploads/max-size-upload';
 
 @Controller()
 @ApiBearerAuth()
