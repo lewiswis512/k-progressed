@@ -5,6 +5,8 @@ import {
   Types,
   UpdateQuery,
   UpdateWriteOpResult,
+  Document,
+  HydratedDocument,
 } from 'mongoose';
 import { AbstractDocument } from '../document/abstract.document';
 
@@ -94,6 +96,17 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     const createdDocument = await documentToCreate.save();
 
     return createdDocument.toJSON() as unknown as TDocument;
+  }
+
+  async insertMany(documents: Partial<TDocument>[]): Promise<TDocument[]> {
+    const docsWithIds = documents.map((doc) => ({
+      _id: new Types.ObjectId(),
+      ...doc,
+    }));
+
+    const createdDocs = await this.model.insertMany(docsWithIds) as HydratedDocument<TDocument>[];
+
+    return createdDocs.map((doc) => doc.toObject());
   }
 
   async findByIdAndUpdate(
