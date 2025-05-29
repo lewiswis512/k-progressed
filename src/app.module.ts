@@ -5,7 +5,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { IsUniqueConstraint } from './common/pipes/unique-field/isUniqueConstraint';
 import { MongoRepository } from './common/repository/mongo.repository';
-import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { CategoriesModule } from './modules/learning/modules/category.module';
@@ -17,6 +16,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { PurchasesModule } from './modules/purchases/purchases.module';
 import { TeachersModule } from './modules/teachers/teachers.module';
 import { UsersModule } from './modules/users/users.module';
+import { LoadDataModule } from './modules/load-data/load-data.module';
 
 @Module({
   imports: [
@@ -36,8 +36,9 @@ import { UsersModule } from './modules/users/users.module';
     TeachersModule,
     PaymentModule,
     LearningModule,
+    LoadDataModule,
   ],
   controllers: [AppController],
-  providers: [AppService, IsUniqueConstraint, MongoRepository, DatabaseModule],
+  providers: [AppService, IsUniqueConstraint, MongoRepository],
 })
 export class AppModule {}
