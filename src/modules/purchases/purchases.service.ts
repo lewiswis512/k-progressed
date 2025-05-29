@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { IAddPurchase } from 'src/interfaces/purchases/IAddPurchase';
+import { IAddPurchase } from '../../interfaces/purchases/IAddPurchase';
 import { PurchaseRepository } from './repository/purchase.repository';
 import { Purchase } from './schemas/purchase.schema';
 import { SavePurchase } from './dto/save-purchase.dto';

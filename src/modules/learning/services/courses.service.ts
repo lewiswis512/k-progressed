@@ -38,7 +38,7 @@ import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
 import { updatePhoto } from '../../../utils/files/update-photo';
-import { uploadPhoto } from 'src/utils/files/upload-photo';
+import { uploadPhoto } from '../../../utils/files/upload-photo';
 
 @Injectable()
 export class CoursesService {

@@ -68,28 +68,45 @@ export class AuthService {
       ...registerDto,
       usr_password: hashedPassword,
     };
-    const userCreated: User = await this.userRepository.create(data);
+    const user: User = await this.userRepository.create(data);
+
+    return await this.attachCustomerIdToUser(user);
+  }
+
+  async createCustomerStripe(user: User) {
     let customerId: string | null = null;
 
     try {
       const stripeCustomer: StripeCustomer =
         await this.stripeCustomerService.createCustomer(
-          userCreated.usr_username,
-          userCreated.usr_email,
+          user.usr_username,
+          user.usr_email,
         );
       customerId = stripeCustomer.customer_id;
     } catch (error: any) {
       console.error(error);
     }
 
-    const userWithStripeCustomerId: User =
-      await this.userRepository.findByIdAndUpdate(userCreated._id, {
-        stripe_customer_id: customerId,
-      });
+    return customerId;
+  }
 
-    userWithStripeCustomerId.usr_password = null;
+  async attachCustomerIdToUser(user: User) {
+    try {
+      const stripeCustomerId: string | null =
+        await this.createCustomerStripe(user);
 
-    return userWithStripeCustomerId;
+      const updatedUser: User = await this.userRepository.findByIdAndUpdate(
+        user._id,
+        { stripe_customer_id: stripeCustomerId },
+      );
+
+      updatedUser.usr_password = null;
+
+      return updatedUser;
+    } catch (error) {
+      console.error('Failed to attach Stripe customer ID to user:', error);
+      throw new Error('Failed to attach Stripe customer ID to user.');
+    }
   }
 
   async resetPassword(email: string): Promise<UserReset> {

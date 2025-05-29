@@ -8,7 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { UserResetRepository } from './repository/user-reset.repository';
 import { UserRepository } from './repository/user.repository';
 import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary';
-import { MongooseRepository } from '../../common/repository/mongo.repository';
+import { MongoRepository } from '../../common/repository/mongo.repository';
 import { CheckingController } from './controllers/checking.controller';
 
 @Module({
@@ -30,7 +30,7 @@ import { CheckingController } from './controllers/checking.controller';
     UserRepository,
     UserResetRepository,
     CloudinaryUploadStrategy,
-    MongooseRepository,
+    MongoRepository,
   ],
   exports: [UsersService],
   controllers: [UsersController, CheckingController],

@@ -10,7 +10,7 @@ import { UpdateProfile } from './dto/update-profile.dto';
 import { PhotoUploaderContext } from '../../utils/uploads/photo-uploader-context';
 import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary';
 import { PATH_USERS_CLOUDINARY } from '../../utils/constants/uploads/path-upload';
-import { MongooseRepository } from '../../common/repository/mongo.repository';
+import { MongoRepository } from '../../common/repository/mongo.repository';
 
 @Injectable()
 export class UsersService {
@@ -18,7 +18,7 @@ export class UsersService {
     private userRepository: UserRepository,
     private userResetRepository: UserResetRepository,
     private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
-    private MongooseRepository: MongooseRepository,
+    private MongoRepository: MongoRepository,
   ) {}
 
   async findAll() {
@@ -38,9 +38,6 @@ export class UsersService {
   ): Promise<IUserUpdateProfile> {
     const user: User = await this.userRepository.findById(
       new Types.ObjectId(id),
-    );
-    const cloudinaryContext = new PhotoUploaderContext(
-      new CloudinaryUploadStrategy(),
     );
 
     let data: Partial<IUserUpdateProfile> = {
@@ -110,6 +107,6 @@ export class UsersService {
   }
 
   async isAlreadySaved(collectionName: string, field: string, value: string) {
-    return await this.MongooseRepository.exists(collectionName, field, value);
+    return await this.MongoRepository.exists(collectionName, field, value);
   }
 }

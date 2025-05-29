@@ -9,7 +9,7 @@ import { UserRepository } from '../users/repository/user.repository';
 import { AddTeacher } from './dto/add-teacher.dto';
 import { SaveTeacher } from './dto/save-teacher.dto';
 import { TeacherRepository } from './repositories/teacher.repository';
-import { RoleEnum } from 'src/utils/enums/role.enum';
+import { RoleEnum } from '../../utils/enums/role.enum';
 import { Teacher } from './schemas/teacher.schema';
 
 @Injectable()

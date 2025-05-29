@@ -5,7 +5,7 @@ import { IRepository } from '../interfaces/IRepository';
 import { ModelSchema } from '../../shared/schema/model-schema';
 
 @Injectable()
-export class MongooseRepository implements IRepository {
+export class MongoRepository implements IRepository {
   constructor(@InjectConnection() private readonly connection: Connection) {}
 
   async exists(

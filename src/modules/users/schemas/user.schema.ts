@@ -4,7 +4,7 @@ import { RoleEnum } from '../../../utils/enums/role.enum';
 import { UserTypeEnum } from '../../../utils/enums/user-type.enum';
 
 @Schema({
-  timestamps: true,
+  collection: 'users',
 })
 export class User extends AbstractDocument {
   @Prop({ type: String, trim: true })
@@ -25,12 +25,8 @@ export class User extends AbstractDocument {
   @Prop({ type: String, required: true, trim: true, minlength: 8 })
   usr_password: string;
 
-  @Prop({ type: Date, required: true, default: new Date().toISOString() })
+  @Prop({ type: Date, required: true, default: () => new Date().toISOString() })
   usr_registered_date: Date;
-
-  createdAt: Date;
-
-  updatedAt: Date;
 
   @Prop({ type: Number, default: UserTypeEnum.STUDENT })
   usr_type: UserTypeEnum;

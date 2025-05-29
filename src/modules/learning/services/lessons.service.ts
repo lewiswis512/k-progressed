@@ -19,7 +19,7 @@ import {
   getMinuteAndSecond,
   getSecond,
   getVideoDuration,
-} from 'src/utils/times/duration';
+} from '../../../utils/times/duration';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;

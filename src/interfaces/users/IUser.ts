@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
-import { RoleEnum } from 'src/utils/enums/role.enum';
-import { UserTypeEnum } from 'src/utils/enums/user-type.enum';
+import { RoleEnum } from '../../utils/enums/role.enum';
+import { UserTypeEnum } from '../../utils/enums/user-type.enum';
 
 export interface IUser {
   _id: Types.ObjectId;
@@ -13,6 +13,6 @@ export interface IUser {
   stripe_customer_id: string;
   usr_type: UserTypeEnum;
   usr_role: RoleEnum;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }

@@ -2,7 +2,7 @@ import multer, { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import * as fs from 'fs';
 import slugify from 'slugify';
-import { IExpressMulterFile } from 'src/interfaces/medias/IExpressMulterFile';
+import { IExpressMulterFile } from '../../interfaces/medias/IExpressMulterFile';
 
 export function UploadMulterInDiskStorage(
   destination: string,
