@@ -14,6 +14,8 @@ import {
   StripeCustomer,
   StripeCustomerSchema,
 } from '../payment/schemas/stripe-customer.schema';
+import { CategoryRepository } from '../learning/repositories/category.repository';
+import { Category, CategorySchema } from '../learning/schemas/category.schema';
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import {
       { name: User.name, schema: UserSchema },
       { name: UserReset.name, schema: UserResetSchema },
       { name: StripeCustomer.name, schema: StripeCustomerSchema },
+      { name: Category.name, schema: CategorySchema },
     ]),
   ],
   controllers: [LoadDataController],
@@ -38,6 +41,7 @@ import {
     UserResetRepository,
     StripeCustomerService,
     StripeCustomerRepository,
+    CategoryRepository
   ],
 })
 export class LoadDataModule {}
