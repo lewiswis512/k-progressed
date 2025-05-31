@@ -1,6 +1,6 @@
 import { Comment } from '../../modules/comments/schemas/comment.schema';
 import { Course } from '../../modules/learning/schemas/course.schema';
-import { Lesson } from '../../modules/learning/schemas/lessons/lesson.schema';
+import { Lesson } from '../../modules/learning/schemas/lesson.schema';
 import { User } from '../../modules/users/schemas/user.schema';
 import { CommentEnum } from '../../utils/enums/comment.enum';
 import { ICommentAuthor } from './ICommentAuthor';

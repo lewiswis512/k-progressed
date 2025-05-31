@@ -9,10 +9,7 @@ import { CommentRepository } from './repository/comment.repository';
 import { Comment, CommentSchema } from './schemas/comment.schema';
 import { CourseRepository } from '../learning/repositories/course.repository';
 import { Course, CourseSchema } from '../learning/schemas/course.schema';
-import {
-  Lesson,
-  LessonSchema,
-} from '../learning/schemas/lessons/lesson.schema';
+import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
 import { LessonRepository } from '../learning/repositories/lesson.repository';
 
 @Module({

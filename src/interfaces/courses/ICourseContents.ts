@@ -1,4 +1,4 @@
-import { Section } from '../../modules/learning/schemas/sections/section.schema';
+import { Section } from '../../modules/learning/schemas/section.schema';
 import { ILessonInSectionWithDuration } from '../lessons/ILessonInSectionWithDuration';
 
 export interface ICourseContents {

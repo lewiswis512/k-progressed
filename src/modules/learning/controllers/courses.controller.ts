@@ -6,14 +6,12 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseFilePipeBuilder,
   Patch,
   Post,
   Query,
   Req,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -28,20 +26,17 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
-import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
+import { ImageFile } from '../../../common/decorators/image-file.decorator';
 import { AuthGuard } from '../../../common/guards/auth.guard';
-import { MAX_SIZE_IN_BYTES_UPLOAD_PHOTO } from '../../../utils/constants/uploads/max-size-upload';
-import { VALID_IMAGE_MIME_TYPES } from '../../../utils/constants/files/mime-types';
-import { CoursesService } from '../services/courses.service';
+import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
+import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
+import { PaginationDto } from '../../../shared/pagination/pagination.dto';
+import { SearchDto } from '../../../shared/search/search.dto';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
-import { Course } from '../schemas/course.schema';
-import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
-import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
-import { PaginationDto } from '../../../shared/pagination/pagination.dto';
 import { ICoursePagination } from '../interfaces/ICoursePagination';
-import { SearchDto } from '../../../shared/search/search.dto';
-import { ImageFile } from '../../../common/decorators/image-file.decorator';
+import { Course } from '../schemas/course.schema';
+import { CoursesService } from '../services/courses.service';
 
 @Controller('courses')
 export class CoursesController {
@@ -126,12 +121,11 @@ export class CoursesController {
     description: 'File is required.',
   })
   async add(
-    @Req() req: any,
     @Body() createCourseDto: CreateCourse,
     @ImageFile({ fileIsRequired: true })
     file: Express.Multer.File,
   ): Promise<Course> {
-    return await this.courseService.store(req.user.id, createCourseDto, file);
+    return await this.courseService.store(createCourseDto, file);
   }
 
   @Patch(':id')

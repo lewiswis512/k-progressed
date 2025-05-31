@@ -5,14 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Course, CourseSchema } from '../schemas/course.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { Comment, CommentSchema } from '../../comments/schemas/comment.schema';
-import {
-  Section,
-  sectionSchema,
-} from '../../../modules/learning/schemas/sections/section.schema';
-import {
-  Lesson,
-  LessonSchema,
-} from '../../../modules/learning/schemas/lessons/lesson.schema';
+import { Section, sectionSchema } from '../schemas/section.schema';
+import { Lesson, LessonSchema } from '../schemas/lesson.schema';
 import { CourseRepository } from '../repositories/course.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
@@ -28,7 +22,10 @@ import {
 import { CategoryRepository } from '../repositories/category.repository';
 import { Category, CategorySchema } from '../schemas/category.schema';
 import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
-import { Teacher, TeacherSchema } from '../../../modules/teachers/schemas/teacher.schema';
+import {
+  Teacher,
+  TeacherSchema,
+} from '../../../modules/teachers/schemas/teacher.schema';
 
 @Module({
   imports: [

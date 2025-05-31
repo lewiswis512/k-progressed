@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { AbstractDocument } from '../../../common/document/abstract.document';
-import { User } from '../../users/schemas/user.schema';
 import { LevelEnum } from '../../../utils/enums/level.enum';
 import { Category } from './category.schema';
 import { Teacher } from '../../../modules/teachers/schemas/teacher.schema';
@@ -33,9 +32,6 @@ export class Course extends AbstractDocument {
 
   @Prop({ type: Boolean, default: false })
   crs_isApprouved: boolean;
-
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  author: User;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
   category: Category;

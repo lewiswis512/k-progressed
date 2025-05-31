@@ -1,25 +1,22 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { IAddLesson } from '../../../interfaces/lessons/IAddLesson';
-import { IEditLesson } from '../../../interfaces/lessons/IEditLesson';
-import { ISectionLessons } from '../../../interfaces/lessons/ISectionLessons';
 import {
   PATH_LESSON_PHOTOS_CLOUDINARY,
   PATH_LESSONS_CLOUDINARY,
 } from '../../../utils/constants/uploads/path-upload';
+import {
+  getMinuteAndSecond,
+  getSecond,
+  getVideoDuration,
+} from '../../../utils/times/duration';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
 import { VideoUploaderContext } from '../../../utils/uploads/video-uploader-context';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
-import { Lesson } from '../schemas/lessons/lesson.schema';
-import { Section } from '../schemas/sections/section.schema';
-import {
-  getMinuteAndSecond,
-  getSecond,
-  getVideoDuration,
-} from '../../../utils/times/duration';
+import { Lesson } from '../schemas/lesson.schema';
+import { Section } from '../schemas/section.schema';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;
@@ -27,7 +24,7 @@ export interface IFreeLesson {
   lssn_video_link?: string;
   lssn_video_photo?: string;
   lssn_is_free: boolean;
-  section: ISectionLessons;
+  section: Section;
   duration: string | number | null;
 }
 
@@ -75,7 +72,7 @@ export class LessonsService {
           lssn_video_link: lesson.lssn_video_link,
           lssn_video_photo: lesson.lssn_video_photo,
           lssn_is_free: lesson.lssn_is_free,
-          section: lesson.section as ISectionLessons,
+          section: lesson.section,
           duration: formattedDuration,
         });
       }
@@ -103,19 +100,11 @@ export class LessonsService {
         PATH_LESSON_PHOTOS_CLOUDINARY,
       );
 
-    const sectionData = await this.sectionRepository.findById(
+    const section = await this.sectionRepository.findById(
       new Types.ObjectId(addLesson.section_id),
     );
 
-    const section: ISectionLessons = {
-      _id: sectionData._id,
-      course: {
-        _id: sectionData.course._id,
-        author: sectionData.course.author,
-      },
-    };
-
-    let data: IAddLesson = {
+    let data = {
       ...addLesson,
       section,
       lssn_video_link: videoLink,
@@ -133,11 +122,11 @@ export class LessonsService {
   ): Promise<Lesson> {
     const lesson: Lesson = await this.findById(id);
 
-    if (String(lesson.section.course.author) !== authorId) {
+    /*if (String(lesson.section.course.author) !== authorId) {
       throw new ForbiddenException(
         "You can't update a lesson who don't belong to you",
       );
-    }
+    }*/
 
     let lessonPhotoFilename: string;
     let videoLink: string;
@@ -177,7 +166,7 @@ export class LessonsService {
       );
     }
 
-    let data: IEditLesson = {
+    let data = {
       ...editLesson,
       lssn_video_photo: lessonPhotoFilename,
       lssn_video_link: videoLink,
@@ -192,11 +181,11 @@ export class LessonsService {
   async delete(id: string, authorId: string): Promise<void> {
     const lesson = await this.findById(id);
 
-    if (String(lesson.section.course.author) !== authorId) {
+    /*if (String(lesson.section.course.author) !== authorId) {
       throw new ForbiddenException(
         "You can't delete a lesson who don't belong to you",
       );
-    }
+    }*/
 
     if (lesson.lssn_video_link) {
       const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(

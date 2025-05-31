@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { AbstractDocument } from '../../../../common/document/abstract.document';
-import { ISectionLessons } from '../../../../interfaces/lessons/ISectionLessons';
-import { SectionLessons } from './section-lessons.schema';
+import { AbstractDocument } from '../../../common/document/abstract.document';
+import { Section } from './section.schema';
+import mongoose from 'mongoose';
 
 @Schema({
   collection: 'lessons',
@@ -19,8 +19,8 @@ export class Lesson extends AbstractDocument {
   @Prop({ type: Boolean, default: false })
   lssn_is_free: boolean;
 
-  @Prop({ type: SectionLessons, required: true })
-  section: ISectionLessons;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Section' })
+  section: Section;
 }
 
 export const LessonSchema = SchemaFactory.createForClass(Lesson);

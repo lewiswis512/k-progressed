@@ -8,7 +8,7 @@ import { CommentEnum } from '../../utils/enums/comment.enum';
 import { CourseRepository } from '../learning/repositories/course.repository';
 import { LessonRepository } from '../learning/repositories/lesson.repository';
 import { Course } from '../learning/schemas/course.schema';
-import { Lesson } from '../learning/schemas/lessons/lesson.schema';
+import { Lesson } from '../learning/schemas/lesson.schema';
 import { UserRepository } from '../users/repository/user.repository';
 import { User } from '../users/schemas/user.schema';
 import { EditCommentCourse } from './dto/edit-comment-course.dto';

@@ -20,9 +20,9 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
 } from '@nestjs/swagger';
-import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema';
+import { Lesson } from '../schemas/lesson.schema';
 import { SectionsService } from '../services/sections.service';
-import { Section } from '../schemas/sections/section.schema';
+import { Section } from '../schemas/section.schema';
 import { AuthGuard } from '../../../common/guards/auth.guard';
 import { AddSection } from '../dtos/sections/add-section.dto';
 import { EditSection } from '../dtos/sections/edit-section.dto';

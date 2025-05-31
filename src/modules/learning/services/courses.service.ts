@@ -6,20 +6,21 @@ import {
 import { Types } from 'mongoose';
 import slugify from 'slugify';
 import { Aggregation } from '../../../common/repository/abstract.repository';
-import { IAddCourse } from '../../../interfaces/courses/IAddCourse';
 import { ICourseContents } from '../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
 import { ISaveCourse } from '../../../interfaces/courses/ISaveCourse';
 import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILessonInSectionWithDuration';
 import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
-import { Lesson } from '../../../modules/learning/schemas/lessons/lesson.schema';
-import { Section } from '../../../modules/learning/schemas/sections/section.schema';
+import { Lesson } from '../schemas/lesson.schema';
+import { Section } from '../schemas/section.schema';
 import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
 import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
 import { PATH_COURSES_CLOUDINARY } from '../../../utils/constants/uploads/path-upload';
+import { updatePhoto } from '../../../utils/files/update-photo';
+import { uploadPhoto } from '../../../utils/files/upload-photo';
 import { pagination } from '../../../utils/pagination';
 import {
   getMinuteAndSecond,
@@ -27,7 +28,6 @@ import {
   getVideoDuration,
 } from '../../../utils/times/duration';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
-import { PhotoUploaderContext } from '../../../utils/uploads/photo-uploader-context';
 import { Comment } from '../../comments/schemas/comment.schema';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
@@ -37,8 +37,6 @@ import { CourseRepository } from '../repositories/course.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
-import { updatePhoto } from '../../../utils/files/update-photo';
-import { uploadPhoto } from '../../../utils/files/upload-photo';
 
 @Injectable()
 export class CoursesService {
@@ -84,24 +82,24 @@ export class CoursesService {
         },
       },
       { $unwind: '$teacher' },
-      {
-        $lookup: {
-          from: 'users',
-          foreignField: '_id',
-          localField: 'author',
-          pipeline: [
-            {
-              $project: {
-                usr_username: 1,
-                usr_firstname: 1,
-                usr_lastname: 1,
-              },
-            },
-          ],
-          as: 'author',
-        },
-      },
-      { $unwind: '$author' },
+      // {
+      //   $lookup: {
+      //     from: 'users',
+      //     foreignField: '_id',
+      //     localField: 'author',
+      //     pipeline: [
+      //       {
+      //         $project: {
+      //           usr_username: 1,
+      //           usr_firstname: 1,
+      //           usr_lastname: 1,
+      //         },
+      //       },
+      //     ],
+      //     as: 'author',
+      //   },
+      // },
+      // { $unwind: '$author' },
     ];
 
     if (keywordToSearch) {
@@ -112,15 +110,15 @@ export class CoursesService {
             {
               'category.ctgr_name': { $regex: keywordToSearch },
             },
-            {
-              'author.usr_username': { $regex: keywordToSearch },
-            },
-            {
-              'author.usr_firstname': { $regex: keywordToSearch },
-            },
-            {
-              'author.usr_lastname': { $regex: keywordToSearch },
-            },
+            // {
+            //   'author.usr_username': { $regex: keywordToSearch },
+            // },
+            // {
+            //   'author.usr_firstname': { $regex: keywordToSearch },
+            // },
+            // {
+            //   'author.usr_lastname': { $regex: keywordToSearch },
+            // },
             {
               'teacher.tchr_title': { $regex: keywordToSearch },
             },
@@ -276,25 +274,19 @@ export class CoursesService {
   }
 
   async store(
-    authorId: string,
     createCourseDto: CreateCourse,
     file: Express.Multer.File,
-  ): Promise<any> {
-    const author: User = await this.userRepository.findById(
-      new Types.ObjectId(authorId),
-    );
-
+  ): Promise<Course> {
     const category = await this.categoryRepository.findById(
       new Types.ObjectId(createCourseDto.category_id),
     );
 
-    const teacher = await this.teacherRepository.findOne({
-      user_id: author._id,
-    });
+    const teacher = await this.teacherRepository.findById(
+      new Types.ObjectId(createCourseDto.teacher_id),
+    );
 
-    let data: IAddCourse = {
+    let data: Partial<Course> = {
       ...createCourseDto,
-      author,
       crs_slug: slugify(createCourseDto.crs_title),
       category,
       teacher,
@@ -323,7 +315,7 @@ export class CoursesService {
   ): Promise<Course> {
     const course: Course = await this.findById(id);
 
-    if (String(course.author) !== authorId) {
+    if (String(course.teacher.user_id) !== authorId) {
       throw new ForbiddenException(
         "You can't update a course who don't belong to you",
       );
@@ -373,7 +365,7 @@ export class CoursesService {
   async delete(id: string, authorId: string): Promise<void> {
     const course: Course = await this.findById(id);
 
-    if (String(course.author) !== authorId) {
+    if (String(course.teacher.user_id) !== authorId) {
       throw new ForbiddenException(
         "You can't delete a course who don't belong to you",
       );
@@ -410,7 +402,7 @@ export class CoursesService {
     return await this.sectionRepository.find({
       course: {
         _id: course._id,
-        author: course.author._id,
+        author: course.teacher.user_id,
       },
     });
   }

@@ -1,11 +1,8 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
-import {
-  Lesson,
-  LessonSchema,
-} from '../../../modules/learning/schemas/lessons/lesson.schema';
-import { Section, sectionSchema } from '../schemas/sections/section.schema';
+import { Lesson, LessonSchema } from '../schemas/lesson.schema';
+import { Section, sectionSchema } from '../schemas/section.schema';
 import { SectionsService } from '../services/sections.service';
 import { CourseRepository } from '../../../modules/learning/repositories/course.repository';
 import {
