@@ -79,7 +79,7 @@ export class CoursesService {
             {
               $lookup: {
                 from: 'users',
-                localField: 'user',
+                localField: 'author',
                 foreignField: '_id',
                 pipeline: [
                   {
@@ -91,16 +91,16 @@ export class CoursesService {
                     },
                   },
                 ],
-                as: 'user',
+                as: 'author',
               },
             },
-            { $unwind: '$user' },
+            { $unwind: '$author' },
             {
               $project: {
                 _id: 0,
                 tchr_title: 1,
                 tchr_biography: 1,
-                user: 1,
+                author: 1,
               },
             },
           ],
@@ -325,7 +325,7 @@ export class CoursesService {
   ): Promise<Course> {
     const course: Course = await this.findById(id);
 
-    if (String(course.teacher.user) !== authorId) {
+    if (String(course.teacher.author) !== authorId) {
       throw new ForbiddenException(
         "You can't update a course who don't belong to you",
       );
@@ -375,7 +375,7 @@ export class CoursesService {
   async delete(id: string, authorId: string): Promise<void> {
     const course: Course = await this.findById(id);
 
-    if (String(course.teacher.user) !== authorId) {
+    if (String(course.teacher.author) !== authorId) {
       throw new ForbiddenException(
         "You can't delete a course who don't belong to you",
       );
@@ -412,7 +412,7 @@ export class CoursesService {
     return await this.sectionRepository.find({
       course: {
         _id: course._id,
-        author: course.teacher.user,
+        author: course.teacher.author,
       },
     });
   }

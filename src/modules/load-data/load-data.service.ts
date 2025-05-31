@@ -13,7 +13,6 @@ import { Teacher } from '../teachers/schemas/teacher.schema';
 import { MARKETING } from '../../data/teachers/marketing';
 import { FINANCE } from '../../data/teachers/finance';
 import { DOMAIN } from '../../data/teachers/domain';
-import { Types } from 'mongoose';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -28,11 +27,12 @@ export class LoadDataService {
 
   async loadData() {
     // await this.userRepository.deleteMany({});
-    // await this.categoryRepository.deleteMany({});
-    // await this.teacherRepository.deleteMany({});
+    await this.categoryRepository.deleteMany({});
+    await this.teacherRepository.deleteMany({});
+
     // this.loadUsers();
-    // this.loadCategories();
-    // this.loadTeachers();
+    this.loadCategories();
+    this.loadTeachers();
   }
 
   async loadUsers() {
@@ -70,7 +70,7 @@ export class LoadDataService {
     return users.slice(startIndex, endIndex).map((user, index) => ({
       tchr_title: domain.title[index],
       tchr_biography: domain.biography[index],
-      user,
+      author: user,
       created_at: new Date(),
       updated_at: new Date(),
     }));
