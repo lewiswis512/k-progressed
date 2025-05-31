@@ -1,12 +1,11 @@
 import { Logger, NotFoundException } from '@nestjs/common';
 import {
   FilterQuery,
+  HydratedDocument,
   Model,
   Types,
   UpdateQuery,
   UpdateWriteOpResult,
-  Document,
-  HydratedDocument,
 } from 'mongoose';
 import { AbstractDocument } from '../document/abstract.document';
 
@@ -16,11 +15,28 @@ type AggregationPipelineStage =
   | { $group: { [key: string]: any } }
   | { $sort: { [key: string]: 1 | -1 } }
   | { $unwind: string }
+  // | { $unwind: { path: any; preserveNullAndEmptyArrays: boolean } }
   | { $limit: number }
   | { $skip: number }
   | { $addFields: { [key: string]: any } }
   | { $set: { [key: string]: any } }
-  | { $replaceRoot: { newRoot: any } };
+  | { $replaceRoot: { newRoot: any } }
+  | {
+      $lookup: {
+        from: string;
+        localField: string;
+        foreignField: string;
+        as: string;
+      };
+    }
+  | {
+      $lookup: {
+        from: string;
+        let?: Record<string, unknown>;
+        pipeline: AggregationPipelineStage[];
+        as: string;
+      };
+    };
 
 export type Aggregation =
   | { $match: { [key: string]: any } }
@@ -104,7 +120,9 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
       ...doc,
     }));
 
-    const createdDocs = await this.model.insertMany(docsWithIds) as HydratedDocument<TDocument>[];
+    const createdDocs = (await this.model.insertMany(
+      docsWithIds,
+    )) as HydratedDocument<TDocument>[];
 
     return createdDocs.map((doc) => doc.toObject());
   }

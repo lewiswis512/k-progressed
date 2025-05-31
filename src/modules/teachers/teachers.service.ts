@@ -4,13 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import mongoose, { Types } from 'mongoose';
+import { RoleEnum } from '../../utils/enums/role.enum';
 import { UserTypeEnum } from '../../utils/enums/user-type.enum';
 import { UserRepository } from '../users/repository/user.repository';
-import { AddTeacher } from './dto/add-teacher.dto';
 import { SaveTeacher } from './dto/save-teacher.dto';
 import { TeacherRepository } from './repositories/teacher.repository';
-import { RoleEnum } from '../../utils/enums/role.enum';
-import { Teacher } from './schemas/teacher.schema';
 
 @Injectable()
 export class TeachersService {
@@ -47,10 +45,10 @@ export class TeachersService {
     return this.teacherRepository.findOneOrNull({ user_id: userId });
   }
 
-  async store(userId: string, addTeacher: AddTeacher) {
-    let data: Partial<Teacher> = {
+  async store(userId: string, addTeacher: SaveTeacher) {
+    let data = {
       ...addTeacher,
-      user_id: new Types.ObjectId(userId),
+      userId,
     };
 
     const teacher = await this.teacherRepository.create(data);

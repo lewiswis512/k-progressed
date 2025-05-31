@@ -76,30 +76,38 @@ export class CoursesService {
           foreignField: '_id',
           localField: 'teacher',
           pipeline: [
-            { $project: { _id: 0, tchr_title: 1, tchr_biography: 1 } },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'user',
+                foreignField: '_id',
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 0,
+                      usr_firstname: 1,
+                      usr_lastname: 1,
+                      usr_email: 1,
+                    },
+                  },
+                ],
+                as: 'user',
+              },
+            },
+            { $unwind: '$user' },
+            {
+              $project: {
+                _id: 0,
+                tchr_title: 1,
+                tchr_biography: 1,
+                user: 1,
+              },
+            },
           ],
           as: 'teacher',
         },
       },
       { $unwind: '$teacher' },
-      // {
-      //   $lookup: {
-      //     from: 'users',
-      //     foreignField: '_id',
-      //     localField: 'author',
-      //     pipeline: [
-      //       {
-      //         $project: {
-      //           usr_username: 1,
-      //           usr_firstname: 1,
-      //           usr_lastname: 1,
-      //         },
-      //       },
-      //     ],
-      //     as: 'author',
-      //   },
-      // },
-      // { $unwind: '$author' },
     ];
 
     if (keywordToSearch) {
@@ -252,6 +260,8 @@ export class CoursesService {
         ? getCountParticipants[0].countParticipants
         : 0;
 
+    // const countParticipants = 0;
+
     let totalCommentByCourse: number = comments.length;
 
     if (totalCommentByCourse !== 0) {
@@ -315,7 +325,7 @@ export class CoursesService {
   ): Promise<Course> {
     const course: Course = await this.findById(id);
 
-    if (String(course.teacher.user_id) !== authorId) {
+    if (String(course.teacher.user) !== authorId) {
       throw new ForbiddenException(
         "You can't update a course who don't belong to you",
       );
@@ -346,7 +356,7 @@ export class CoursesService {
     );
 
     const teacher = await this.teacherRepository.findOne({
-      user_id: author._id,
+      user: author._id,
     });
 
     let data: ISaveCourse = {
@@ -365,7 +375,7 @@ export class CoursesService {
   async delete(id: string, authorId: string): Promise<void> {
     const course: Course = await this.findById(id);
 
-    if (String(course.teacher.user_id) !== authorId) {
+    if (String(course.teacher.user) !== authorId) {
       throw new ForbiddenException(
         "You can't delete a course who don't belong to you",
       );
@@ -402,7 +412,7 @@ export class CoursesService {
     return await this.sectionRepository.find({
       course: {
         _id: course._id,
-        author: course.teacher.user_id,
+        author: course.teacher.user,
       },
     });
   }

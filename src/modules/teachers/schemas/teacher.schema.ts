@@ -14,7 +14,7 @@ export class Teacher extends AbstractDocument {
   tchr_biography: string;
 
   @Prop({ type: mongoose.Schema.ObjectId, ref: 'User' })
-  user_id: Partial<User>;
+  user: User;
 }
 
 export const TeacherSchema = SchemaFactory.createForClass(Teacher);

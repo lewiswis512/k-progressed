@@ -13,6 +13,7 @@ import { Teacher } from '../teachers/schemas/teacher.schema';
 import { MARKETING } from '../../data/teachers/marketing';
 import { FINANCE } from '../../data/teachers/finance';
 import { DOMAIN } from '../../data/teachers/domain';
+import { Types } from 'mongoose';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -26,13 +27,12 @@ export class LoadDataService {
   ) {}
 
   async loadData() {
-    //await this.userRepository.deleteMany({});
-    await this.categoryRepository.deleteMany({});
-    await this.teacherRepository.deleteMany({});
-
-    //this.loadUsers();
-    this.loadCategories();
-    this.loadTeachers();
+    // await this.userRepository.deleteMany({});
+    // await this.categoryRepository.deleteMany({});
+    // await this.teacherRepository.deleteMany({});
+    // this.loadUsers();
+    // this.loadCategories();
+    // this.loadTeachers();
   }
 
   async loadUsers() {
@@ -66,11 +66,11 @@ export class LoadDataService {
     endIndex: number,
     domain: DOMAIN,
     users: User[],
-  ) => {
+  ): Omit<Teacher, '_id'>[] => {
     return users.slice(startIndex, endIndex).map((user, index) => ({
-      tchr_title: domain['title'][index],
-      tchr_biography: domain['biography'][index],
-      user_id: user._id,
+      tchr_title: domain.title[index],
+      tchr_biography: domain.biography[index],
+      user,
       created_at: new Date(),
       updated_at: new Date(),
     }));
@@ -82,12 +82,8 @@ export class LoadDataService {
       usr_role: RoleEnum.ADMIN,
     });
 
-    const teachersInMarketing: Omit<Teacher, '_id'>[] = this.createTeachers(
-      0,
-      5,
-      MARKETING,
-      users,
-    );
+    const teachersInMarketing: Omit<Partial<Teacher>, '_id'>[] =
+      this.createTeachers(0, 5, MARKETING, users);
     const teachersInFinance: Omit<Teacher, '_id'>[] = this.createTeachers(
       5,
       users.length,
