@@ -1,6 +1,6 @@
-import { hashPassword } from '../utils/auths/hashPassword';
-import { RoleEnum } from '../utils/enums/role.enum';
-import { UserTypeEnum } from '../utils/enums/user-type.enum';
+import { hashPassword } from '../../utils/auths/hashPassword';
+import { RoleEnum } from '../../utils/enums/role.enum';
+import { UserTypeEnum } from '../../utils/enums/user-type.enum';
 
 export const getTeacherUsers = async () => {
   return [

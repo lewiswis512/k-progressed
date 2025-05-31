@@ -8,10 +8,10 @@ import { User } from '../../users/schemas/user.schema';
 })
 export class Teacher extends AbstractDocument {
   @Prop({ type: String, trim: true })
-  tchr_biography: string;
+  tchr_title: string;
 
   @Prop({ type: String, trim: true })
-  tchr_title: string;
+  tchr_biography: string;
 
   @Prop({ type: mongoose.Schema.ObjectId, ref: 'User' })
   user_id: Partial<User>;
