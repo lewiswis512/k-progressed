@@ -72,29 +72,30 @@ export class CoursesService {
       { $unwind: '$category' },
       {
         $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+                usr_email: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+      {
+        $lookup: {
           from: 'teachers',
           foreignField: '_id',
           localField: 'teacher',
           pipeline: [
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'author',
-                foreignField: '_id',
-                pipeline: [
-                  {
-                    $project: {
-                      _id: 0,
-                      usr_firstname: 1,
-                      usr_lastname: 1,
-                      usr_email: 1,
-                    },
-                  },
-                ],
-                as: 'author',
-              },
-            },
-            { $unwind: '$author' },
             {
               $project: {
                 _id: 0,
@@ -284,9 +285,14 @@ export class CoursesService {
   }
 
   async store(
+    authorId: string,
     createCourseDto: CreateCourse,
     file: Express.Multer.File,
   ): Promise<Course> {
+    const author: User = await this.userRepository.findById(
+      new Types.ObjectId(authorId),
+    );
+
     const category = await this.categoryRepository.findById(
       new Types.ObjectId(createCourseDto.category_id),
     );
@@ -298,6 +304,7 @@ export class CoursesService {
     let data: Partial<Course> = {
       ...createCourseDto,
       crs_slug: slugify(createCourseDto.crs_title),
+      author,
       category,
       teacher,
     };
@@ -317,19 +324,23 @@ export class CoursesService {
     return this.courseRepository.create(data);
   }
 
-  async update(
-    id: string,
-    editCourseDto: EditCourse,
-    file: Express.Multer.File,
-    authorId: string,
-  ): Promise<Course> {
-    const course: Course = await this.findById(id);
-
-    if (String(course.teacher.author) !== authorId) {
+  async isCourseAuthor(courseAuthorId: string, authorId: string) {
+    if (courseAuthorId !== authorId) {
       throw new ForbiddenException(
         "You can't update a course who don't belong to you",
       );
     }
+  }
+
+  async update(
+    id: string,
+    authorId: string,
+    editCourseDto: EditCourse,
+    file: Express.Multer.File,
+  ): Promise<Course> {
+    const course: Course = await this.findById(id);
+
+    this.isCourseAuthor(course.author._id.toString(), authorId);
 
     let photoLink: string;
 
@@ -375,11 +386,7 @@ export class CoursesService {
   async delete(id: string, authorId: string): Promise<void> {
     const course: Course = await this.findById(id);
 
-    if (String(course.teacher.author) !== authorId) {
-      throw new ForbiddenException(
-        "You can't delete a course who don't belong to you",
-      );
-    }
+    this.isCourseAuthor(course.author._id.toString(), authorId);
 
     if (course.crs_photo) {
       const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(

@@ -51,12 +51,13 @@ export class SectionsService {
     return await this.sectionRepository.create(data);
   }
 
-  // async isCourseAuthor(sectionId: string) {
-  //   const section = await this.sectionRepository.findById(
-  //     new Types.ObjectId(sectionId),
-  //   );
-  //   const sectionOne = await this.sectionRepository.findOne({  });
-  // }
+  async isCourseAuthor(courseAuthorId: string, authorId: string) {
+    if (courseAuthorId !== authorId) {
+      throw new ForbiddenException(
+        "You can't update a section who don't belong to you",
+      );
+    }
+  }
 
   async update(
     id: string,
@@ -65,11 +66,7 @@ export class SectionsService {
   ): Promise<Section> {
     const section: Section = await this.findById(id);
 
-    // if (String(section.course.author._id) !== authorId) {
-    //   throw new ForbiddenException(
-    //     "You can't update a section who don't belong to you",
-    //   );
-    // }
+    this.isCourseAuthor(section.course.author._id.toString(), authorId);
 
     return this.sectionRepository.findByIdAndUpdate(
       new Types.ObjectId(id),
@@ -79,12 +76,7 @@ export class SectionsService {
 
   async delete(id: string, authorId: string): Promise<void> {
     const section = await this.findById(id);
-
-    // if (String(section.course.author._id) !== authorId) {
-    //   throw new ForbiddenException(
-    //     "You can't delete a section who don't belong to you",
-    //   );
-    // }
+    this.isCourseAuthor(section.course.author._id.toString(), authorId);
 
     const lessons: Lesson[] = await this.lessonRepository.find({
       'section._id': new Types.ObjectId(section._id),

@@ -11,7 +11,7 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -121,11 +121,12 @@ export class CoursesController {
     description: 'File is required.',
   })
   async add(
+    @Req() req: any,
     @Body() createCourseDto: CreateCourse,
     @ImageFile({ fileIsRequired: true })
     file: Express.Multer.File,
   ): Promise<Course> {
-    return await this.courseService.store(createCourseDto, file);
+    return await this.courseService.store(req.user.id, createCourseDto, file);
   }
 
   @Patch(':id')
@@ -152,9 +153,9 @@ export class CoursesController {
   ): Promise<Course> {
     return await this.courseService.update(
       id,
+      req.user.id,
       editCourseDto,
       file,
-      req.user.id,
     );
   }
 

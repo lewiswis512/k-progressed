@@ -4,6 +4,7 @@ import { AbstractDocument } from '../../../common/document/abstract.document';
 import { LevelEnum } from '../../../utils/enums/level.enum';
 import { Category } from './category.schema';
 import { Teacher } from '../../../modules/teachers/schemas/teacher.schema';
+import { User } from '../../../modules/users/schemas/user.schema';
 
 @Schema({
   collection: 'courses',
@@ -32,6 +33,9 @@ export class Course extends AbstractDocument {
 
   @Prop({ type: Boolean, default: false })
   crs_isApprouved: boolean;
+
+  @Prop({ type: mongoose.Schema.ObjectId, ref: 'User' })
+  author: User;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
   category: Category;

@@ -18,6 +18,8 @@ import { CategoryRepository } from '../learning/repositories/category.repository
 import { Category, CategorySchema } from '../learning/schemas/category.schema';
 import { Teacher, TeacherSchema } from '../teachers/schemas/teacher.schema';
 import { TeacherRepository } from '../teachers/repositories/teacher.repository';
+import { CourseRepository } from '../learning/repositories/course.repository';
+import { Course, CourseSchema } from '../learning/schemas/course.schema';
 
 @Module({
   imports: [
@@ -34,6 +36,7 @@ import { TeacherRepository } from '../teachers/repositories/teacher.repository';
       { name: StripeCustomer.name, schema: StripeCustomerSchema },
       { name: Category.name, schema: CategorySchema },
       { name: Teacher.name, schema: TeacherSchema },
+      { name: Course.name, schema: CourseSchema },
     ]),
   ],
   controllers: [LoadDataController],
@@ -46,6 +49,7 @@ import { TeacherRepository } from '../teachers/repositories/teacher.repository';
     StripeCustomerRepository,
     CategoryRepository,
     TeacherRepository,
+    CourseRepository,
   ],
 })
 export class LoadDataModule {}

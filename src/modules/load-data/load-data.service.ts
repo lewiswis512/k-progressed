@@ -13,6 +13,11 @@ import { Teacher } from '../teachers/schemas/teacher.schema';
 import { MARKETING } from '../../data/teachers/marketing';
 import { FINANCE } from '../../data/teachers/finance';
 import { DOMAIN } from '../../data/teachers/domain';
+import { Category } from '../learning/schemas/category.schema';
+import { Course } from '../learning/schemas/course.schema';
+import { MARKETING_COURSE } from '../../data/courses/marketing-course';
+import { Types } from 'mongoose';
+import { CourseRepository } from '../learning/repositories/course.repository';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -23,16 +28,19 @@ export class LoadDataService {
     private authService: AuthService,
     private categoryRepository: CategoryRepository,
     private teacherRepository: TeacherRepository,
+    private courseRepository: CourseRepository,
   ) {}
 
   async loadData() {
     // await this.userRepository.deleteMany({});
-    await this.categoryRepository.deleteMany({});
-    await this.teacherRepository.deleteMany({});
+    // await this.categoryRepository.deleteMany({});
+    // await this.teacherRepository.deleteMany({});
+    await this.courseRepository.deleteMany({});
 
     // this.loadUsers();
-    this.loadCategories();
-    this.loadTeachers();
+    // this.loadCategories();
+    // this.loadTeachers();
+    this.loadMarketingCourses();
   }
 
   async loadUsers() {
@@ -93,5 +101,49 @@ export class LoadDataService {
 
     await this.teacherRepository.insertMany(teachersInMarketing);
     await this.teacherRepository.insertMany(teachersInFinance);
+  }
+
+  async loadMarketingCourses(): Promise<Course[]> {
+    const category: Category = await this.categoryRepository.findOne({
+      ctgr_name: 'Marketing',
+    });
+
+    const teachers: Teacher[] = await this.teacherRepository.find();
+    const teacherIds: Types.ObjectId[] = teachers.map((teacher) => teacher._id);
+    let courses: Partial<Course>[] = [];
+
+    for (let index = 0; index < MARKETING_COURSE.length; index++) {
+      const course = MARKETING_COURSE[index];
+      const teacherId: Types.ObjectId = teacherIds[index % teacherIds.length];
+      const teacher: Teacher = await this.teacherRepository.findById(
+        new Types.ObjectId(teacherId),
+      );
+      const author: User = teacher.author;
+      const baseDate: Date = new Date();
+      const createdAt: Date = new Date(baseDate);
+      const updatedAt: Date = new Date(baseDate);
+      createdAt.setDate(createdAt.getDate() + index);
+      updatedAt.setDate(updatedAt.getDate() + index);
+
+      let data: Partial<Course> = {
+        crs_title: course.crs_title,
+        crs_slug: course.crs_slug,
+        crs_description: course.crs_description,
+        crs_price: course.crs_price,
+        crs_isPaid: course.crs_isPaid,
+        crs_photo: course.crs_photo,
+        level_id: course.level_id,
+        crs_isApprouved: course.crs_isApprouved,
+        category,
+        teacher,
+        author,
+        created_at: createdAt,
+        updated_at: updatedAt,
+      };
+
+      courses.push(data);
+    }
+
+    return await this.courseRepository.insertMany(courses);
   }
 }
