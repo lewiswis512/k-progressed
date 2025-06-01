@@ -42,7 +42,7 @@ export class TeachersService {
   }
 
   async findByUserId(userId: string) {
-    return this.teacherRepository.findOneOrNull({ user_id: userId });
+    return this.teacherRepository.findOneOrNull({ author: userId });
   }
 
   async store(userId: string, addTeacher: SaveTeacher) {
