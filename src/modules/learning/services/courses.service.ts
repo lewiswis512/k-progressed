@@ -78,7 +78,6 @@ export class CoursesService {
           pipeline: [
             {
               $project: {
-                _id: 0,
                 usr_username: 1,
                 usr_firstname: 1,
                 usr_lastname: 1,
@@ -119,15 +118,15 @@ export class CoursesService {
             {
               'category.ctgr_name': { $regex: keywordToSearch },
             },
-            // {
-            //   'author.usr_username': { $regex: keywordToSearch },
-            // },
-            // {
-            //   'author.usr_firstname': { $regex: keywordToSearch },
-            // },
-            // {
-            //   'author.usr_lastname': { $regex: keywordToSearch },
-            // },
+            {
+              'author.usr_username': { $regex: keywordToSearch },
+            },
+            {
+              'author.usr_firstname': { $regex: keywordToSearch },
+            },
+            {
+              'author.usr_lastname': { $regex: keywordToSearch },
+            },
             {
               'teacher.tchr_title': { $regex: keywordToSearch },
             },
