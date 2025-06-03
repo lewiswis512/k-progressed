@@ -87,7 +87,7 @@ export class LoadDataService {
     }));
   };
 
-  async loadTeachers(): Promise<Teacher[]> {
+  async loadTeachers(): Promise<any> {
     const users: User[] = await this.userRepository.find({
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
@@ -103,8 +103,8 @@ export class LoadDataService {
     );
 
     const teachers: [Teacher[], Teacher[]] = await Promise.all([
-      this.teacherRepository.insertMany(teachersInMarketing),
-      this.teacherRepository.insertMany(teachersInFinance),
+      await this.teacherRepository.insertMany(teachersInMarketing),
+      await this.teacherRepository.insertMany(teachersInFinance),
     ]);
 
     return teachers.flat();
@@ -167,7 +167,7 @@ export class LoadDataService {
   }
 
   async loadFinanceCourses(): Promise<Course[]> {
-    const courses = await this.loadCourses(5, 10, 'Finance', FINANCE_COURSE);
+    const courses = await this.loadCourses(5, 9, 'Finance', FINANCE_COURSE);
 
     return await this.courseRepository.insertMany(courses);
   }
