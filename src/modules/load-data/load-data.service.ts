@@ -18,6 +18,8 @@ import { Course } from '../learning/schemas/course.schema';
 import { MARKETING_COURSE } from '../../data/courses/marketing-course';
 import { Types } from 'mongoose';
 import { CourseRepository } from '../learning/repositories/course.repository';
+import { COURSE_DOMAIN } from 'src/data/courses/course-domain';
+import { FINANCE_COURSE } from 'src/data/courses/finance-course';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -41,6 +43,7 @@ export class LoadDataService {
     // this.loadCategories();
     // this.loadTeachers();
     this.loadMarketingCourses();
+    this.loadFinanceCourses();
   }
 
   async loadUsers() {
@@ -84,7 +87,7 @@ export class LoadDataService {
     }));
   };
 
-  async loadTeachers() {
+  async loadTeachers(): Promise<Teacher[]> {
     const users: User[] = await this.userRepository.find({
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
@@ -99,21 +102,31 @@ export class LoadDataService {
       users,
     );
 
-    await this.teacherRepository.insertMany(teachersInMarketing);
-    await this.teacherRepository.insertMany(teachersInFinance);
+    const teachers: [Teacher[], Teacher[]] = await Promise.all([
+      this.teacherRepository.insertMany(teachersInMarketing),
+      this.teacherRepository.insertMany(teachersInFinance),
+    ]);
+
+    return teachers.flat();
   }
 
-  async loadMarketingCourses(): Promise<Course[]> {
+  async loadCourses(
+    startIndex: number,
+    endIndex: number,
+    categoryName: string,
+    domain: COURSE_DOMAIN,
+  ): Promise<Partial<Course>[]> {
     const category: Category = await this.categoryRepository.findOne({
-      ctgr_name: 'Marketing',
+      ctgr_name: categoryName,
     });
-
     const teachers: Teacher[] = await this.teacherRepository.find();
-    const teacherIds: Types.ObjectId[] = teachers.map((teacher) => teacher._id);
+    const teacherIds: Types.ObjectId[] = teachers
+      .slice(startIndex, endIndex)
+      .map((teacher) => teacher._id);
     let courses: Partial<Course>[] = [];
 
-    for (let index = 0; index < MARKETING_COURSE.length; index++) {
-      const course = MARKETING_COURSE[index];
+    for (let index = 0; index < domain.length; index++) {
+      const course = domain[index];
       const teacherId: Types.ObjectId = teacherIds[index % teacherIds.length];
       const teacher: Teacher = await this.teacherRepository.findById(
         new Types.ObjectId(teacherId),
@@ -143,6 +156,18 @@ export class LoadDataService {
 
       courses.push(data);
     }
+
+    return courses;
+  }
+
+  async loadMarketingCourses(): Promise<Course[]> {
+    const courses = await this.loadCourses(0, 5, 'Marketing', MARKETING_COURSE);
+
+    return await this.courseRepository.insertMany(courses);
+  }
+
+  async loadFinanceCourses(): Promise<Course[]> {
+    const courses = await this.loadCourses(5, 10, 'Finance', FINANCE_COURSE);
 
     return await this.courseRepository.insertMany(courses);
   }
