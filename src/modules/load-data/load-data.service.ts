@@ -34,14 +34,14 @@ export class LoadDataService {
   ) {}
 
   async loadData() {
-    // await this.userRepository.deleteMany({});
-    // await this.categoryRepository.deleteMany({});
-    // await this.teacherRepository.deleteMany({});
+    await this.userRepository.deleteMany({});
+    await this.categoryRepository.deleteMany({});
+    await this.teacherRepository.deleteMany({});
     await this.courseRepository.deleteMany({});
 
-    // this.loadUsers();
-    // this.loadCategories();
-    // this.loadTeachers();
+    this.loadUsers();
+    this.loadCategories();
+    this.loadTeachers();
     this.loadMarketingCourses();
     this.loadFinanceCourses();
   }
