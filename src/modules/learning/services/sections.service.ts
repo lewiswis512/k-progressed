@@ -7,6 +7,7 @@ import { SectionRepository } from '../repositories/section.repository';
 import { Section } from '../schemas/section.schema';
 import { Lesson } from '../schemas/lesson.schema';
 import { AddSection } from '../dtos/sections/add-section.dto';
+import { User } from '../../../modules/users/schemas/user.schema';
 
 @Injectable()
 export class SectionsService {
@@ -51,8 +52,14 @@ export class SectionsService {
     return await this.sectionRepository.create(data);
   }
 
-  async isCourseAuthor(courseAuthorId: string, authorId: string) {
-    if (courseAuthorId !== authorId) {
+  async isCourseAuthor(sectionId: string, authorId: string) {
+    const section = await this.sectionRepository.findById(
+      new Types.ObjectId(sectionId),
+    );
+    const courseAuthor: User = section.course.author;
+    const courseAuthorId = courseAuthor._id;
+
+    if (courseAuthorId.toString() !== authorId) {
       throw new ForbiddenException(
         "You can't update a section who don't belong to you",
       );
