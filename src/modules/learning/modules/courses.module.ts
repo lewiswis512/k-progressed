@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Course, CourseSchema } from '../schemas/course.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { Comment, CommentSchema } from '../../comments/schemas/comment.schema';
-import { Section, sectionSchema } from '../schemas/section.schema';
+import { Section, SectionSchema } from '../schemas/section.schema';
 import { Lesson, LessonSchema } from '../schemas/lesson.schema';
 import { CourseRepository } from '../repositories/course.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
@@ -35,7 +35,7 @@ import {
       { name: Teacher.name, schema: TeacherSchema },
       { name: User.name, schema: UserSchema },
       { name: Comment.name, schema: CommentSchema },
-      { name: Section.name, schema: sectionSchema },
+      { name: Section.name, schema: SectionSchema },
       { name: Lesson.name, schema: LessonSchema },
       { name: Purchase.name, schema: PurchaseSchema },
     ]),

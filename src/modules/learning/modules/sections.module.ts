@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Lesson, LessonSchema } from '../schemas/lesson.schema';
-import { Section, sectionSchema } from '../schemas/section.schema';
+import { Section, SectionSchema } from '../schemas/section.schema';
 import { SectionsService } from '../services/sections.service';
 import { CourseRepository } from '../../../modules/learning/repositories/course.repository';
 import {
@@ -23,7 +23,7 @@ import { SectionsController } from '../controllers/sections.controller';
       }),
     }),
     MongooseModule.forFeature([
-      { name: Section.name, schema: sectionSchema },
+      { name: Section.name, schema: SectionSchema },
       { name: Lesson.name, schema: LessonSchema },
       { name: Course.name, schema: CourseSchema },
     ]),

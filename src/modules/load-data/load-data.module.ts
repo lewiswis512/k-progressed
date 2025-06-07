@@ -20,6 +20,8 @@ import { Teacher, TeacherSchema } from '../teachers/schemas/teacher.schema';
 import { TeacherRepository } from '../teachers/repositories/teacher.repository';
 import { CourseRepository } from '../learning/repositories/course.repository';
 import { Course, CourseSchema } from '../learning/schemas/course.schema';
+import { SectionRepository } from '../learning/repositories/section.repository';
+import { Section, SectionSchema } from '../learning/schemas/section.schema';
 
 @Module({
   imports: [
@@ -37,6 +39,7 @@ import { Course, CourseSchema } from '../learning/schemas/course.schema';
       { name: Category.name, schema: CategorySchema },
       { name: Teacher.name, schema: TeacherSchema },
       { name: Course.name, schema: CourseSchema },
+      { name: Section.name, schema: SectionSchema },
     ]),
   ],
   controllers: [LoadDataController],
@@ -50,6 +53,7 @@ import { Course, CourseSchema } from '../learning/schemas/course.schema';
     CategoryRepository,
     TeacherRepository,
     CourseRepository,
+    SectionRepository,
   ],
 })
 export class LoadDataModule {}

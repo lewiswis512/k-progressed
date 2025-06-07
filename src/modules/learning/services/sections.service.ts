@@ -25,7 +25,7 @@ export class SectionsService {
   }
 
   async findByCourse(id: string): Promise<Section[]> {
-    return await this.sectionRepository.find({ 'course._id': id });
+    return await this.sectionRepository.find({ course: id });
   }
 
   async getLessons(id: string): Promise<Lesson[]> {
@@ -66,7 +66,7 @@ export class SectionsService {
   ): Promise<Section> {
     const section: Section = await this.findById(id);
 
-    this.isCourseAuthor(section.course.author._id.toString(), authorId);
+    // this.isCourseAuthor(section.course.toString(), authorId);
 
     return this.sectionRepository.findByIdAndUpdate(
       new Types.ObjectId(id),

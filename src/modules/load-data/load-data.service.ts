@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { superAdminUser } from '../../data/users/super-admin';
 import { getStudentUsers } from '../../data/users/students';
 import { getTeacherUsers } from '../../data/users/teacher-users';
@@ -16,10 +17,14 @@ import { DOMAIN } from '../../data/teachers/domain';
 import { Category } from '../learning/schemas/category.schema';
 import { Course } from '../learning/schemas/course.schema';
 import { MARKETING_COURSE } from '../../data/courses/marketing-course';
-import { Types } from 'mongoose';
 import { CourseRepository } from '../learning/repositories/course.repository';
-import { COURSE_DOMAIN } from 'src/data/courses/course-domain';
-import { FINANCE_COURSE } from 'src/data/courses/finance-course';
+import { COURSE_DOMAIN } from '../../data/courses/course-domain';
+import { FINANCE_COURSE } from '../../data/courses/finance-course';
+import { Section } from '../learning/schemas/section.schema';
+import { MARKETING_SECTIONS } from '../../data/sections/marketing-sections';
+import { SectionRepository } from '../learning/repositories/section.repository';
+import { SECTION_DOMAIN } from '../../data/sections/section-domain';
+import { FINANCE_SECTIONS } from '../../data/sections/finance-sections';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -31,19 +36,23 @@ export class LoadDataService {
     private categoryRepository: CategoryRepository,
     private teacherRepository: TeacherRepository,
     private courseRepository: CourseRepository,
+    private sectionRepository: SectionRepository,
   ) {}
 
   async loadData() {
-    await this.userRepository.deleteMany({});
-    await this.categoryRepository.deleteMany({});
-    await this.teacherRepository.deleteMany({});
-    await this.courseRepository.deleteMany({});
+    // await this.userRepository.deleteMany({});
+    // await this.categoryRepository.deleteMany({});
+    // await this.teacherRepository.deleteMany({});
+    // await this.courseRepository.deleteMany({});
+    await this.sectionRepository.deleteMany({});
 
-    await this.loadUsers();
-    await this.loadCategories();
-    await this.loadTeachers();
-    await this.loadMarketingCourses();
-    await this.loadFinanceCourses();
+    // await this.loadUsers();
+    // await this.loadCategories();
+    // await this.loadTeachers();
+    // await this.loadMarketingCourses();
+    // await this.loadFinanceCourses();
+    await this.loadMarketingSections();
+    await this.loadFinanceSections();
   }
 
   async loadUsers() {
@@ -64,12 +73,12 @@ export class LoadDataService {
     );
   }
 
-  async loadCategories() {
+  async loadCategories(): Promise<Category[]> {
     const categories = CATEGORIES_DESIGNATION.map((designation) => ({
       ctgr_name: designation,
     }));
 
-    await this.categoryRepository.insertMany(categories);
+    return await this.categoryRepository.insertMany(categories);
   }
 
   createTeachers = (
@@ -87,7 +96,7 @@ export class LoadDataService {
     }));
   };
 
-  async loadTeachers(): Promise<any> {
+  async loadTeachers(): Promise<Teacher[]> {
     const users: User[] = await this.userRepository.find({
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
@@ -95,6 +104,7 @@ export class LoadDataService {
 
     const teachersInMarketing: Omit<Partial<Teacher>, '_id'>[] =
       this.createTeachers(0, 5, MARKETING, users);
+
     const teachersInFinance: Omit<Teacher, '_id'>[] = this.createTeachers(
       5,
       users.length,
@@ -170,5 +180,31 @@ export class LoadDataService {
     const courses = await this.loadCourses(5, 9, 'Finance', FINANCE_COURSE);
 
     return await this.courseRepository.insertMany(courses);
+  }
+
+  async loadSections(
+    ctgrName: string,
+    sectionDomain: SECTION_DOMAIN,
+  ): Promise<Section[]> {
+    const category: Category = await this.categoryRepository.findOne({
+      ctgr_name: ctgrName,
+    });
+    const courses: Course[] = await this.courseRepository.find({ category });
+    const sections: Omit<Section, '_id'>[] = courses.flatMap((course) =>
+      sectionDomain.map((sectionTitle) => ({
+        sect_title: sectionTitle,
+        course,
+      })),
+    );
+
+    return await this.sectionRepository.insertMany(sections);
+  }
+
+  async loadMarketingSections(): Promise<Section[]> {
+    return await this.loadSections('Marketing', MARKETING_SECTIONS);
+  }
+
+  async loadFinanceSections(): Promise<Section[]> {
+    return await this.loadSections('Finance', FINANCE_SECTIONS);
   }
 }

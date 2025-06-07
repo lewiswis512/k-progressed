@@ -3,7 +3,7 @@ import { LessonsService } from '../services/lessons.service';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Lesson, LessonSchema } from '../schemas/lesson.schema';
-import { Section, sectionSchema } from '../schemas/section.schema';
+import { Section, SectionSchema } from '../schemas/section.schema';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { LessonsController } from '../controllers/lessons.controller';
@@ -20,7 +20,7 @@ import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
     }),
     MongooseModule.forFeature([
       { name: Lesson.name, schema: LessonSchema },
-      { name: Section.name, schema: sectionSchema },
+      { name: Section.name, schema: SectionSchema },
     ]),
   ],
   providers: [

@@ -14,4 +14,4 @@ export class Section extends AbstractDocument {
   course: Course;
 }
 
-export const sectionSchema = SchemaFactory.createForClass(Section);
+export const SectionSchema = SchemaFactory.createForClass(Section);
