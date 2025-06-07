@@ -55,6 +55,14 @@ export class CoursesController {
     return await this.courseService.findAll(search.q, page, limit);
   }
 
+  @Get('by/:authorId')
+  @ApiOkResponse({
+    description: 'The courses have been successfully retrieved.',
+  })
+  async byAuthor(@Param('authorId') authorId: string): Promise<Course[]> {
+    return await this.courseService.byAuthor(authorId);
+  }
+
   @Get('show/:id')
   @ApiOkResponse({
     description: 'The course have been successfully retrieved.',
