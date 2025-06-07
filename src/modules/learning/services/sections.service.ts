@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Types } from 'mongoose';
+import { ObjectId, Types } from 'mongoose';
 import { CourseRepository } from '../../../modules/learning/repositories/course.repository';
 import { EditSection } from '../dtos/sections/edit-section.dto';
 import { LessonRepository } from '../repositories/lesson.repository';
@@ -56,10 +56,9 @@ export class SectionsService {
     const section = await this.sectionRepository.findById(
       new Types.ObjectId(sectionId),
     );
-    const courseAuthor: User = section.course.author;
-    const courseAuthorId = courseAuthor._id;
+    const course = await this.courseRepository.findById(section.course._id);
 
-    if (courseAuthorId.toString() !== authorId) {
+    if (course.author._id.toString() !== authorId) {
       throw new ForbiddenException(
         "You can't update a section who don't belong to you",
       );
@@ -73,7 +72,7 @@ export class SectionsService {
   ): Promise<Section> {
     const section: Section = await this.findById(id);
 
-    // this.isCourseAuthor(section.course.toString(), authorId);
+    this.isCourseAuthor(section._id.toString(), authorId);
 
     return this.sectionRepository.findByIdAndUpdate(
       new Types.ObjectId(id),

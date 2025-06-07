@@ -194,6 +194,8 @@ export class LoadDataService {
       sectionDomain.map((sectionTitle) => ({
         sect_title: sectionTitle,
         course,
+        created_at: new Date(),
+        updated_at: new Date(),
       })),
     );
 
