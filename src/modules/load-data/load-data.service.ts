@@ -39,11 +39,11 @@ export class LoadDataService {
     await this.teacherRepository.deleteMany({});
     await this.courseRepository.deleteMany({});
 
-    this.loadUsers();
-    this.loadCategories();
-    this.loadTeachers();
-    this.loadMarketingCourses();
-    this.loadFinanceCourses();
+    await this.loadUsers();
+    await this.loadCategories();
+    await this.loadTeachers();
+    await this.loadMarketingCourses();
+    await this.loadFinanceCourses();
   }
 
   async loadUsers() {
