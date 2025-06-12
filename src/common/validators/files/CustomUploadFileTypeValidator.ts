@@ -1,29 +1,27 @@
-import { FileValidator } from "@nestjs/common";
-import * as fileType from "file-type-mime";
+import { FileValidator } from '@nestjs/common';
+import * as fileType from 'file-type-mime';
 
 export interface CustomUploadTypeValidatorOptions {
-    fileType: string[];
+  fileType: string[];
 }
 
 export class CustomUploadFileTypeValidatorOptions extends FileValidator {
-    private allowedMimeTypes: string[];
+  private allowedMimeTypes: string[];
 
-    constructor(protected readonly validationOptions: CustomUploadTypeValidatorOptions) {
-        super(validationOptions);
-        this.allowedMimeTypes = this.validationOptions.fileType;
-    }
+  constructor(
+    protected readonly validationOptions: CustomUploadTypeValidatorOptions,
+  ) {
+    super(validationOptions);
+    this.allowedMimeTypes = this.validationOptions.fileType;
+  }
 
-    isValid(file?: Express.Multer.File): boolean {
-        const parseFileBuffer = fileType.parse(file.buffer);
+  isValid(file?: Express.Multer.File): boolean {
+    if (!file || !file.mimetype) return false;
 
-        if (!parseFileBuffer || !parseFileBuffer.mime) {
-            return false;
-        }
+    return this.allowedMimeTypes.includes(file.mimetype);
+  }
 
-        return this.allowedMimeTypes.includes(parseFileBuffer.mime);
-    }
-
-    buildErrorMessage(): string {
-        return `Upload not allowed. Upload only files of type: ${this.allowedMimeTypes.join(', ')}`
-    }
+  buildErrorMessage(): string {
+    return `Upload not allowed. Upload only files of type: ${this.allowedMimeTypes.join(', ')}`;
+  }
 }

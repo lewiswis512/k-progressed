@@ -206,10 +206,10 @@ export const FINANCE_COURSE = [
     crs_isApprouved: true,
   },
   {
-    crs_title: 'Finance islamique : principes et applications',
-    crs_slug: 'finance-islamique-principes-et-applications',
+    crs_title: 'Finance : principes et applications',
+    crs_slug: 'finance-principes-et-applications',
     crs_description:
-      'Comprenez les bases de la finance islamique et comment elle se distingue de la finance conventionnelle.',
+      'Comprenez les bases de la finance et comment elle se distingue de la finance conventionnelle.',
     crs_price: 99,
     crs_isPaid: true,
     crs_photo:

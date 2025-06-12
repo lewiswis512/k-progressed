@@ -25,6 +25,7 @@ import { MARKETING_SECTIONS } from '../../data/sections/marketing-sections';
 import { SectionRepository } from '../learning/repositories/section.repository';
 import { SECTION_DOMAIN } from '../../data/sections/section-domain';
 import { FINANCE_SECTIONS } from '../../data/sections/finance-sections';
+import { Lesson } from '../learning/schemas/lesson.schema';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -208,5 +209,9 @@ export class LoadDataService {
 
   async loadFinanceSections(): Promise<Section[]> {
     return await this.loadSections('Finance', FINANCE_SECTIONS);
+  }
+
+  async loadLessons(): Promise<Lesson[]> {
+    return null;
   }
 }
