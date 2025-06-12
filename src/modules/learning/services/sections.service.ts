@@ -33,7 +33,7 @@ export class SectionsService {
     await this.findById(id);
 
     const lessons = await this.lessonRepository.find({
-      'section._id': id,
+      'section': id,
     });
 
     return lessons;
