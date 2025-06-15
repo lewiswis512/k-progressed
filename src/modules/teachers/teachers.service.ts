@@ -77,6 +77,37 @@ export class TeachersService {
     return teacher[0];
   }
 
+  async findByUserSlug(slug: string) {
+    const teacherAggregation = [
+      { $project: { __v: 0 } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+                usr_email: 1,
+                usr_photo: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+      { $match: { 'author.usr_slug': slug } },
+    ];
+
+    const teacher = await this.teacherRepository.aggregate(teacherAggregation);
+
+    return teacher[0];
+  }
+
   async findByUserId(userId: string) {
     return this.teacherRepository.findOneOrNull({ author: userId });
   }
