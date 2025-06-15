@@ -93,6 +93,7 @@ export class TeachersService {
                 usr_lastname: 1,
                 usr_email: 1,
                 usr_photo: 1,
+                usr_slug: 1
               },
             },
           ],
