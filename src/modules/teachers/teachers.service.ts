@@ -47,23 +47,34 @@ export class TeachersService {
   }
 
   async findById(id: string) {
-    const isvalidId = mongoose.isValidObjectId(id);
+    const teacherAggregation = [
+      { $match: { _id: new Types.ObjectId(id) } },
+      { $project: { __v: 0 } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+                usr_email: 1,
+                usr_photo: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+    ];
 
-    if (!isvalidId) {
-      throw new BadRequestException(
-        'Wrong mongoose id, please enter a valid id',
-      );
-    }
+    const teacher = await this.teacherRepository.aggregate(teacherAggregation);
 
-    const teacher = await this.teacherRepository.findById(
-      new Types.ObjectId(id),
-    );
-
-    if (!teacher) {
-      throw new NotFoundException('Teacher not found');
-    }
-
-    return teacher;
+    return teacher[0];
   }
 
   async findByUserId(userId: string) {
