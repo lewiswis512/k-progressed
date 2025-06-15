@@ -9,6 +9,7 @@ import { UserTypeEnum } from '../../utils/enums/user-type.enum';
 import { UserRepository } from '../users/repository/user.repository';
 import { SaveTeacher } from './dto/save-teacher.dto';
 import { TeacherRepository } from './repositories/teacher.repository';
+import { Aggregation } from '../../common/repository/abstract.repository';
 
 @Injectable()
 export class TeachersService {
@@ -18,7 +19,30 @@ export class TeachersService {
   ) {}
 
   async findAll() {
-    return this.teacherRepository.find();
+    const teacherAggregation: Aggregation[] = [
+      { $project: { __v: 0 } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'author',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                usr_username: 1,
+                usr_firstname: 1,
+                usr_lastname: 1,
+                usr_email: 1,
+              },
+            },
+          ],
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+    ];
+
+    return this.teacherRepository.aggregate(teacherAggregation);
   }
 
   async findById(id: string) {
