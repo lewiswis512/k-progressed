@@ -8,6 +8,7 @@ export const superAdminUser = async () => {
     usr_username: 'Lewis',
     usr_firstname: 'Lewis',
     usr_lastname: 'Rabarison',
+    usr_slug: 'lewis-rabarison',
     usr_email: 'rabarilewis@gmail.com',
     usr_password: await hashPassword('password'),
     usr_type: UserTypeEnum.TEACHER,

@@ -41,17 +41,17 @@ export class LoadDataService {
   ) {}
 
   async loadData() {
-    // await this.userRepository.deleteMany({});
-    // await this.categoryRepository.deleteMany({});
-    // await this.teacherRepository.deleteMany({});
-    // await this.courseRepository.deleteMany({});
+    await this.userRepository.deleteMany({});
+    await this.categoryRepository.deleteMany({});
+    await this.teacherRepository.deleteMany({});
+    await this.courseRepository.deleteMany({});
     await this.sectionRepository.deleteMany({});
 
-    // await this.loadUsers();
-    // await this.loadCategories();
-    // await this.loadTeachers();
-    // await this.loadMarketingCourses();
-    // await this.loadFinanceCourses();
+    await this.loadUsers();
+    await this.loadCategories();
+    await this.loadTeachers();
+    await this.loadMarketingCourses();
+    await this.loadFinanceCourses();
     await this.loadMarketingSections();
     await this.loadFinanceSections();
   }

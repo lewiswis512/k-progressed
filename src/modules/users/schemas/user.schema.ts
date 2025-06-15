@@ -19,6 +19,9 @@ export class User extends AbstractDocument {
   @Prop({ type: String, trim: true })
   usr_lastname?: string;
 
+  @Prop({ type: String, trim: true })
+  usr_slug?: string;
+
   @Prop({ type: String, required: true, unique: true, trim: true })
   usr_email: string;
 

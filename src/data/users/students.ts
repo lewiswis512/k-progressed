@@ -16,6 +16,7 @@ export const getStudentUsers = async () => {
       usr_username: firstname,
       usr_firstname: firstname,
       usr_lastname: lastname,
+      usr_slug: `${firstname}-${lastname}`,
       usr_email: `${firstname}.${lastname}@${domain}`,
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.STUDENT,
