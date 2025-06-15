@@ -47,7 +47,7 @@ export class TeachersController {
     return await this.teachersService.findById(id);
   }
 
-  @Get(':userSlug')
+  @Get('by/user/:userSlug')
   @ApiOkResponse({
     description: 'The teacher have been successfully retrieved.',
   })
