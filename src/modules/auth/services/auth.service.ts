@@ -51,6 +51,7 @@ export class AuthService {
       email: user.usr_email,
       firstname: user.usr_firstname,
       lastname: user.usr_lastname,
+      slug: user.usr_slug,
       photo: user.usr_photo,
       type: user.usr_type,
       role: user.usr_role,
@@ -66,6 +67,7 @@ export class AuthService {
     const hashedPassword: string = await hashPassword(registerDto.usr_password);
     const data: IRegistration = {
       ...registerDto,
+      usr_slug: '',
       usr_password: hashedPassword,
     };
     const user: User = await this.userRepository.create(data);

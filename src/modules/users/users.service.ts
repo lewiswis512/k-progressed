@@ -82,6 +82,7 @@ export class UsersService {
       usr_type: userUpdated.usr_type,
       usr_firstname: userUpdated.usr_firstname,
       usr_lastname: userUpdated.usr_lastname,
+      usr_slug: `${userUpdated.usr_firstname}-${userUpdated.usr_lastname}`,
       usr_photo: userUpdated.usr_photo ?? null,
     };
   }

@@ -9,5 +9,6 @@ export interface IUserUpdateProfile {
   usr_type: UserTypeEnum;
   usr_firstname: string;
   usr_lastname: string;
+  usr_slug: string;
   usr_photo?: string;
 }
