@@ -429,15 +429,10 @@ export class CoursesService {
       new Types.ObjectId(categoryId),
     );
 
-    const teacher = await this.teacherRepository.findOne({
-      user: author._id,
-    });
-
-    let data: ISaveCourse = {
+    let data: any = {
       ...editCourseDto,
       crs_photo: photoLink,
       category,
-      teacher,
     };
 
     return this.courseRepository.findByIdAndUpdate(
