@@ -10,14 +10,13 @@ export const getStudentUsers = async () => {
   for (let i = 0; i < 10; i++) {
     const firstname = faker.person.firstName().toLowerCase();
     const lastname = faker.person.lastName().toLowerCase();
-    const domain = faker.internet.domainName();
 
     users.push({
       usr_username: firstname,
       usr_firstname: firstname,
       usr_lastname: lastname,
       usr_slug: `${firstname}-${lastname}`,
-      usr_email: `${firstname}.${lastname}@${domain}`,
+      usr_email: `${firstname}.${lastname}@gmail.com`,
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.STUDENT,
       usr_role: RoleEnum.USER,
