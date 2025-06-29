@@ -10,6 +10,7 @@ import { PaymentIntentController } from './controller/payment-intent.controller'
 import { PaymentController } from './controller/payment.controller';
 import { StripePaymentIntentRepository } from './repository/stripePaymentIntent.repository';
 import { PaymentService } from './service/payment.service';
+import { WebhookController } from './controller/webhook.controller';
 
 @Module({
   imports: [
@@ -17,7 +18,12 @@ import { PaymentService } from './service/payment.service';
       { name: StripePaymentIntent.name, schema: StripePaymentIntentSchema },
     ]),
   ],
-  controllers: [PaymentIntentController, ConfigController, PaymentController],
+  controllers: [
+    PaymentIntentController,
+    ConfigController,
+    PaymentController,
+    WebhookController,
+  ],
   providers: [StripeService, StripePaymentIntentRepository, PaymentService],
 })
 export class PaymentModule {}

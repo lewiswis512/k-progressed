@@ -33,6 +33,8 @@ async function bootstrap() {
     }),
   );
 
+  app.use('/api/webhook', express.raw({ type: 'application/json' }));
+
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const config = new DocumentBuilder()
