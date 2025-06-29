@@ -9,15 +9,12 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../common/guards/auth.guard';
-import { StripeService } from '../../modules/payment/service/stripe.service';
 import { SavePurchase } from './dto/save-purchase.dto';
 import { PurchasesService } from './purchases.service';
 
 @Controller('purchases')
-export class PurchasesController extends StripeService {
-  constructor(private purchaseService: PurchasesService) {
-    super();
-  }
+export class PurchasesController {
+  constructor(private purchaseService: PurchasesService) {}
 
   @Get()
   @ApiBearerAuth()

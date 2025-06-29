@@ -3,6 +3,7 @@ import { StripeService } from '../../../modules/payment/service/stripe.service';
 import { StripePaymentIntentRepository } from '../repository/stripePaymentIntent.repository';
 import { IBillingDetail } from '../schemas/stripe-payment-intent.schema';
 import Stripe from 'stripe';
+import { PurchasesService } from '../../../modules/purchases/purchases.service';
 
 interface IPayInfoData {
   strp_paym_amount: number;
@@ -19,6 +20,7 @@ interface IPayInfoData {
 export class PaymentService extends StripeService {
   constructor(
     private stripePaymentIntentRepository: StripePaymentIntentRepository,
+    private purchaseService: PurchasesService,
   ) {
     super();
   }
@@ -84,7 +86,13 @@ export class PaymentService extends StripeService {
         break;
       case 'charge.succeeded':
         const charge: Stripe.Charge = event.data.object;
+        const { metadata } = charge;
+
         await this.savePaymentInformation(charge);
+
+        if (metadata.purchaseId) {
+          await this.purchaseService.validatePurchase(metadata.purchaseId);
+        }
 
         console.info('Charge succeeded');
         break;
