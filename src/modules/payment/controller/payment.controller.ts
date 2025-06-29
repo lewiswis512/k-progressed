@@ -1,17 +1,11 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { PaymentService } from '../service/payment.service';
-import { SavePaymentAddressDto } from '../dto/save-payment-address.dto';
-import { SavePaymentDto } from '../dto/save-payment.dto';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
+import { SavePaymentDto } from '../dto/save-payment.dto';
+import { PaymentService } from '../service/payment.service';
 
 @Controller('payment')
 export class PaymentController {
   constructor(private paymentService: PaymentService) {}
-
-  @ApiExcludeEndpoint()
-  @Post('address')
-  async saveAddress(@Body() savePaymentAddressDto: SavePaymentAddressDto) {
-  }
 
   @ApiExcludeEndpoint()
   @Post('create')
