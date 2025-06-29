@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { StripeService } from '../../../modules/payment/service/stripe.service';
 import { StripePaymentIntentRepository } from '../repository/stripePaymentIntent.repository';
-import {
-  IBillingDetail
-} from '../schemas/stripe-payment-intent.schema';
+import { IBillingDetail } from '../schemas/stripe-payment-intent.schema';
+import Stripe from 'stripe';
 
 interface IPayInfoData {
   strp_paym_amount: number;
@@ -14,7 +13,6 @@ interface IPayInfoData {
   strp_paym_exp_year: number;
   strp_paym_billing_details: IBillingDetail;
   strp_customer_id: string;
-  purchase_id: string;
 }
 
 @Injectable()
@@ -34,31 +32,71 @@ export class PaymentService extends StripeService {
     }
   }
 
-  async savePaymentInformation(purchaseId: string) {
+  async savePaymentInformation(charge: Stripe.Charge) {
     try {
-      const chargesSearched = await this.stripe.charges.search({
-        query: `metadata[\'purchase_id\']:\'${purchaseId}\'`,
-      });
+      const payInfoData: IPayInfoData = {
+        strp_paym_amount: charge.amount / 100,
+        strp_paym_currency: charge.currency,
+        strp_paym_status: charge.status,
+        strp_paym_type: charge.payment_method_details.type,
+        strp_paym_exp_month: charge.payment_method_details.card.exp_month,
+        strp_paym_exp_year: charge.payment_method_details.card.exp_year,
+        strp_paym_billing_details: charge.billing_details,
+        strp_customer_id: charge.customer as string,
+      };
 
-      if (chargesSearched.data.length > 0) {
-        const charges = chargesSearched.data[0];
-        const payInfoData: IPayInfoData = {
-          strp_paym_amount: charges.amount / 100,
-          strp_paym_currency: charges.currency,
-          strp_paym_status: charges.status,
-          strp_paym_type: charges.payment_method_details.type,
-          strp_paym_exp_month: charges.payment_method_details.card.exp_month,
-          strp_paym_exp_year: charges.payment_method_details.card.exp_year,
-          strp_paym_billing_details: charges.billing_details,
-          strp_customer_id: charges.customer as string,
-          purchase_id: purchaseId,
-        };
-
-        return await this.stripePaymentIntentRepository.create(payInfoData);
-      }
+      return await this.stripePaymentIntentRepository.create(payInfoData);
     } catch (error) {
       console.error('Error saving payment information:', error);
       throw error;
+    }
+  }
+
+  async webhook(
+    payload: string | Buffer,
+    header: string | Buffer | Array<string>,
+    webhookSecret: string,
+  ): Promise<void> {
+    let event: Stripe.Event;
+
+    if (webhookSecret) {
+      try {
+        event = this.stripe.webhooks.constructEvent(
+          payload,
+          header,
+          webhookSecret,
+        );
+      } catch (error: any) {
+        console.error(
+          `Webhook signature verification failed. ${error.message}`,
+        );
+      }
+    } else {
+      throw new Error('Failed to fetch the webhook secret');
+    }
+
+    switch (event.type) {
+      case 'payment_intent.created':
+        console.info('Payment intent created');
+        break;
+      case 'payment_intent.succeeded':
+        console.info('Payment intent succeeded');
+        break;
+      case 'charge.succeeded':
+        const charge: Stripe.Charge = event.data.object;
+        await this.savePaymentInformation(charge);
+
+        console.info('Charge succeeded');
+        break;
+      case 'charge.updated':
+        console.info('Charge updated');
+        break;
+      case 'charge.failed':
+        throw new Error(
+          `Charge failed: ${JSON.stringify(event.data.object, null, 2)}`,
+        );
+      default:
+        throw new Error(`Unhandled event type ${event.type}`);
     }
   }
 }
