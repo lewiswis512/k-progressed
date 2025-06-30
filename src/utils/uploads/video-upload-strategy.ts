@@ -3,4 +3,5 @@ export interface VideoUploadStrategy<
   TResult = { secure_url: string; thumbnail?: string },
 > {
   uploadVideo(file: TInput, destination: string): Promise<TResult>;
+  delete(publicId: string): Promise<void>;
 }
