@@ -99,6 +99,9 @@ export class PaymentService extends StripeService {
       case 'charge.updated':
         console.info('Charge updated');
         break;
+      case 'customer.created':
+        console.info('customer created');
+        break;
       case 'charge.failed':
         throw new Error(
           `Charge failed: ${JSON.stringify(event.data.object, null, 2)}`,
