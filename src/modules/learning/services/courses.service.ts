@@ -9,11 +9,8 @@ import { Aggregation } from '../../../common/repository/abstract.repository';
 import { ICourseContents } from '../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
-import { ISaveCourse } from '../../../interfaces/courses/ISaveCourse';
 import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILessonInSectionWithDuration';
 import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
-import { Lesson } from '../schemas/lesson.schema';
-import { Section } from '../schemas/section.schema';
 import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
 import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
@@ -37,6 +34,8 @@ import { CourseRepository } from '../repositories/course.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
+import { Lesson } from '../schemas/lesson.schema';
+import { Section } from '../schemas/section.schema';
 
 @Injectable()
 export class CoursesService {

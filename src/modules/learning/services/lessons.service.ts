@@ -19,7 +19,9 @@ import { SectionRepository } from '../repositories/section.repository';
 import { Lesson } from '../schemas/lesson.schema';
 import { Section } from '../schemas/section.schema';
 import { videoUploaderProvider } from '../../../utils/uploads/video-uploader-provider';
-import { videoLink } from 'src/utils/uploads/video-link';
+import { videoLink } from '../../../utils/uploads/video-link';
+import * as fs from 'fs';
+import { Aggregation } from 'src/common/repository/abstract.repository';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;
@@ -44,7 +46,42 @@ export class LessonsService {
   }
 
   async findById(id: string): Promise<Lesson> {
-    return this.lessonRepository.findById(new Types.ObjectId(id));
+    const [lesson] = await this.lessonRepository.aggregate([
+      { $match: { _id: new Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'sections',
+          localField: 'section',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'courses',
+                localField: 'course',
+                foreignField: '_id',
+                as: 'course',
+              },
+            },
+            {
+              $unwind: '$course',
+            },
+            {
+              $project: {
+                _id: 0,
+                sect_title: 1,
+                course: {
+                  author: 1,
+                },
+              },
+            },
+          ],
+          as: 'section',
+        },
+      },
+      { $unwind: '$section' },
+    ]);
+
+    return lesson;
   }
 
   async getFree(courseId: string): Promise<IFreeLesson[]> {
@@ -177,30 +214,52 @@ export class LessonsService {
   }
 
   async delete(id: string, authorId: string): Promise<void> {
-    const lesson = await this.findById(id);
+    const lesson: Lesson = await this.findById(id);
+    console.log({ lesson });
 
-    if (String(lesson.section.course.author._id) !== authorId) {
+    this.isAuthorLesson(lesson.section.course.author._id.toString(), authorId);
+    this.deleteVideoLesson(lesson);
+
+    // if (lesson.lssn_video_photo) {
+    //   const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
+    //     lesson.lssn_video_photo,
+    //   );
+
+    //   await this.cloudinaryUploadStrategy.delete(publicId);
+    // }
+
+    //await this.lessonRepository.findByIdAndDelete(new Types.ObjectId(id));
+  }
+
+  isAuthorLesson(lessonAuthorId: string, authorId: string) {
+    console.log({ lessonAuthorId });
+    console.log({ authorId });
+
+    if (lessonAuthorId !== authorId) {
       throw new ForbiddenException(
         "You can't delete a lesson who don't belong to you",
       );
     }
+  }
 
-    if (lesson.lssn_video_link) {
+  async deleteVideoLesson(lesson: Lesson) {
+    if (
+      lesson.lssn_video_link.startsWith('https') ||
+      lesson.lssn_video_link.startsWith('http')
+    ) {
       const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
         lesson.lssn_video_link,
       );
 
       await this.cloudinaryUploadStrategy.delete(publicId);
+    } else {
+      const videoPath = `${PATH_UPLOAD_LESSON_VIDEOS}/${lesson.lssn_video_link}`;
+      fs.unlink(videoPath, (err) => {
+        if (err) {
+          console.error('Failed to delete video:', err);
+          return;
+        }
+      });
     }
-
-    if (lesson.lssn_video_photo) {
-      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-        lesson.lssn_video_photo,
-      );
-
-      await this.cloudinaryUploadStrategy.delete(publicId);
-    }
-
-    await this.lessonRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 }
