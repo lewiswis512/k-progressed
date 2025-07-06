@@ -21,7 +21,6 @@ import { Section } from '../schemas/section.schema';
 import { videoUploaderProvider } from '../../../utils/uploads/video-uploader-provider';
 import { videoLink } from '../../../utils/uploads/video-link';
 import * as fs from 'fs';
-import { Aggregation } from 'src/common/repository/abstract.repository';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;
@@ -215,26 +214,15 @@ export class LessonsService {
 
   async delete(id: string, authorId: string): Promise<void> {
     const lesson: Lesson = await this.findById(id);
-    console.log({ lesson });
 
     this.isAuthorLesson(lesson.section.course.author._id.toString(), authorId);
     this.deleteVideoLesson(lesson);
+    this.deleteLessonPhoto(lesson);
 
-    // if (lesson.lssn_video_photo) {
-    //   const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-    //     lesson.lssn_video_photo,
-    //   );
-
-    //   await this.cloudinaryUploadStrategy.delete(publicId);
-    // }
-
-    //await this.lessonRepository.findByIdAndDelete(new Types.ObjectId(id));
+    await this.lessonRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 
   isAuthorLesson(lessonAuthorId: string, authorId: string) {
-    console.log({ lessonAuthorId });
-    console.log({ authorId });
-
     if (lessonAuthorId !== authorId) {
       throw new ForbiddenException(
         "You can't delete a lesson who don't belong to you",
@@ -242,7 +230,7 @@ export class LessonsService {
     }
   }
 
-  async deleteVideoLesson(lesson: Lesson) {
+  async deleteVideoLesson(lesson: Lesson): Promise<void> {
     if (
       lesson.lssn_video_link.startsWith('https') ||
       lesson.lssn_video_link.startsWith('http')
@@ -260,6 +248,16 @@ export class LessonsService {
           return;
         }
       });
+    }
+  }
+
+  async deleteLessonPhoto(lesson: Lesson): Promise<void> {
+    if (lesson.lssn_video_photo) {
+      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
+        lesson.lssn_video_photo,
+      );
+
+      await this.cloudinaryUploadStrategy.delete(publicId);
     }
   }
 }
