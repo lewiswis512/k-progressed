@@ -7,10 +7,8 @@ import { AuthService } from '../auth/services/auth.service';
 import { CategoryRepository } from '../learning/repositories/category.repository';
 import { UserRepository } from '../users/repository/user.repository';
 import { User } from '../users/schemas/user.schema';
-import { TeacherRepository } from '../teachers/repositories/teacher.repository';
 import { UserTypeEnum } from '../../utils/enums/user-type.enum';
 import { RoleEnum } from '../../utils/enums/role.enum';
-import { Teacher } from '../teachers/schemas/teacher.schema';
 import { MARKETING } from '../../data/teachers/marketing';
 import { FINANCE } from '../../data/teachers/finance';
 import { DOMAIN } from '../../data/teachers/domain';
@@ -26,6 +24,8 @@ import { SectionRepository } from '../learning/repositories/section.repository';
 import { SECTION_DOMAIN } from '../../data/sections/section-domain';
 import { FINANCE_SECTIONS } from '../../data/sections/finance-sections';
 import { Lesson } from '../learning/schemas/lesson.schema';
+import { TeacherRepository } from '../learning/repositories/teacher.repository';
+import { Teacher } from '../learning/schemas/teachers/teacher.schema';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 

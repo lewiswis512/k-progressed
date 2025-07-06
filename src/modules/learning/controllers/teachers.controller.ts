@@ -19,10 +19,10 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
 } from '@nestjs/swagger';
-import { AuthGuard } from '../../common/guards/auth.guard';
-import { SaveTeacher } from './dto/save-teacher.dto';
-import { TeachersService } from './teachers.service';
-import { AddTeacher } from './dto/add-teacher.dto';
+import { TeachersService } from '../services/teachers.service';
+import { AuthGuard } from 'src/common/guards/auth.guard';
+import { AddTeacher } from '../dtos/teachers/add-teacher.dto';
+import { SaveTeacher } from '../dtos/teachers/save-teacher.dto';
 
 @Controller('teachers')
 export class TeachersController {

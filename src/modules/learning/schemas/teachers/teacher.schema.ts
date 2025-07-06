@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { AbstractDocument } from '../../../common/document/abstract.document';
-import { User } from '../../users/schemas/user.schema';
+import { AbstractDocument } from '../../../../common/document/abstract.document';
+import { User } from '../../../../modules/users/schemas/user.schema';
 
 @Schema({
   collection: 'teachers',

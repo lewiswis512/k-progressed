@@ -1,6 +1,6 @@
 import { LevelEnum } from '../../utils/enums/level.enum';
 import { Category } from '../../modules/learning/schemas/category.schema';
-import { Teacher } from '../../modules/teachers/schemas/teacher.schema';
+import { Teacher } from '../../modules/learning/schemas/teachers/teacher.schema';
 
 export interface ISaveCourse {
   crs_title: string;

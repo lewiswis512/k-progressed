@@ -21,11 +21,8 @@ import {
 } from '../../../modules/purchases/schemas/purchase.schema';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Category, CategorySchema } from '../schemas/category.schema';
-import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
-import {
-  Teacher,
-  TeacherSchema,
-} from '../../../modules/teachers/schemas/teacher.schema';
+import { Teacher, TeacherSchema } from '../schemas/teachers/teacher.schema';
+import { TeacherRepository } from '../repositories/teacher.repository';
 
 @Module({
   imports: [

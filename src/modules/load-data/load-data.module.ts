@@ -16,12 +16,15 @@ import {
 } from '../payment/schemas/stripe-customer.schema';
 import { CategoryRepository } from '../learning/repositories/category.repository';
 import { Category, CategorySchema } from '../learning/schemas/category.schema';
-import { Teacher, TeacherSchema } from '../teachers/schemas/teacher.schema';
-import { TeacherRepository } from '../teachers/repositories/teacher.repository';
 import { CourseRepository } from '../learning/repositories/course.repository';
 import { Course, CourseSchema } from '../learning/schemas/course.schema';
 import { SectionRepository } from '../learning/repositories/section.repository';
 import { Section, SectionSchema } from '../learning/schemas/section.schema';
+import {
+  Teacher,
+  TeacherSchema,
+} from '../learning/schemas/teachers/teacher.schema';
+import { TeacherRepository } from '../learning/repositories/teacher.repository';
 
 @Module({
   imports: [

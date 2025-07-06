@@ -1,15 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import mongoose, { Types } from 'mongoose';
-import { RoleEnum } from '../../utils/enums/role.enum';
-import { UserTypeEnum } from '../../utils/enums/user-type.enum';
-import { UserRepository } from '../users/repository/user.repository';
-import { SaveTeacher } from './dto/save-teacher.dto';
-import { TeacherRepository } from './repositories/teacher.repository';
-import { Aggregation } from '../../common/repository/abstract.repository';
+import { Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
+import { Aggregation } from '../../../common/repository/abstract.repository';
+import { UserRepository } from '../../../modules/users/repository/user.repository';
+import { RoleEnum } from '../../../utils/enums/role.enum';
+import { UserTypeEnum } from '../../../utils/enums/user-type.enum';
+import { SaveTeacher } from '../dtos/teachers/save-teacher.dto';
+import { TeacherRepository } from '../repositories/teacher.repository';
 
 @Injectable()
 export class TeachersService {
@@ -93,7 +89,7 @@ export class TeachersService {
                 usr_lastname: 1,
                 usr_email: 1,
                 usr_photo: 1,
-                usr_slug: 1
+                usr_slug: 1,
               },
             },
           ],

@@ -14,7 +14,7 @@ import { LessonsModule } from './modules/learning/modules/lessons.module';
 import { SectionsModule } from './modules/learning/modules/sections.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { PurchasesModule } from './modules/purchases/purchases.module';
-import { TeachersModule } from './modules/teachers/teachers.module';
+import { TeachersModule } from './modules/learning/modules/teachers.module';
 import { UsersModule } from './modules/users/users.module';
 import { LoadDataModule } from './modules/load-data/load-data.module';
 

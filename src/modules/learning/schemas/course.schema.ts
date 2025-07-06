@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 import { AbstractDocument } from '../../../common/document/abstract.document';
 import { LevelEnum } from '../../../utils/enums/level.enum';
 import { Category } from './category.schema';
-import { Teacher } from '../../../modules/teachers/schemas/teacher.schema';
 import { User } from '../../../modules/users/schemas/user.schema';
+import { Teacher } from './teachers/teacher.schema';
 
 @Schema({
   collection: 'courses',

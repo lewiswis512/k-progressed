@@ -12,7 +12,6 @@ import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWit
 import { ILessonInSectionWithDuration } from '../../../interfaces/lessons/ILessonInSectionWithDuration';
 import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
 import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
-import { TeacherRepository } from '../../../modules/teachers/repositories/teacher.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
 import { PATH_COURSES_CLOUDINARY } from '../../../utils/constants/uploads/path-upload';
@@ -36,6 +35,7 @@ import { SectionRepository } from '../repositories/section.repository';
 import { Course } from '../schemas/course.schema';
 import { Lesson } from '../schemas/lesson.schema';
 import { Section } from '../schemas/section.schema';
+import { TeacherRepository } from '../repositories/teacher.repository';
 
 @Injectable()
 export class CoursesService {

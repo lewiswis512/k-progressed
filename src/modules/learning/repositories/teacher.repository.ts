@@ -2,7 +2,7 @@ import { AbstractRepository } from '../../../common/repository/abstract.reposito
 import { Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Teacher } from '../schemas/teacher.schema';
+import { Teacher } from '../schemas/teachers/teacher.schema';
 
 export class TeacherRepository extends AbstractRepository<Teacher> {
   protected logger: Logger = new Logger();
