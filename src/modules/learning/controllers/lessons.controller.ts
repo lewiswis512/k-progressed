@@ -37,10 +37,14 @@ import { AddLesson } from '../dtos/lessons/add-lesson.dto';
 import { MAX_SIZE_IN_BYTES_UPLOAD_VIDEO } from '../../../utils/constants/uploads/max-size-upload';
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
+import { DeleteLessonService } from '../services/lessons/delete.service';
 
 @Controller('lessons')
 export class LessonsController {
-  constructor(private lessonsService: LessonsService) {}
+  constructor(
+    private lessonsService: LessonsService,
+    private deleteLessonService: DeleteLessonService,
+  ) {}
 
   @Get()
   @ApiBearerAuth()
@@ -156,6 +160,6 @@ export class LessonsController {
     description: 'The lesson have been successfully deleted.',
   })
   async delete(@Param('id') id: string, @Req() req: any): Promise<void> {
-    await this.lessonsService.delete(id, req.user.id);
+    await this.deleteLessonService.delete(id, req.user.id);
   }
 }

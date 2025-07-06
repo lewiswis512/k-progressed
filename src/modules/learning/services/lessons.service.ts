@@ -20,7 +20,6 @@ import { Lesson } from '../schemas/lesson.schema';
 import { Section } from '../schemas/section.schema';
 import { videoUploaderProvider } from '../../../utils/uploads/video-uploader-provider';
 import { videoLink } from '../../../utils/uploads/video-link';
-import * as fs from 'fs';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;
@@ -210,54 +209,5 @@ export class LessonsService {
       new Types.ObjectId(id),
       data,
     );
-  }
-
-  async delete(id: string, authorId: string): Promise<void> {
-    const lesson: Lesson = await this.findById(id);
-
-    this.isAuthorLesson(lesson.section.course.author._id.toString(), authorId);
-    this.deleteVideoLesson(lesson);
-    this.deleteLessonPhoto(lesson);
-
-    await this.lessonRepository.findByIdAndDelete(new Types.ObjectId(id));
-  }
-
-  isAuthorLesson(lessonAuthorId: string, authorId: string) {
-    if (lessonAuthorId !== authorId) {
-      throw new ForbiddenException(
-        "You can't delete a lesson who don't belong to you",
-      );
-    }
-  }
-
-  async deleteVideoLesson(lesson: Lesson): Promise<void> {
-    if (
-      lesson.lssn_video_link.startsWith('https') ||
-      lesson.lssn_video_link.startsWith('http')
-    ) {
-      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-        lesson.lssn_video_link,
-      );
-
-      await this.cloudinaryUploadStrategy.delete(publicId);
-    } else {
-      const videoPath = `${PATH_UPLOAD_LESSON_VIDEOS}/${lesson.lssn_video_link}`;
-      fs.unlink(videoPath, (err) => {
-        if (err) {
-          console.error('Failed to delete video:', err);
-          return;
-        }
-      });
-    }
-  }
-
-  async deleteLessonPhoto(lesson: Lesson): Promise<void> {
-    if (lesson.lssn_video_photo) {
-      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-        lesson.lssn_video_photo,
-      );
-
-      await this.cloudinaryUploadStrategy.delete(publicId);
-    }
   }
 }
