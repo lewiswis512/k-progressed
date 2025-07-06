@@ -23,9 +23,14 @@ import { MARKETING_SECTIONS } from '../../data/sections/marketing-sections';
 import { SectionRepository } from '../learning/repositories/section.repository';
 import { SECTION_DOMAIN } from '../../data/sections/section-domain';
 import { FINANCE_SECTIONS } from '../../data/sections/finance-sections';
-import { Lesson } from '../learning/schemas/lesson.schema';
 import { TeacherRepository } from '../learning/repositories/teacher.repository';
 import { Teacher } from '../learning/schemas/teachers/teacher.schema';
+import { SectionsService } from '../learning/services/sections.service';
+import { MARKETING_LESSONS } from '../../data/lessons/marketing-lesson';
+import { Lesson } from '../learning/schemas/lesson.schema';
+import { LessonRepository } from '../learning/repositories/lesson.repository';
+import { LESSON_DOMAIN } from '../../data/lessons/lesson-domain';
+import { FINANCE_LESSONS } from 'src/data/lessons/finance-lesson';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -38,22 +43,28 @@ export class LoadDataService {
     private teacherRepository: TeacherRepository,
     private courseRepository: CourseRepository,
     private sectionRepository: SectionRepository,
+    private sectionService: SectionsService,
+    private lessonRepository: LessonRepository,
   ) {}
 
   async loadData() {
-    await this.userRepository.deleteMany({});
-    await this.categoryRepository.deleteMany({});
-    await this.teacherRepository.deleteMany({});
-    await this.courseRepository.deleteMany({});
-    await this.sectionRepository.deleteMany({});
+    // await this.userRepository.deleteMany({});
+    // await this.categoryRepository.deleteMany({});
+    // await this.teacherRepository.deleteMany({});
+    // await this.courseRepository.deleteMany({});
+    // await this.sectionRepository.deleteMany({});
+    // await this.lessonRepository.deleteMany({});
 
-    await this.loadUsers();
-    await this.loadCategories();
-    await this.loadTeachers();
-    await this.loadMarketingCourses();
-    await this.loadFinanceCourses();
-    await this.loadMarketingSections();
-    await this.loadFinanceSections();
+    // await this.loadUsers();
+    // await this.loadCategories();
+    // await this.loadTeachers();
+    // await this.loadMarketingCourses();
+    // await this.loadFinanceCourses();
+    // await this.loadMarketingSections();
+    // await this.loadFinanceSections();
+
+    await this.loadMarketingLessons();
+    await this.loadFinanceLessons();
   }
 
   async loadUsers() {
@@ -211,7 +222,52 @@ export class LoadDataService {
     return await this.loadSections('Finance', FINANCE_SECTIONS);
   }
 
-  async loadLessons(): Promise<Lesson[]> {
-    return null;
+  async loadLessons(lessonDomain: LESSON_DOMAIN) {
+    const courses: Course[] = await this.courseRepository.find();
+    const data = [];
+
+    for (const course of courses) {
+      const courseSections: Section[] = await this.sectionService.findByCourse(
+        course._id.toString(),
+      );
+
+      for (const section of courseSections) {
+        if (lessonDomain == MARKETING_LESSONS) {
+          for (const lesson of MARKETING_LESSONS) {
+            data.push({
+              section,
+              lssn_title: lesson.lssn_title,
+              lssn_is_free: lesson.lssn_is_free,
+              lssn_video_photo: lesson.lssn_video_photo,
+              lssn_video_link: lesson.lssn_video_link,
+            });
+          }
+        }
+      }
+
+      for (const section of courseSections) {
+        if (lessonDomain == FINANCE_LESSONS) {
+          for (const lesson of FINANCE_LESSONS) {
+            data.push({
+              section,
+              lssn_title: lesson.lssn_title,
+              lssn_is_free: lesson.lssn_is_free,
+              lssn_video_photo: lesson.lssn_video_photo,
+              lssn_video_link: lesson.lssn_video_link,
+            });
+          }
+        }
+      }
+    }
+
+    return await this.lessonRepository.insertMany(data);
+  }
+
+  async loadMarketingLessons() {
+    return await this.loadLessons(MARKETING_LESSONS);
+  }
+
+  async loadFinanceLessons() {
+    return await this.loadLessons(FINANCE_LESSONS);
   }
 }

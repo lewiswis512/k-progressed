@@ -14,7 +14,10 @@ import { CommentRepository } from '../../../modules/comments/repository/comment.
 import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { User } from '../../../modules/users/schemas/user.schema';
-import { PATH_COURSES_CLOUDINARY } from '../../../utils/constants/uploads/path-upload';
+import {
+  PATH_COURSES_CLOUDINARY,
+  PATH_UPLOAD_LESSON_VIDEOS,
+} from '../../../utils/constants/uploads/path-upload';
 import { updatePhoto } from '../../../utils/files/update-photo';
 import { uploadPhoto } from '../../../utils/files/upload-photo';
 import { pagination } from '../../../utils/pagination';
@@ -483,7 +486,7 @@ export class CoursesService {
 
   private async getLessonsSection(sectionDoc: Section) {
     return await this.lessonRepository.find({
-      'section._id': sectionDoc._id,
+      section: sectionDoc._id,
     });
   }
 
@@ -496,9 +499,16 @@ export class CoursesService {
       [...lessonsInSection].map(async (lesson) => {
         let duration = 0;
 
-        if (lesson.lssn_video_link) {
+        if (
+          lesson.lssn_video_link.startsWith('https') ||
+          lesson.lssn_video_link.startsWith('http')
+        ) {
           totalDurationLessonBySection = await getVideoDuration(
             lesson.lssn_video_link,
+          );
+        } else {
+          totalDurationLessonBySection = await getVideoDuration(
+            `${PATH_UPLOAD_LESSON_VIDEOS}/${lesson.lssn_video_link}`,
           );
         }
 

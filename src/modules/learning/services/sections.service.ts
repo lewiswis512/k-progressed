@@ -26,14 +26,50 @@ export class SectionsService {
   }
 
   async findByCourse(id: string): Promise<Section[]> {
-    return await this.sectionRepository.find({ course: id });
+    return await this.sectionRepository.aggregate([
+      { $match: { course: new Types.ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: 'course',
+          foreignField: '_id',
+          as: 'course',
+        },
+      },
+      { $unwind: '$course' },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'course.category',
+          foreignField: '_id',
+          as: 'course.category',
+        },
+      },
+      {
+        $unwind: {
+          path: '$course.category',
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          sect_title: 1,
+          created_at: 1,
+          updated_at: 1,
+          'course._id': 1,
+          'course.crs_title': 1,
+          'course.category._id': 1,
+          'course.category.ctgr_name': 1,
+        },
+      },
+    ]);
   }
 
   async getLessons(id: string): Promise<Lesson[]> {
     await this.findById(id);
 
     const lessons = await this.lessonRepository.find({
-      'section': id,
+      section: id,
     });
 
     return lessons;

@@ -25,6 +25,9 @@ import {
   TeacherSchema,
 } from '../learning/schemas/teachers/teacher.schema';
 import { TeacherRepository } from '../learning/repositories/teacher.repository';
+import { SectionsService } from '../learning/services/sections.service';
+import { LessonRepository } from '../learning/repositories/lesson.repository';
+import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
 
 @Module({
   imports: [
@@ -43,13 +46,15 @@ import { TeacherRepository } from '../learning/repositories/teacher.repository';
       { name: Teacher.name, schema: TeacherSchema },
       { name: Course.name, schema: CourseSchema },
       { name: Section.name, schema: SectionSchema },
+      { name: Lesson.name, schema: LessonSchema },
     ]),
   ],
   controllers: [LoadDataController],
   providers: [
     LoadDataService,
-    UserRepository,
     AuthService,
+    SectionsService,
+    UserRepository,
     UserResetRepository,
     StripeCustomerService,
     StripeCustomerRepository,
@@ -57,6 +62,7 @@ import { TeacherRepository } from '../learning/repositories/teacher.repository';
     TeacherRepository,
     CourseRepository,
     SectionRepository,
+    LessonRepository,
   ],
 })
 export class LoadDataModule {}
