@@ -2,22 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import * as fs from 'fs';
 import { Lesson } from '../../schemas/lesson.schema';
-import { LessonsService } from '../lessons.service';
 import { AuthorLessonService } from './author.service';
 import { LessonRepository } from '../../repositories/lesson.repository';
 import { CloudinaryUploadStrategy } from '../../../../utils/uploads/cloudinary-upload-strategy';
 import { PATH_UPLOAD_LESSON_VIDEOS } from '../../../../utils/constants/uploads/path-upload';
+import { LessonService } from './find-one-by-id.service';
 
 @Injectable()
 export class DeleteLessonService {
   constructor(
-    private lessonService: LessonsService,
+    private lessonService: LessonService,
     private lessonRepository: LessonRepository,
     private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
   async delete(id: string, authorId: string): Promise<void> {
-    const lesson: Lesson = await this.lessonService.findById(id);
+    const lesson: Lesson = await this.lessonService.byId(id);
 
     AuthorLessonService.isAuthor(
       lesson.section.course.author._id.toString(),

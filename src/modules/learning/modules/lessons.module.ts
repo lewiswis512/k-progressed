@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { LessonsService } from '../services/lessons.service';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Lesson, LessonSchema } from '../schemas/lesson.schema';
@@ -12,6 +11,8 @@ import { UpdateLessonservice } from '../services/lessons/update.service';
 import { DeleteLessonService } from '../services/lessons/delete.service';
 import { AddLessonService } from '../services/lessons/add.service';
 import { FreeLessonService } from '../services/lessons/free.service';
+import { LessonService } from '../services/lessons/find-one-by-id.service';
+import { LessonsService } from '../services/lessons/list.service';
 
 @Module({
   imports: [
@@ -28,10 +29,11 @@ import { FreeLessonService } from '../services/lessons/free.service';
     ]),
   ],
   providers: [
-    LessonsService,
     LessonRepository,
     SectionRepository,
     CloudinaryUploadStrategy,
+    LessonsService,
+    LessonService,
     AddLessonService,
     UpdateLessonservice,
     DeleteLessonService,

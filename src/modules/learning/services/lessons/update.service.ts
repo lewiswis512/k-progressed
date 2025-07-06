@@ -3,7 +3,6 @@ import { Types } from 'mongoose';
 import { EditLesson } from '../../dtos/lessons/edit-lesson.dto';
 import { Lesson } from '../../schemas/lesson.schema';
 import { AuthorLessonService } from './author.service';
-import { LessonsService } from '../lessons.service';
 import { CloudinaryUploadStrategy } from '../../../../utils/uploads/cloudinary-upload-strategy';
 import { videoUploaderProvider } from '../../../../utils/uploads/video-uploader-provider';
 import {
@@ -13,11 +12,12 @@ import {
 import { LessonRepository } from '../../repositories/lesson.repository';
 import { DeleteLessonService } from './delete.service';
 import { videoLink } from '../../../../utils/uploads/video-link';
+import { LessonService } from './find-one-by-id.service';
 
 @Injectable()
 export class UpdateLessonservice {
   constructor(
-    private lessonService: LessonsService,
+    private lessonService: LessonService,
     private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
     private lessonRepository: LessonRepository,
     private deleteLessonService: DeleteLessonService,
@@ -29,7 +29,7 @@ export class UpdateLessonservice {
     file: Express.Multer.File,
     authorId: string,
   ): Promise<Lesson> {
-    const lesson: Lesson = await this.lessonService.findById(id);
+    const lesson: Lesson = await this.lessonService.byId(id);
 
     AuthorLessonService.isAuthor(
       lesson.section.course.author._id.toString(),

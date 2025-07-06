@@ -32,7 +32,6 @@ import { AuthGuard } from '../../../common/guards/auth.guard';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { Lesson } from '../schemas/lesson.schema';
-import { LessonsService } from '../services/lessons.service';
 import { AddLessonService } from '../services/lessons/add.service';
 import { DeleteLessonService } from '../services/lessons/delete.service';
 import { UpdateLessonservice } from '../services/lessons/update.service';
@@ -40,11 +39,14 @@ import {
   FreeLessonService,
   IFreeLesson,
 } from '../services/lessons/free.service';
+import { LessonService } from '../services/lessons/find-one-by-id.service';
+import { LessonsService } from '../services/lessons/list.service';
 
 @Controller('lessons')
 export class LessonsController {
   constructor(
     private lessonsService: LessonsService,
+    private lessonService: LessonService,
     private addLessonService: AddLessonService,
     private deleteLessonService: DeleteLessonService,
     private updateLessonservice: UpdateLessonservice,
@@ -71,7 +73,7 @@ export class LessonsController {
     description: 'The lesson is not found.',
   })
   async show(@Param('id') id: string): Promise<Lesson> {
-    return await this.lessonsService.findById(id);
+    return await this.lessonService.byId(id);
   }
 
   @Get('free/:courseId')

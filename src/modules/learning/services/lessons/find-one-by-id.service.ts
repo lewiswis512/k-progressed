@@ -1,17 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { LessonRepository } from '../repositories/lesson.repository';
-import { Lesson } from '../schemas/lesson.schema';
+import { Lesson } from '../../schemas/lesson.schema';
+import { LessonRepository } from '../../repositories/lesson.repository';
 
 @Injectable()
-export class LessonsService {
+export class LessonService {
   constructor(private lessonRepository: LessonRepository) {}
 
-  async findAll(): Promise<Lesson[]> {
-    return this.lessonRepository.find();
-  }
-
-  async findById(id: string): Promise<Lesson> {
+  async byId(id: string): Promise<Lesson> {
     const [lesson] = await this.lessonRepository.aggregate([
       { $match: { _id: new Types.ObjectId(id) } },
       {
