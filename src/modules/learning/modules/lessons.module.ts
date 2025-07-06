@@ -8,6 +8,7 @@ import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { LessonsController } from '../controllers/lessons.controller';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
+import { UpdateLessonservice } from '../services/lessons/update.service';
 import { DeleteLessonService } from '../services/lessons/delete.service';
 
 @Module({
@@ -29,6 +30,7 @@ import { DeleteLessonService } from '../services/lessons/delete.service';
     LessonRepository,
     SectionRepository,
     CloudinaryUploadStrategy,
+    UpdateLessonservice,
     DeleteLessonService,
   ],
   controllers: [LessonsController],

@@ -6,7 +6,7 @@ import { LessonsService } from '../lessons.service';
 import { AuthorLessonService } from './author.service';
 import { LessonRepository } from '../../repositories/lesson.repository';
 import { CloudinaryUploadStrategy } from '../../../../utils/uploads/cloudinary-upload-strategy';
-import { PATH_UPLOAD_LESSON_VIDEOS } from 'src/utils/constants/uploads/path-upload';
+import { PATH_UPLOAD_LESSON_VIDEOS } from '../../../../utils/constants/uploads/path-upload';
 
 @Injectable()
 export class DeleteLessonService {

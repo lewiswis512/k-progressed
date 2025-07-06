@@ -1,8 +1,7 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import {
   PATH_LESSON_PHOTOS_CLOUDINARY,
-  PATH_LESSONS_CLOUDINARY,
   PATH_UPLOAD_LESSON_VIDEOS,
 } from '../../../utils/constants/uploads/path-upload';
 import {
@@ -11,15 +10,13 @@ import {
   getVideoDuration,
 } from '../../../utils/times/duration';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
-import { VideoUploaderContext } from '../../../utils/uploads/video-uploader-context';
+import { videoLink } from '../../../utils/uploads/video-link';
+import { videoUploaderProvider } from '../../../utils/uploads/video-uploader-provider';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
-import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Lesson } from '../schemas/lesson.schema';
 import { Section } from '../schemas/section.schema';
-import { videoUploaderProvider } from '../../../utils/uploads/video-uploader-provider';
-import { videoLink } from '../../../utils/uploads/video-link';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;
@@ -145,69 +142,5 @@ export class LessonsService {
     };
 
     return await this.lessonRepository.create(data);
-  }
-
-  async update(
-    id: string,
-    editLesson: EditLesson,
-    file: Express.Multer.File,
-    authorId: string,
-  ): Promise<Lesson> {
-    const lesson: Lesson = await this.findById(id);
-
-    if (String(lesson.section.course.author._id) !== authorId) {
-      throw new ForbiddenException(
-        "You can't update a lesson who don't belong to you",
-      );
-    }
-
-    let lessonPhotoFilename: string;
-    let videoLink: string;
-
-    if (file === undefined) {
-      lessonPhotoFilename = lesson.lssn_video_photo;
-      videoLink = lesson.lssn_video_link;
-    } else {
-      if (lesson.lssn_video_link) {
-        const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-          lesson.lssn_video_link,
-        );
-
-        await this.cloudinaryUploadStrategy.delete(publicId);
-      }
-
-      if (lesson.lssn_video_photo) {
-        const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-          lesson.lssn_video_photo,
-        );
-
-        await this.cloudinaryUploadStrategy.delete(publicId);
-      }
-
-      const videoCloudinaryContext = new VideoUploaderContext(
-        new CloudinaryUploadStrategy(),
-      );
-
-      let { secure_url: videoLink } = await videoCloudinaryContext.uploadVideo(
-        file.buffer,
-        PATH_LESSONS_CLOUDINARY,
-      );
-
-      lessonPhotoFilename = await this.cloudinaryUploadStrategy.takeScreenshot(
-        videoLink,
-        PATH_LESSON_PHOTOS_CLOUDINARY,
-      );
-    }
-
-    let data = {
-      ...editLesson,
-      lssn_video_photo: lessonPhotoFilename,
-      lssn_video_link: videoLink,
-    };
-
-    return await this.lessonRepository.findByIdAndUpdate(
-      new Types.ObjectId(id),
-      data,
-    );
   }
 }

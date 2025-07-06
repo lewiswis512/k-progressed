@@ -38,12 +38,14 @@ import { MAX_SIZE_IN_BYTES_UPLOAD_VIDEO } from '../../../utils/constants/uploads
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
 import { DeleteLessonService } from '../services/lessons/delete.service';
+import { UpdateLessonservice } from '../services/lessons/update.service';
 
 @Controller('lessons')
 export class LessonsController {
   constructor(
     private lessonsService: LessonsService,
     private deleteLessonService: DeleteLessonService,
+    private updateLessonservice: UpdateLessonservice,
   ) {}
 
   @Get()
@@ -149,7 +151,12 @@ export class LessonsController {
     )
     file: Express.Multer.File,
   ): Promise<Lesson> {
-    return await this.lessonsService.update(id, editLesson, file, req.user.id);
+    return await this.updateLessonservice.update(
+      id,
+      editLesson,
+      file,
+      req.user.id,
+    );
   }
 
   @Delete(':id')
