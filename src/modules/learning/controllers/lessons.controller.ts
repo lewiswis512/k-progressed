@@ -6,11 +6,9 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseFilePipeBuilder,
   Patch,
   Post,
   Req,
-  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -29,14 +27,13 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
-import { IFreeLesson, LessonsService } from '../services/lessons.service';
+import { videoFile } from '../../../common/decorators/video-file.decorator';
 import { AuthGuard } from '../../../common/guards/auth.guard';
-import { Lesson } from '../schemas/lesson.schema';
-import { VALID_VIDEO_MIME_TYPES } from '../../../utils/constants/files/mime-types';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
-import { MAX_SIZE_IN_BYTES_UPLOAD_VIDEO } from '../../../utils/constants/uploads/max-size-upload';
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
-import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
+import { Lesson } from '../schemas/lesson.schema';
+import { IFreeLesson, LessonsService } from '../services/lessons.service';
+import { AddLessonService } from '../services/lessons/add.service';
 import { DeleteLessonService } from '../services/lessons/delete.service';
 import { UpdateLessonservice } from '../services/lessons/update.service';
 
@@ -44,6 +41,7 @@ import { UpdateLessonservice } from '../services/lessons/update.service';
 export class LessonsController {
   constructor(
     private lessonsService: LessonsService,
+    private addLessonService: AddLessonService,
     private deleteLessonService: DeleteLessonService,
     private updateLessonservice: UpdateLessonservice,
   ) {}
@@ -99,19 +97,10 @@ export class LessonsController {
   })
   async add(
     @Body() addLesson: AddLesson,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addValidator(
-          new CustomUploadFileTypeValidatorOptions({
-            fileType: VALID_VIDEO_MIME_TYPES,
-          }),
-        )
-        .addMaxSizeValidator({ maxSize: MAX_SIZE_IN_BYTES_UPLOAD_VIDEO })
-        .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-    )
+    @videoFile({ fileIsRequired: true })
     file: Express.Multer.File,
   ): Promise<Lesson> {
-    return await this.lessonsService.store(addLesson, file);
+    return await this.addLessonService.store(addLesson, file);
   }
 
   @Patch(':id')
@@ -136,19 +125,7 @@ export class LessonsController {
     @Param('id') id: string,
     @Body() editLesson: EditLesson,
     @Req() req: any,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addValidator(
-          new CustomUploadFileTypeValidatorOptions({
-            fileType: VALID_VIDEO_MIME_TYPES,
-          }),
-        )
-        .addMaxSizeValidator({ maxSize: MAX_SIZE_IN_BYTES_UPLOAD_VIDEO })
-        .build({
-          fileIsRequired: false,
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        }),
-    )
+    @videoFile({ fileIsRequired: false })
     file: Express.Multer.File,
   ): Promise<Lesson> {
     return await this.updateLessonservice.update(

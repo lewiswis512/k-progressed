@@ -1,18 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import {
-  PATH_LESSON_PHOTOS_CLOUDINARY,
-  PATH_UPLOAD_LESSON_VIDEOS,
-} from '../../../utils/constants/uploads/path-upload';
-import {
   getMinuteAndSecond,
   getSecond,
   getVideoDuration,
 } from '../../../utils/times/duration';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
-import { videoLink } from '../../../utils/uploads/video-link';
-import { videoUploaderProvider } from '../../../utils/uploads/video-uploader-provider';
-import { AddLesson } from '../dtos/lessons/add-lesson.dto';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Lesson } from '../schemas/lesson.schema';
@@ -114,33 +107,5 @@ export class LessonsService {
     }
 
     return freeLessons;
-  }
-
-  async store(
-    addLesson: AddLesson,
-    file: Express.Multer.File,
-  ): Promise<Lesson> {
-    let { secure_url: videoPath } = await videoUploaderProvider.uploadVideo(
-      file,
-      PATH_UPLOAD_LESSON_VIDEOS,
-    );
-    const lessonPhotoFilename: string =
-      await this.cloudinaryUploadStrategy.takeScreenshot(
-        videoLink(videoPath),
-        PATH_LESSON_PHOTOS_CLOUDINARY,
-      );
-
-    const section = await this.sectionRepository.findById(
-      new Types.ObjectId(addLesson.section_id),
-    );
-
-    let data = {
-      ...addLesson,
-      section,
-      lssn_video_link: videoPath,
-      lssn_video_photo: lessonPhotoFilename,
-    };
-
-    return await this.lessonRepository.create(data);
   }
 }
