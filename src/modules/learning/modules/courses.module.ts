@@ -13,7 +13,7 @@ import { CommentRepository } from '../../../modules/comments/repository/comment.
 import { User, UserSchema } from '../../../modules/users/schemas/user.schema';
 import { SectionRepository } from '../repositories/section.repository';
 import { LessonRepository } from '../repositories/lesson.repository';
-import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
 import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
 import {
   Purchase,

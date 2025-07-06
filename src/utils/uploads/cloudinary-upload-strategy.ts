@@ -9,6 +9,11 @@ import path from 'path';
 import * as _ffmpeg from 'fluent-ffmpeg';
 const ffmpeg = _ffmpeg.default;
 
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { writeFile, readFile, unlink } from 'fs/promises';
+import { v4 as uuidv4 } from 'uuid';
+
 dotenv.config();
 
 cloudinary.config({
@@ -50,6 +55,8 @@ export class CloudinaryUploadStrategy
     folder: string,
   ): Promise<{ secure_url: string; thumbnail?: string }> {
     try {
+      const compressedBuffer = await this.compressVideo(fileBuffer);
+
       const result: UploadApiResponse = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
@@ -75,7 +82,7 @@ export class CloudinaryUploadStrategy
           },
         );
 
-        Readable.from(fileBuffer).pipe(uploadStream);
+        Readable.from(compressedBuffer).pipe(uploadStream);
       });
 
       return {
@@ -144,5 +151,35 @@ export class CloudinaryUploadStrategy
       console.error('uploadVideoWithScreenshot error:', error);
       throw new Error('Failed to upload video and screenshot to Cloudinary.');
     }
+  }
+
+  compressVideo(inputBuffer: Buffer): Promise<Buffer> {
+    return new Promise(async (resolve, reject) => {
+      const inputPath = join(tmpdir(), `${uuidv4()}.mp4`);
+      const outputPath = join(tmpdir(), `${uuidv4()}-compressed.mp4`);
+
+      try {
+        await writeFile(inputPath, inputBuffer);
+
+        ffmpeg(inputPath)
+          .outputOptions(['-vcodec libx264', '-crf 28', '-preset fast'])
+          .on('end', async () => {
+            try {
+              const compressedBuffer = await readFile(outputPath);
+              await unlink(inputPath);
+              await unlink(outputPath);
+              resolve(compressedBuffer);
+            } catch (readErr) {
+              reject(readErr);
+            }
+          })
+          .on('error', (err) => {
+            reject(err);
+          })
+          .save(outputPath);
+      } catch (err) {
+        reject(err);
+      }
+    });
   }
 }

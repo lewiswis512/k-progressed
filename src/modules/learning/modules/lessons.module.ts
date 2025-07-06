@@ -7,7 +7,7 @@ import { Section, SectionSchema } from '../schemas/section.schema';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { LessonsController } from '../controllers/lessons.controller';
-import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
 
 @Module({
   imports: [

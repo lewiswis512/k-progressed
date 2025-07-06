@@ -26,16 +26,13 @@ export class VimeoUploadStrategy
   ): Promise<any> {
     console.log({ vimeo: this.vimeo });
 
-    // Create a temporary file path
     const tempDir = path.resolve(__dirname, '..', '..', 'temp');
     const tempPath = path.join(tempDir, `${Date.now()}-${file.originalname}`);
 
-    // Ensure temp dir exists
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    // Write buffer to disk
     await this.writeFile(tempPath, file.buffer);
 
     const data = new Promise((resolve, reject) => {
@@ -49,7 +46,6 @@ export class VimeoUploadStrategy
           const videoId = uri.split('/').pop();
           const videoUrl = `https://vimeo.com/${videoId}`;
 
-          // Clean up temp file
           await this.unlink(tempPath);
 
           resolve({ secure_url: videoUrl });
@@ -57,7 +53,6 @@ export class VimeoUploadStrategy
         undefined,
         async (err) => {
           console.error('Upload to Vimeo failed', err);
-          // Clean up on error
           await this.unlink(tempPath);
           reject(err);
         },

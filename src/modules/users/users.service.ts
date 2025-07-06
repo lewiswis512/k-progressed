@@ -8,7 +8,7 @@ import { UserReset } from './schemas/user-reset.schema';
 import { User } from './schemas/user.schema';
 import { UpdateProfile } from './dto/update-profile.dto';
 import { PhotoUploaderContext } from '../../utils/uploads/photo-uploader-context';
-import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary';
+import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary-upload-strategy';
 import { PATH_USERS_CLOUDINARY } from '../../utils/constants/uploads/path-upload';
 import { MongoRepository } from '../../common/repository/mongo.repository';
 

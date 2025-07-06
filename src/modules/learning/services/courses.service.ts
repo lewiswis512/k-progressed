@@ -27,7 +27,7 @@ import {
   getSecond,
   getVideoDuration,
 } from '../../../utils/times/duration';
-import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
 import { Comment } from '../../comments/schemas/comment.schema';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';

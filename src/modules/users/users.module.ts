@@ -7,7 +7,7 @@ import { UsersController } from './users.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UserResetRepository } from './repository/user-reset.repository';
 import { UserRepository } from './repository/user.repository';
-import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary';
+import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary-upload-strategy';
 import { MongoRepository } from '../../common/repository/mongo.repository';
 import { CheckingController } from './controllers/checking.controller';
 

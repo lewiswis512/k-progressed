@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import {
   PATH_LESSON_PHOTOS_CLOUDINARY,
@@ -9,7 +9,7 @@ import {
   getSecond,
   getVideoDuration,
 } from '../../../utils/times/duration';
-import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary';
+import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
 import { VideoUploaderContext } from '../../../utils/uploads/video-uploader-context';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
@@ -122,11 +122,11 @@ export class LessonsService {
   ): Promise<Lesson> {
     const lesson: Lesson = await this.findById(id);
 
-    /*if (String(lesson.section.course.author) !== authorId) {
+    if (String(lesson.section.course.author._id) !== authorId) {
       throw new ForbiddenException(
         "You can't update a lesson who don't belong to you",
       );
-    }*/
+    }
 
     let lessonPhotoFilename: string;
     let videoLink: string;
@@ -181,11 +181,11 @@ export class LessonsService {
   async delete(id: string, authorId: string): Promise<void> {
     const lesson = await this.findById(id);
 
-    /*if (String(lesson.section.course.author) !== authorId) {
+    if (String(lesson.section.course.author._id) !== authorId) {
       throw new ForbiddenException(
         "You can't delete a lesson who don't belong to you",
       );
-    }*/
+    }
 
     if (lesson.lssn_video_link) {
       const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
