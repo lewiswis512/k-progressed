@@ -32,10 +32,14 @@ import { AuthGuard } from '../../../common/guards/auth.guard';
 import { AddLesson } from '../dtos/lessons/add-lesson.dto';
 import { EditLesson } from '../dtos/lessons/edit-lesson.dto';
 import { Lesson } from '../schemas/lesson.schema';
-import { IFreeLesson, LessonsService } from '../services/lessons.service';
+import { LessonsService } from '../services/lessons.service';
 import { AddLessonService } from '../services/lessons/add.service';
 import { DeleteLessonService } from '../services/lessons/delete.service';
 import { UpdateLessonservice } from '../services/lessons/update.service';
+import {
+  FreeLessonService,
+  IFreeLesson,
+} from '../services/lessons/free.service';
 
 @Controller('lessons')
 export class LessonsController {
@@ -44,6 +48,7 @@ export class LessonsController {
     private addLessonService: AddLessonService,
     private deleteLessonService: DeleteLessonService,
     private updateLessonservice: UpdateLessonservice,
+    private freeLessonService: FreeLessonService,
   ) {}
 
   @Get()
@@ -74,7 +79,7 @@ export class LessonsController {
     description: 'The free lessons have been successfully retrieved.',
   })
   async getFree(@Param('courseId') courseId: string): Promise<IFreeLesson[]> {
-    return await this.lessonsService.getFree(courseId);
+    return await this.freeLessonService.getByCourseId(courseId);
   }
 
   @Post()

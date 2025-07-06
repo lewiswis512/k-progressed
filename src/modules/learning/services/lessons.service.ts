@@ -1,33 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import {
-  getMinuteAndSecond,
-  getSecond,
-  getVideoDuration,
-} from '../../../utils/times/duration';
-import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
 import { LessonRepository } from '../repositories/lesson.repository';
-import { SectionRepository } from '../repositories/section.repository';
 import { Lesson } from '../schemas/lesson.schema';
-import { Section } from '../schemas/section.schema';
-
-export interface IFreeLesson {
-  _id: Types.ObjectId;
-  lssn_title: string;
-  lssn_video_link?: string;
-  lssn_video_photo?: string;
-  lssn_is_free: boolean;
-  section: Section;
-  duration: string | number | null;
-}
 
 @Injectable()
 export class LessonsService {
-  constructor(
-    private lessonRepository: LessonRepository,
-    private sectionRepository: SectionRepository,
-    private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
-  ) {}
+  constructor(private lessonRepository: LessonRepository) {}
 
   async findAll(): Promise<Lesson[]> {
     return this.lessonRepository.find();
@@ -70,42 +48,5 @@ export class LessonsService {
     ]);
 
     return lesson;
-  }
-
-  async getFree(courseId: string): Promise<IFreeLesson[]> {
-    const sections: Section[] = await this.sectionRepository.find({
-      'course._id': courseId,
-    });
-    let freeLessons: IFreeLesson[] = [];
-
-    for (const section of sections) {
-      const lessons = await this.lessonRepository.find({
-        'section._id': section._id,
-        lssn_is_free: true,
-      });
-
-      for (const lesson of lessons) {
-        const durationInSeconds = await getVideoDuration(
-          lesson.lssn_video_link,
-        );
-
-        const formattedDuration =
-          durationInSeconds != 0 && durationInSeconds >= 60
-            ? getMinuteAndSecond(durationInSeconds)
-            : getSecond(durationInSeconds);
-
-        freeLessons.push({
-          _id: lesson._id,
-          lssn_title: lesson.lssn_title,
-          lssn_video_link: lesson.lssn_video_link,
-          lssn_video_photo: lesson.lssn_video_photo,
-          lssn_is_free: lesson.lssn_is_free,
-          section: lesson.section,
-          duration: formattedDuration,
-        });
-      }
-    }
-
-    return freeLessons;
   }
 }

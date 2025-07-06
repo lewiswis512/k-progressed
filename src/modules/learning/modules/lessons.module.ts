@@ -11,6 +11,7 @@ import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-uplo
 import { UpdateLessonservice } from '../services/lessons/update.service';
 import { DeleteLessonService } from '../services/lessons/delete.service';
 import { AddLessonService } from '../services/lessons/add.service';
+import { FreeLessonService } from '../services/lessons/free.service';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AddLessonService } from '../services/lessons/add.service';
     AddLessonService,
     UpdateLessonservice,
     DeleteLessonService,
+    FreeLessonService,
   ],
   controllers: [LessonsController],
 })
