@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import {
   PATH_LESSON_PHOTOS_CLOUDINARY,
   PATH_LESSONS_CLOUDINARY,
+  PATH_UPLOAD_LESSON_VIDEOS,
 } from '../../../utils/constants/uploads/path-upload';
 import {
   getMinuteAndSecond,
@@ -17,6 +18,8 @@ import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
 import { Lesson } from '../schemas/lesson.schema';
 import { Section } from '../schemas/section.schema';
+import { videoUploaderProvider } from '../../../utils/uploads/video-uploader-provider';
+import { videoLink } from 'src/utils/uploads/video-link';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;
@@ -85,18 +88,13 @@ export class LessonsService {
     addLesson: AddLesson,
     file: Express.Multer.File,
   ): Promise<Lesson> {
-    const videoCloudinaryContext = new VideoUploaderContext(
-      new CloudinaryUploadStrategy(),
+    let { secure_url: videoPath } = await videoUploaderProvider.uploadVideo(
+      file,
+      PATH_UPLOAD_LESSON_VIDEOS,
     );
-
-    let { secure_url: videoLink } = await videoCloudinaryContext.uploadVideo(
-      file.buffer,
-      PATH_LESSONS_CLOUDINARY,
-    );
-
     const lessonPhotoFilename: string =
       await this.cloudinaryUploadStrategy.takeScreenshot(
-        videoLink,
+        videoLink(videoPath),
         PATH_LESSON_PHOTOS_CLOUDINARY,
       );
 
@@ -107,7 +105,7 @@ export class LessonsService {
     let data = {
       ...addLesson,
       section,
-      lssn_video_link: videoLink,
+      lssn_video_link: videoPath,
       lssn_video_photo: lessonPhotoFilename,
     };
 
