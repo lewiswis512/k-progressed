@@ -118,9 +118,6 @@ export class CoursesService {
           $or: [
             { crs_title: { $regex: keywordToSearch } },
             {
-              'category.ctgr_name': { $regex: keywordToSearch },
-            },
-            {
               'author.usr_username': { $regex: keywordToSearch },
             },
             {
@@ -131,6 +128,9 @@ export class CoursesService {
             },
             {
               'teacher.tchr_title': { $regex: keywordToSearch },
+            },
+            {
+              'category.ctgr_name': keyword,
             },
           ],
         },
@@ -164,6 +164,29 @@ export class CoursesService {
       totalPages: Math.ceil(coursesWithAverageRating.length / limit),
       data: paginatedData,
     };
+  }
+
+  async findByCategory(categoryName: string) {
+    const courseAggregation: Aggregation[] = [
+      { $project: { __v: 0 } },
+      {
+        $lookup: {
+          from: 'categories',
+          foreignField: '_id',
+          localField: 'category',
+          pipeline: [{ $project: { _id: 0, ctgr_name: 1 } }],
+          as: 'category',
+        },
+      },
+    ];
+
+    courseAggregation.push({
+      $match: {
+        'category.ctgr_name': new RegExp(categoryName, 'i'),
+      },
+    });
+
+    return await this.courseRepository.aggregate(courseAggregation);
   }
 
   async byAuthor(authorId: string): Promise<Course[]> {

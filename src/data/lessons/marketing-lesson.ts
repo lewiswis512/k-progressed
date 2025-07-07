@@ -15,6 +15,14 @@ export const MARKETING_LESSONS = [
     lssn_is_free: false,
   },
   {
+    lssn_title: 'lesson 3',
+    lssn_video_link:
+      'construire-une-proposition-de-valeur-claire-5547455372.mp4',
+    lssn_video_photo:
+      'https://res.cloudinary.com/k-progressed/image/upload/v1751828065/lesson-photos/y25r9yjcxslxxxy72ber.png',
+    lssn_is_free: false,
+  },
+  {
     lssn_title: 'lesson 4',
     lssn_video_link:
       'comment-cra(c)er-du-contenu-qui-attire-des-clients-2140067465.mp4',

@@ -28,6 +28,12 @@ import { TeacherRepository } from '../learning/repositories/teacher.repository';
 import { SectionsService } from '../learning/services/sections.service';
 import { LessonRepository } from '../learning/repositories/lesson.repository';
 import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
+import { CoursesService } from '../learning/services/courses.service';
+import { CommentRepository } from '../comments/repository/comment.repository';
+import { PurchaseRepository } from '../purchases/repository/purchase.repository';
+import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary-upload-strategy';
+import { Comment, CommentSchema } from '../comments/schemas/comment.schema';
+import { Purchase, PurchaseSchema } from '../purchases/schemas/purchase.schema';
 
 @Module({
   imports: [
@@ -47,6 +53,8 @@ import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
       { name: Course.name, schema: CourseSchema },
       { name: Section.name, schema: SectionSchema },
       { name: Lesson.name, schema: LessonSchema },
+      { name: Comment.name, schema: CommentSchema },
+      { name: Purchase.name, schema: PurchaseSchema },
     ]),
   ],
   controllers: [LoadDataController],
@@ -54,6 +62,7 @@ import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
     LoadDataService,
     AuthService,
     SectionsService,
+    CoursesService,
     UserRepository,
     UserResetRepository,
     StripeCustomerService,
@@ -63,6 +72,9 @@ import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
     CourseRepository,
     SectionRepository,
     LessonRepository,
+    CommentRepository,
+    PurchaseRepository,
+    CloudinaryUploadStrategy,
   ],
 })
 export class LoadDataModule {}

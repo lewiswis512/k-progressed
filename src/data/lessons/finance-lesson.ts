@@ -4,7 +4,7 @@ export const FINANCE_LESSONS = [
     lssn_video_link: 'la-finance-en-5-minutes-introduction-5147213033.mp4',
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751826683/lesson-photos/cddigyxri0u5fo9x5m6y.png',
-    lssn_is_free: false,
+    lssn_is_free: true,
   },
   {
     lssn_title: 'lesson 2',
@@ -75,6 +75,6 @@ export const FINANCE_LESSONS = [
       '10-erreurs-financia¨res-a-aviter-absolument-(au-risque-de-le-regretter)-5710234155.mp4',
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827298/lesson-photos/isblluzfcwerjs79nsii.png',
-    lssn_is_free: true,
+    lssn_is_free: false,
   },
 ];
