@@ -1,38 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { superAdminUser } from '../../data/users/super-admin';
-import { getStudentUsers } from '../../data/users/students';
-import { getTeacherUsers } from '../../data/users/teacher-users';
-import { AuthService } from '../auth/services/auth.service';
-import { CategoryRepository } from '../learning/repositories/category.repository';
-import { UserRepository } from '../users/repository/user.repository';
-import { User } from '../users/schemas/user.schema';
-import { UserTypeEnum } from '../../utils/enums/user-type.enum';
-import { RoleEnum } from '../../utils/enums/role.enum';
-import { MARKETING } from '../../data/teachers/marketing';
-import { FINANCE } from '../../data/teachers/finance';
-import { DOMAIN } from '../../data/teachers/domain';
-import { Category } from '../learning/schemas/category.schema';
-import { Course } from '../learning/schemas/course.schema';
-import { MARKETING_COURSE } from '../../data/courses/marketing-course';
-import { CourseRepository } from '../learning/repositories/course.repository';
+import { FINANCE_LESSONS } from '../../data/lessons/finance-lesson';
 import { COURSE_DOMAIN } from '../../data/courses/course-domain';
 import { FINANCE_COURSE } from '../../data/courses/finance-course';
-import { Section } from '../learning/schemas/section.schema';
-import { MARKETING_SECTIONS } from '../../data/sections/marketing-sections';
-import { SectionRepository } from '../learning/repositories/section.repository';
-import { SECTION_DOMAIN } from '../../data/sections/section-domain';
-import { FINANCE_SECTIONS } from '../../data/sections/finance-sections';
-import { TeacherRepository } from '../learning/repositories/teacher.repository';
-import { Teacher } from '../learning/schemas/teachers/teacher.schema';
-import { SectionsService } from '../learning/services/sections.service';
-import { MARKETING_LESSONS } from '../../data/lessons/marketing-lesson';
-import { Lesson } from '../learning/schemas/lesson.schema';
-import { LessonRepository } from '../learning/repositories/lesson.repository';
+import { MARKETING_COURSE } from '../../data/courses/marketing-course';
 import { LESSON_DOMAIN } from '../../data/lessons/lesson-domain';
-import { FINANCE_LESSONS } from 'src/data/lessons/finance-lesson';
+import { MARKETING_LESSONS } from '../../data/lessons/marketing-lesson';
+import { FINANCE_SECTIONS } from '../../data/sections/finance-sections';
+import { MARKETING_SECTIONS } from '../../data/sections/marketing-sections';
+import { SECTION_DOMAIN } from '../../data/sections/section-domain';
+import { DOMAIN } from '../../data/teachers/domain';
+import { FINANCE } from '../../data/teachers/finance';
+import { MARKETING } from '../../data/teachers/marketing';
+import { getStudentUsers } from '../../data/users/students';
+import { superAdminUser } from '../../data/users/super-admin';
+import { getTeacherUsers } from '../../data/users/teacher-users';
+import { RoleEnum } from '../../utils/enums/role.enum';
+import { UserTypeEnum } from '../../utils/enums/user-type.enum';
+import { AuthService } from '../auth/services/auth.service';
+import { CategoryRepository } from '../learning/repositories/category.repository';
+import { CourseRepository } from '../learning/repositories/course.repository';
+import { LessonRepository } from '../learning/repositories/lesson.repository';
+import { SectionRepository } from '../learning/repositories/section.repository';
+import { TeacherRepository } from '../learning/repositories/teacher.repository';
+import { Category } from '../learning/schemas/category.schema';
+import { Course } from '../learning/schemas/course.schema';
+import { Section } from '../learning/schemas/section.schema';
+import { Teacher } from '../learning/schemas/teachers/teacher.schema';
 import { CoursesService } from '../learning/services/courses.service';
-import { ICoursePagination } from '../learning/interfaces/ICoursePagination';
+import { UserRepository } from '../users/repository/user.repository';
+import { User } from '../users/schemas/user.schema';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -45,26 +42,25 @@ export class LoadDataService {
     private teacherRepository: TeacherRepository,
     private courseRepository: CourseRepository,
     private sectionRepository: SectionRepository,
-    private sectionService: SectionsService,
     private lessonRepository: LessonRepository,
     private coursesService: CoursesService,
   ) {}
 
   async loadData() {
-    // await this.userRepository.deleteMany({});
-    // await this.categoryRepository.deleteMany({});
-    // await this.teacherRepository.deleteMany({});
-    // await this.courseRepository.deleteMany({});
-    // await this.sectionRepository.deleteMany({});
-    // await this.lessonRepository.deleteMany({});
+    await this.userRepository.deleteMany({});
+    await this.categoryRepository.deleteMany({});
+    await this.teacherRepository.deleteMany({});
+    await this.courseRepository.deleteMany({});
+    await this.sectionRepository.deleteMany({});
+    await this.lessonRepository.deleteMany({});
 
-    // await this.loadUsers();
-    // await this.loadCategories();
-    // await this.loadTeachers();
-    // await this.loadMarketingCourses();
-    // await this.loadFinanceCourses();
-    // await this.loadMarketingSections();
-    // await this.loadFinanceSections();
+    await this.loadUsers();
+    await this.loadCategories();
+    await this.loadTeachers();
+    await this.loadMarketingCourses();
+    await this.loadFinanceCourses();
+    await this.loadMarketingSections();
+    await this.loadFinanceSections();
 
     await this.loadMarketingLessons();
     await this.loadFinanceLessons();
