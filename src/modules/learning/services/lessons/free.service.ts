@@ -8,6 +8,7 @@ import {
   getSecond,
   getVideoDuration,
 } from '../../../../utils/times/duration';
+import { videoLink } from '../../../../utils/uploads/video-link';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;
@@ -28,26 +29,25 @@ export class FreeLessonService {
 
   async getByCourseId(courseId: string): Promise<IFreeLesson[]> {
     const sections: Section[] = await this.sectionRepository.find({
-      'course._id': courseId,
+      course: courseId,
     });
+
     let freeLessons: IFreeLesson[] = [];
 
     for (const section of sections) {
-      const lessons = await this.lessonRepository.find({
-        'section._id': section._id,
+      let lessons = await this.lessonRepository.find({
+        section,
         lssn_is_free: true,
       });
 
       for (const lesson of lessons) {
         const durationInSeconds = await getVideoDuration(
-          lesson.lssn_video_link,
+          videoLink(lesson.lssn_video_link),
         );
-
         const formattedDuration =
           durationInSeconds != 0 && durationInSeconds >= 60
             ? getMinuteAndSecond(durationInSeconds)
             : getSecond(durationInSeconds);
-
         freeLessons.push({
           _id: lesson._id,
           lssn_title: lesson.lssn_title,
