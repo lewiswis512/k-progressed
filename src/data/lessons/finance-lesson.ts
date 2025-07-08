@@ -50,7 +50,7 @@ export const FINANCE_LESSONS = [
   {
     lssn_title: 'lesson 7',
     lssn_video_link:
-      'https://res.cloudinary.com/k-progressed/video/upload/v1751998003/7_Petits_Investissements_Sans_Risques_ygvche.mp4',
+      'https://res.cloudinary.com/k-progressed/video/upload/v1752007209/7_Petits_Investissements_Sans_Risques_j1vipq.mp4',
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827172/lesson-photos/sysp4vp9txvg6fcjfvyk.png',
     lssn_is_free: false,
