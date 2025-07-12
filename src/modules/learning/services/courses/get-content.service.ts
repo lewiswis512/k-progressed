@@ -28,7 +28,10 @@ export class CourseContentService {
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
     const course: Course = await this.getCourseByIdService.byId(courseId);
     let courseContents: ICourseContents[] = [];
-    const sections: Section[] = await this.courseSectionsService.get(course);
+    const sections: Section[] = await this.courseSectionsService.get(
+      course._id,
+      course.teacher.author,
+    );
 
     const totalSections: number = sections.length;
     let totalLessons: number = 0;
