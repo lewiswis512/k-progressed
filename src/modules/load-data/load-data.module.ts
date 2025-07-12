@@ -28,12 +28,15 @@ import { TeacherRepository } from '../learning/repositories/teacher.repository';
 import { SectionsService } from '../learning/services/sections.service';
 import { LessonRepository } from '../learning/repositories/lesson.repository';
 import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
-import { CoursesService } from '../learning/services/courses.service';
 import { CommentRepository } from '../comments/repository/comment.repository';
 import { PurchaseRepository } from '../purchases/repository/purchase.repository';
 import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary-upload-strategy';
 import { Comment, CommentSchema } from '../comments/schemas/comment.schema';
 import { Purchase, PurchaseSchema } from '../purchases/schemas/purchase.schema';
+import { GetCourseByIdService } from '../learning/services/courses/get-by-id.service';
+import { CoursesService } from '../learning/services/courses/list.service';
+import { CoursesByCategoryService } from '../learning/services/courses/get-by-category.service';
+import { GetCourseWithRatingService } from '../learning/services/courses/get-with-rating.service';
 
 @Module({
   imports: [
@@ -63,9 +66,12 @@ import { Purchase, PurchaseSchema } from '../purchases/schemas/purchase.schema';
     AuthService,
     SectionsService,
     CoursesService,
+    GetCourseByIdService,
     UserRepository,
     UserResetRepository,
     StripeCustomerService,
+    CoursesByCategoryService,
+    GetCourseWithRatingService,
     StripeCustomerRepository,
     CategoryRepository,
     TeacherRepository,

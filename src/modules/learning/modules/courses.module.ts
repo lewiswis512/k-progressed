@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { CoursesController } from '../controllers/courses.controller';
-import { CoursesService } from '../services/courses.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Course, CourseSchema } from '../schemas/course.schema';
 import { JwtModule } from '@nestjs/jwt';
@@ -23,6 +22,19 @@ import { CategoryRepository } from '../repositories/category.repository';
 import { Category, CategorySchema } from '../schemas/category.schema';
 import { Teacher, TeacherSchema } from '../schemas/teachers/teacher.schema';
 import { TeacherRepository } from '../repositories/teacher.repository';
+import { GetCourseByIdService } from '../services/courses/get-by-id.service';
+import { CourseContentService } from '../services/courses/get-content.service';
+import { CourseSectionsService } from '../services/courses/get-sections.service';
+import { CourseContentDetailService } from '../services/courses/get-content-detail.service';
+import { SectionLessonsService } from '../services/lessons/section.service';
+import { SectionLessonsWithDurationService } from '../services/lessons/section-with-duration.service';
+import { CoursesService } from '../services/courses/list.service';
+import { GetCourseWithRatingService } from '../services/courses/get-with-rating.service';
+import { CoursesByAuthorService } from '../services/courses/get-by-author.service';
+import { GetCoursesBySlugService } from '../services/courses/get-by-slug.service';
+import { AddCourseService } from '../services/courses/add.service';
+import { UpdateCourseService } from '../services/courses/update.service';
+import { DeleteCourseService } from '../services/courses/delete.service';
 
 @Module({
   imports: [
@@ -47,6 +59,18 @@ import { TeacherRepository } from '../repositories/teacher.repository';
   controllers: [CoursesController],
   providers: [
     CoursesService,
+    GetCourseByIdService,
+    CourseContentService,
+    CourseSectionsService,
+    CourseContentDetailService,
+    SectionLessonsService,
+    SectionLessonsWithDurationService,
+    GetCourseWithRatingService,
+    CoursesByAuthorService,
+    GetCoursesBySlugService,
+    AddCourseService,
+    UpdateCourseService,
+    DeleteCourseService,
     CourseRepository,
     CategoryRepository,
     TeacherRepository,

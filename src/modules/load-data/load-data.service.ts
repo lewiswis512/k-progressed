@@ -27,9 +27,10 @@ import { Category } from '../learning/schemas/category.schema';
 import { Course } from '../learning/schemas/course.schema';
 import { Section } from '../learning/schemas/section.schema';
 import { Teacher } from '../learning/schemas/teachers/teacher.schema';
-import { CoursesService } from '../learning/services/courses.service';
 import { UserRepository } from '../users/repository/user.repository';
 import { User } from '../users/schemas/user.schema';
+import { CoursesService } from '../learning/services/courses/list.service';
+import { CoursesByCategoryService } from '../learning/services/courses/get-by-category.service';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -44,6 +45,7 @@ export class LoadDataService {
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
     private coursesService: CoursesService,
+    private coursesByCategoryService: CoursesByCategoryService,
   ) {}
 
   async loadData() {
@@ -223,7 +225,7 @@ export class LoadDataService {
 
   async loadLessons(categoryName: string, lessonDomain: LESSON_DOMAIN) {
     const courses: Course[] =
-      await this.coursesService.findByCategory(categoryName);
+      await this.coursesByCategoryService.findBy(categoryName);
     const data = [];
 
     await Promise.all(

@@ -36,11 +36,27 @@ import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
 import { ICoursePagination } from '../interfaces/ICoursePagination';
 import { Course } from '../schemas/course.schema';
-import { CoursesService } from '../services/courses.service';
+import { CourseContentService } from '../services/courses/get-content.service';
+import { GetCourseByIdService } from '../services/courses/get-by-id.service';
+import { CoursesService } from '../services/courses/list.service';
+import { DeleteCourseService } from '../services/courses/delete.service';
+import { UpdateCourseService } from '../services/courses/update.service';
+import { CoursesByAuthorService } from '../services/courses/get-by-author.service';
+import { AddCourseService } from '../services/courses/add.service';
+import { GetCoursesBySlugService } from '../services/courses/get-by-slug.service';
 
 @Controller('courses')
 export class CoursesController {
-  constructor(private courseService: CoursesService) {}
+  constructor(
+    private courseContentService: CourseContentService,
+    private getCourseByIdService: GetCourseByIdService,
+    private coursesService: CoursesService,
+    private coursesByAuthorService: CoursesByAuthorService,
+    private getCoursesBySlugService: GetCoursesBySlugService,
+    private addCourseService: AddCourseService,
+    private updateCourseService: UpdateCourseService,
+    private deleteCourseService: DeleteCourseService,
+  ) {}
 
   @Get()
   @ApiOkResponse({
@@ -52,7 +68,7 @@ export class CoursesController {
   ): Promise<ICoursePagination> {
     const { page, limit } = pagination;
 
-    return await this.courseService.findAll(search.q, page, limit);
+    return await this.coursesService.get(search.q, page, limit);
   }
 
   @Get('by/:authorId')
@@ -60,7 +76,7 @@ export class CoursesController {
     description: 'The courses have been successfully retrieved.',
   })
   async byAuthor(@Param('authorId') authorId: string): Promise<Course[]> {
-    return await this.courseService.byAuthor(authorId);
+    return await this.coursesByAuthorService.byAuthor(authorId);
   }
 
   @Get('show/:id')
@@ -71,7 +87,7 @@ export class CoursesController {
     description: 'The course is not found.',
   })
   async showById(@Param('id') id: string): Promise<Course> {
-    return await this.courseService.findById(id);
+    return await this.getCourseByIdService.byId(id);
   }
 
   @Get('view/:slug')
@@ -84,7 +100,7 @@ export class CoursesController {
   async viewBySlug(
     @Param('slug') slug: string,
   ): Promise<ICourseWithAverageRating> {
-    return await this.courseService.findBySlug(slug);
+    return await this.getCoursesBySlugService.findBy(slug);
   }
 
   @Get('contents/:id')
@@ -97,7 +113,7 @@ export class CoursesController {
   async contents(
     @Param('id') id: string,
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
-    return this.courseService.getContent(id, false);
+    return this.courseContentService.get(id, false);
   }
 
   @Get('view-lessons/:id')
@@ -110,7 +126,7 @@ export class CoursesController {
   async viewLessons(
     @Param('id') id: string,
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
-    return this.courseService.getContent(id, true);
+    return this.courseContentService.get(id, true);
   }
 
   @Post()
@@ -134,7 +150,11 @@ export class CoursesController {
     @ImageFile({ fileIsRequired: true })
     file: Express.Multer.File,
   ): Promise<Course> {
-    return await this.courseService.store(req.user.id, createCourseDto, file);
+    return await this.addCourseService.store(
+      req.user.id,
+      createCourseDto,
+      file,
+    );
   }
 
   @Patch(':id')
@@ -159,7 +179,7 @@ export class CoursesController {
     @ImageFile({ fileIsRequired: false })
     file: Express.Multer.File,
   ): Promise<Course> {
-    return await this.courseService.update(
+    return await this.updateCourseService.update(
       id,
       req.user.id,
       editCourseDto,
@@ -175,6 +195,6 @@ export class CoursesController {
     description: 'The course has been successfully deleted.',
   })
   async delete(@Param('id') id: string, @Req() req: any): Promise<void> {
-    await this.courseService.delete(id, req.user.id);
+    await this.deleteCourseService.delete(id, req.user.id);
   }
 }
