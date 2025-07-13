@@ -1,13 +1,12 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { ObjectId, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { CourseRepository } from '../../../modules/learning/repositories/course.repository';
+import { AddSection } from '../dtos/sections/add-section.dto';
 import { EditSection } from '../dtos/sections/edit-section.dto';
 import { LessonRepository } from '../repositories/lesson.repository';
 import { SectionRepository } from '../repositories/section.repository';
-import { Section } from '../schemas/section.schema';
 import { Lesson } from '../schemas/lesson.schema';
-import { AddSection } from '../dtos/sections/add-section.dto';
-import { User } from '../../../modules/users/schemas/user.schema';
+import { Section } from '../schemas/section.schema';
 
 @Injectable()
 export class SectionsService {
@@ -88,7 +87,7 @@ export class SectionsService {
     return await this.sectionRepository.create(data);
   }
 
-  async isCourseAuthor(sectionId: string, authorId: string) {
+  async isSectionAuthor(sectionId: string, authorId: string) {
     const section = await this.sectionRepository.findById(
       new Types.ObjectId(sectionId),
     );
@@ -108,7 +107,7 @@ export class SectionsService {
   ): Promise<Section> {
     const section: Section = await this.findById(id);
 
-    this.isCourseAuthor(section._id.toString(), authorId);
+    this.isSectionAuthor(section._id.toString(), authorId);
 
     return this.sectionRepository.findByIdAndUpdate(
       new Types.ObjectId(id),
@@ -118,7 +117,8 @@ export class SectionsService {
 
   async delete(id: string, authorId: string): Promise<void> {
     const section = await this.findById(id);
-    this.isCourseAuthor(section.course.author._id.toString(), authorId);
+
+    this.isSectionAuthor(section._id.toString(), authorId);
 
     const lessons: Lesson[] = await this.lessonRepository.find({
       'section._id': new Types.ObjectId(section._id),
