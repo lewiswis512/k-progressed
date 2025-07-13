@@ -6,6 +6,7 @@ import { RoleEnum } from '../../../utils/enums/role.enum';
 import { UserTypeEnum } from '../../../utils/enums/user-type.enum';
 import { SaveTeacher } from '../dtos/teachers/save-teacher.dto';
 import { TeacherRepository } from '../repositories/teacher.repository';
+import { Teacher } from '../schemas/teachers/teacher.schema';
 
 @Injectable()
 export class TeachersService {
@@ -110,13 +111,21 @@ export class TeachersService {
   }
 
   async store(userId: string, addTeacher: SaveTeacher) {
+    const author = await this.userRepository.findById(
+      new Types.ObjectId(userId),
+    );
     let data = {
       ...addTeacher,
-      userId,
+      author,
     };
 
     const teacher = await this.teacherRepository.create(data);
+    this.updateTypeAndRole(teacher, userId);
 
+    return teacher;
+  }
+
+  async updateTypeAndRole(teacher: Teacher, userId: string) {
     if (teacher) {
       const user = await this.userRepository.findById(
         new Types.ObjectId(userId),
@@ -132,8 +141,6 @@ export class TeachersService {
         );
       }
     }
-
-    return teacher;
   }
 
   async update(id: string, teacher: SaveTeacher) {
