@@ -90,7 +90,7 @@ export class CoursesService {
               'teacher.tchr_title': { $regex: keywordToSearch },
             },
             {
-              'category.ctgr_name': keyword,
+              'category.ctgr_name': { $regex: keywordToSearch },
             },
           ],
         },
