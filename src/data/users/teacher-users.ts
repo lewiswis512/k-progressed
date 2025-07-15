@@ -13,7 +13,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=1',
+      usr_photo:
+        'https://images.unsplash.com/photo-1664913920468-e04086b46b61?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTJ8fHRlYWNoZXIlMjB3b21hbnxlbnwwfHwwfHx8MA%3D%3D',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -27,7 +28,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=2',
+      usr_photo:
+        'https://images.unsplash.com/photo-1714328564923-d4826427c991?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OTJ8fHRlYWNoZXIlMjBtYW58ZW58MHx8MHx8fDA%3D',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -41,7 +43,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=3',
+      usr_photo:
+        'https://images.unsplash.com/photo-1551989745-347c28b620e5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fHRlYWNoZXIlMjB3b21hbnxlbnwwfHwwfHx8MA%3D%3D',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -55,7 +58,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=4',
+      usr_photo:
+        'https://images.unsplash.com/photo-1696603865152-74514c198a07?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDR8fHRlYWNoZXIlMjBtYW58ZW58MHx8MHx8fDA%3D',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -69,7 +73,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=5',
+      usr_photo:
+        'https://images.unsplash.com/photo-1573496800808-56566a492b63?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fHRlYWNoZXIlMjB3b21hbnxlbnwwfHwwfHx8MA%3D%3D',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -83,7 +88,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=6',
+      usr_photo:
+        'https://images.unsplash.com/photo-1613063020776-2497a693d583?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHRlYWNoZXIlMjBtYW58ZW58MHx8MHx8fDA%3D',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -97,7 +103,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=7',
+      usr_photo:
+        'https://media.istockphoto.com/id/1401269015/fr/photo/femme-daffaires-asiatique-d%C3%A2ge-moyen-concentr%C3%A9e-utilisant-un-ordinateur-portable.webp?a=1&b=1&s=612x612&w=0&k=20&c=N_zqZvYYz6uzRT9r6z13OhXODfQ6dQdhS2alRRHhlZ4=',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -111,7 +118,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=8',
+      usr_photo:
+        'https://images.unsplash.com/photo-1601655781320-205e34c94eb1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHRlYWNoZXIlMjBtYW58ZW58MHx8MHx8fDA%3D',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -125,7 +133,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=9',
+      usr_photo:
+        'https://plus.unsplash.com/premium_photo-1682437962170-8163b332a921?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8dGVhY2hlciUyMHdvbWFufGVufDB8fDB8fHww',
       usr_registered_date: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
@@ -139,7 +148,8 @@ export const getTeacherUsers = async () => {
       usr_password: await hashPassword('password'),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
-      usr_photo: 'https://i.pravatar.cc/150?img=10',
+      usr_photo:
+        'https://plus.unsplash.com/premium_photo-1661780842994-1b7b748d87af?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHRlYWNoZXIlMjBtYW58ZW58MHx8MHx8fDA%3D',
       usr_registered_date: new Date(),
       updated_at: new Date(),
     },
