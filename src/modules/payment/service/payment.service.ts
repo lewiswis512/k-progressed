@@ -4,6 +4,10 @@ import { StripePaymentIntentRepository } from '../repository/stripePaymentIntent
 import { IBillingDetail } from '../schemas/stripe-payment-intent.schema';
 import Stripe from 'stripe';
 import { PurchasesService } from '../../../modules/purchases/purchases.service';
+import {
+  IBookingInformation,
+  MentorBookingNotificationService,
+} from '../../../modules/learning/services/mentor-booking-notification.service';
 
 interface IPayInfoData {
   strp_paym_amount: number;
@@ -21,6 +25,7 @@ export class PaymentService extends StripeService {
   constructor(
     private stripePaymentIntentRepository: StripePaymentIntentRepository,
     private purchaseService: PurchasesService,
+    private mentorBookingNotificationService: MentorBookingNotificationService,
   ) {
     super();
   }
@@ -92,6 +97,30 @@ export class PaymentService extends StripeService {
 
         if (metadata.purchaseId) {
           await this.purchaseService.validatePurchase(metadata.purchaseId);
+        }
+
+        if (
+          metadata.date &&
+          metadata.time &&
+          metadata.bookerLastname &&
+          metadata.bookerFirstname &&
+          metadata.bookerEmail &&
+          metadata.teacherLastname &&
+          metadata.teacherFirstname &&
+          metadata.teacherEmail
+        ) {
+          const bookingInfo: IBookingInformation = {
+            date: new Date(metadata.date),
+            time: metadata.time,
+            bookerLastname: metadata.bookerLastname,
+            bookerFirstname: metadata.bookerFirstname,
+            bookerEmail: metadata.bookerEmail,
+            teacherLastname: metadata.teacherLastname,
+            teacherFirstname: metadata.teacherFirstname,
+            teacherEmail: metadata.teacherEmail,
+          };
+
+          this.mentorBookingNotificationService.send(bookingInfo);
         }
 
         console.info('Charge succeeded');

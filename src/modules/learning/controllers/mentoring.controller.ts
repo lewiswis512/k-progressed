@@ -1,4 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import {
   IBookingInformation,
   MentorBookingNotificationService,
@@ -11,6 +12,7 @@ export class MentoringController {
   ) {}
 
   @Post()
+  @ApiExcludeEndpoint()
   async sendMail(@Body() bookingInformation: IBookingInformation) {
     await this.mentorBookingNotificationService.send(bookingInformation);
   }

@@ -47,6 +47,8 @@ export class MentorBookingNotificationService {
         ? studentBookingNotificationTemplate(bookingInformation)
         : teacherBookingNotificationTemplate(bookingInformation);
 
+    console.log({ to: user.usr_email });
+
     try {
       await this.mailerService.sendMail({
         from: process.env.EMAIL_FROM,
@@ -55,6 +57,7 @@ export class MentorBookingNotificationService {
         html: htmlTemplate,
       });
     } catch (error) {
+      console.error('Error sending email:', error);
       throw new InternalServerErrorException();
     }
   }

@@ -13,12 +13,16 @@ import { WebhookController } from './controller/webhook.controller';
 import { PurchasesService } from '../purchases/purchases.service';
 import { PurchaseRepository } from '../purchases/repository/purchase.repository';
 import { Purchase, PurchaseSchema } from '../purchases/schemas/purchase.schema';
+import { MentorBookingNotificationService } from '../learning/services/mentor-booking-notification.service';
+import { UserRepository } from '../users/repository/user.repository';
+import { User, UserSchema } from '../users/schemas/user.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: StripePaymentIntent.name, schema: StripePaymentIntentSchema },
       { name: Purchase.name, schema: PurchaseSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   controllers: [PaymentIntentController, ConfigController, WebhookController],
@@ -27,7 +31,9 @@ import { Purchase, PurchaseSchema } from '../purchases/schemas/purchase.schema';
     StripePaymentIntentRepository,
     PaymentService,
     PurchasesService,
+    MentorBookingNotificationService,
     PurchaseRepository,
+    UserRepository,
   ],
 })
 export class PaymentModule {}
