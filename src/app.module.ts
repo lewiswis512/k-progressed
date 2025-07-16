@@ -17,6 +17,7 @@ import { PurchasesModule } from './modules/purchases/purchases.module';
 import { TeachersModule } from './modules/learning/modules/teachers.module';
 import { UsersModule } from './modules/users/users.module';
 import { LoadDataModule } from './modules/load-data/load-data.module';
+import { MentoringModule } from './modules/learning/modules/mentoring.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { LoadDataModule } from './modules/load-data/load-data.module';
     PaymentModule,
     LearningModule,
     LoadDataModule,
+    MentoringModule,
   ],
   controllers: [AppController],
   providers: [AppService, IsUniqueConstraint, MongoRepository],
