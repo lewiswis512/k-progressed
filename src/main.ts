@@ -8,9 +8,11 @@ import * as express from 'express';
 import * as path from 'path';
 import { Request, Response, NextFunction } from 'express';
 import * as bodyParser from 'body-parser';
+import { join } from 'path';
 
 const siteName = 'K-Progressed';
 export const LOGO = `${process.env.API_URL}/assets/img/${siteName.toLowerCase()}.png`;
+console.log(LOGO);
 
 async function bootstrap() {
   dotenv.config();
@@ -47,6 +49,8 @@ async function bootstrap() {
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
+
+  app.use('/assets', express.static(join(__dirname, '..', 'assets')));
 
   app.use(
     '/uploads/courses',

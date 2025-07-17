@@ -47,8 +47,6 @@ export class MentorBookingNotificationService {
         ? studentBookingNotificationTemplate(bookingInformation)
         : teacherBookingNotificationTemplate(bookingInformation);
 
-    console.log({ to: user.usr_email });
-
     try {
       await this.mailerService.sendMail({
         from: process.env.EMAIL_FROM,
