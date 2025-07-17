@@ -44,7 +44,6 @@ export class LoadDataService {
     private courseRepository: CourseRepository,
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
-    private coursesService: CoursesService,
     private coursesByCategoryService: CoursesByCategoryService,
   ) {}
 
@@ -170,6 +169,7 @@ export class LoadDataService {
         crs_photo: course.crs_photo,
         level_id: course.level_id,
         crs_isApprouved: course.crs_isApprouved,
+        crs_isValid: course.crs_isValid,
         category,
         teacher,
         author,
