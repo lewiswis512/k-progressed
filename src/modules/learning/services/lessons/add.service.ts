@@ -25,7 +25,7 @@ export class AddLessonService {
     file: Express.Multer.File,
   ): Promise<Lesson> {
     let { secure_url: videoPath } = await videoUploaderProvider.uploadVideo(
-      file,
+      file.buffer,
       PATH_UPLOAD_LESSON_VIDEOS,
     );
     const lessonPhotoFilename: string =
