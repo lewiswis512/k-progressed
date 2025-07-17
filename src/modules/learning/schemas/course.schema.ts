@@ -25,6 +25,9 @@ export class Course extends AbstractDocument {
   @Prop({ type: Boolean, default: false })
   crs_isPaid: boolean;
 
+  @Prop({ type: Boolean, default: false })
+  crs_isValid: boolean;
+
   @Prop({ type: String, default: '' })
   crs_photo: string;
 

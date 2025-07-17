@@ -22,6 +22,7 @@ export class CoursesService {
     const keywordToSearch = keyword ? new RegExp(keyword, 'i') : null;
     const courseAggregation: Aggregation[] = [
       { $project: { __v: 0 } },
+      { $match: { crs_isValid: true } },
       {
         $lookup: {
           from: 'categories',
