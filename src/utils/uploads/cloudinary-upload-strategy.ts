@@ -27,7 +27,7 @@ const unlinkAsync = promisify(fs.unlink);
 export class CloudinaryUploadStrategy
   implements
     PhotoUploadStrategy<Buffer, string>,
-    VideoUploadStrategy<Buffer, { secure_url: string; thumbnail?: string }>
+    VideoUploadStrategy<{ secure_url: string; thumbnail?: string }>
 {
   async upload(fileBuffer: Buffer, folder: string): Promise<string> {
     try {
@@ -51,16 +51,16 @@ export class CloudinaryUploadStrategy
   }
 
   async uploadVideo(
-    fileBuffer: Buffer,
-    folder: string,
+    file: Express.Multer.File,
+    destination: string,
   ): Promise<{ secure_url: string; thumbnail?: string }> {
     try {
-      const compressedBuffer = await this.compressVideo(fileBuffer);
+      const compressedBuffer = await this.compressVideo(file.buffer);
 
       const result: UploadApiResponse = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
-            folder,
+            destination,
             resource_type: 'video',
             transformation: [
               { width: 1280, height: 720, crop: 'limit' },

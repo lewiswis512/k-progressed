@@ -1,13 +1,18 @@
 import { VideoUploadStrategy } from './video-upload-strategy';
 
-export class VideoUploaderContext<TInput, TResult> {
-  constructor(private strategy: VideoUploadStrategy<TInput, TResult>) {}
+export class VideoUploaderContext {
+  constructor(private strategy: VideoUploadStrategy) {}
 
-  setStrategy(strategy: VideoUploadStrategy<TInput, TResult>) {
+  setStrategy(strategy: VideoUploadStrategy) {
     this.strategy = strategy;
   }
 
-  async uploadVideo(file: TInput, destination: string): Promise<TResult> {
+  async uploadVideo(
+    file: Express.Multer.File,
+    destination: string,
+  ): Promise<{
+    secure_url: string;
+  }> {
     return this.strategy.uploadVideo(file, destination);
   }
 }

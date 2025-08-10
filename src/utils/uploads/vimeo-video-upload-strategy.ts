@@ -4,8 +4,8 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
 
-export class VimeoUploadStrategy
-  implements VideoUploadStrategy<Express.Multer.File, { secure_url: string }>
+export class VimeoVideoUploadStrategy
+  implements VideoUploadStrategy<{ secure_url: string }>
 {
   private vimeo: Vimeo;
 
