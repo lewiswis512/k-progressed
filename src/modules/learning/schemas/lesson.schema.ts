@@ -19,6 +19,9 @@ export class Lesson extends AbstractDocument {
   @Prop({ type: Boolean, default: false })
   lssn_is_free: boolean;
 
+  @Prop({ type: String, trim: true })
+  lssn_duration: string;
+
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Section' })
   section: Section;
 }

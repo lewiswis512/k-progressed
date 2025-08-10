@@ -6,6 +6,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827988/lesson-photos/g8vxaf6vflw6inoa5y65.png',
     lssn_is_free: true,
+    lssn_duration: '04:35',
   },
   {
     lssn_title: 'lesson 2',
@@ -14,6 +15,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828065/lesson-photos/y25r9yjcxslxxxy72ber.png',
     lssn_is_free: false,
+    lssn_duration: '07:12',
   },
   {
     lssn_title: 'lesson 3',
@@ -22,6 +24,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828065/lesson-photos/y25r9yjcxslxxxy72ber.png',
     lssn_is_free: false,
+    lssn_duration: '05:48',
   },
   {
     lssn_title: 'lesson 4',
@@ -30,6 +33,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828156/lesson-photos/v8t7a1t5ytg8v3cztudo.png',
     lssn_is_free: false,
+    lssn_duration: '06:21',
   },
   {
     lssn_title: 'lesson 5',
@@ -38,6 +42,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828185/lesson-photos/tlvhz29xykqqrclsvda2.png',
     lssn_is_free: false,
+    lssn_duration: '08:03',
   },
   {
     lssn_title: 'lesson 6',
@@ -46,6 +51,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828212/lesson-photos/gobjltbjijqoswsuz4gh.png',
     lssn_is_free: false,
+    lssn_duration: '09:27',
   },
   {
     lssn_title: 'lesson 7',
@@ -54,6 +60,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828253/lesson-photos/urugvsmdcjusrovotu7k.png',
     lssn_is_free: false,
+    lssn_duration: '04:56',
   },
   {
     lssn_title: 'lesson 8',
@@ -62,6 +69,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828296/lesson-photos/kiliar94unlvisbwshkh.png',
     lssn_is_free: false,
+    lssn_duration: '05:39',
   },
   {
     lssn_title: 'lesson 9',
@@ -70,6 +78,7 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828333/lesson-photos/w2bwao0zypnwrqmhi4ez.png',
     lssn_is_free: false,
+    lssn_duration: '07:45',
   },
   {
     lssn_title: 'lesson 10',
@@ -78,5 +87,6 @@ export const MARKETING_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751828360/lesson-photos/noe6q12dw2xfwxfs6mbj.png',
     lssn_is_free: false,
+    lssn_duration: '06:58',
   },
 ];

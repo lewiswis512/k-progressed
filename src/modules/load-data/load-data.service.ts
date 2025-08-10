@@ -244,6 +244,7 @@ export class LoadDataService {
             lssn_is_free: lesson.lssn_is_free,
             lssn_video_photo: lesson.lssn_video_photo,
             lssn_video_link: lesson.lssn_video_link,
+            lssn_duration: lesson.lssn_duration,
           });
         }
       }),

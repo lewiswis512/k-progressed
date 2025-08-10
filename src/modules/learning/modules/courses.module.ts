@@ -25,7 +25,6 @@ import { TeacherRepository } from '../repositories/teacher.repository';
 import { GetCourseByIdService } from '../services/courses/get-by-id.service';
 import { CourseContentService } from '../services/courses/get-content.service';
 import { CourseSectionsService } from '../services/courses/get-sections.service';
-import { CourseContentDetailService } from '../services/courses/get-content-detail.service';
 import { SectionLessonsService } from '../services/lessons/section.service';
 import { SectionLessonsWithDurationService } from '../services/lessons/section-with-duration.service';
 import { CoursesService } from '../services/courses/list.service';
@@ -62,7 +61,6 @@ import { DeleteCourseService } from '../services/courses/delete.service';
     GetCourseByIdService,
     CourseContentService,
     CourseSectionsService,
-    CourseContentDetailService,
     SectionLessonsService,
     SectionLessonsWithDurationService,
     GetCourseWithRatingService,

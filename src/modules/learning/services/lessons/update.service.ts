@@ -47,7 +47,7 @@ export class UpdateLessonservice {
       await this.deleteLessonService.deleteLessonPhoto(lesson);
 
       let { secure_url: videoPath } = await videoUploaderProvider.uploadVideo(
-        file.buffer,
+        file,
         PATH_UPLOAD_LESSON_VIDEOS,
       );
 

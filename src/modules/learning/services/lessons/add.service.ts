@@ -11,6 +11,11 @@ import { CloudinaryUploadStrategy } from '../../../../utils/uploads/cloudinary-u
 import { videoLink } from '../../../../utils/uploads/video-link';
 import { SectionRepository } from '../../repositories/section.repository';
 import { LessonRepository } from '../../repositories/lesson.repository';
+import {
+  getMinuteAndSecond,
+  getSecond,
+  getVideoDuration,
+} from '../../../../utils/times/duration';
 
 @Injectable()
 export class AddLessonService {
@@ -20,12 +25,9 @@ export class AddLessonService {
     private lessonRepository: LessonRepository,
   ) {}
 
-  async store(
-    addLesson: AddLesson,
-    file: Express.Multer.File,
-  ): Promise<Lesson> {
+  async store(addLesson: AddLesson, file: Express.Multer.File): Promise<any> {
     let { secure_url: videoPath } = await videoUploaderProvider.uploadVideo(
-      file.buffer,
+      file,
       PATH_UPLOAD_LESSON_VIDEOS,
     );
     const lessonPhotoFilename: string =
@@ -38,11 +40,25 @@ export class AddLessonService {
       new Types.ObjectId(addLesson.section_id),
     );
 
+    let videoDuration = 0;
+
+    if (videoPath.startsWith('https') || videoPath.startsWith('http')) {
+      videoDuration = await getVideoDuration(videoPath);
+    } else {
+      videoDuration = await getVideoDuration(
+        `${PATH_UPLOAD_LESSON_VIDEOS}/${videoPath}`,
+      );
+    }
+
     let data = {
       ...addLesson,
       section,
       lssn_video_link: videoPath,
       lssn_video_photo: lessonPhotoFilename,
+      lssn_duration:
+        videoDuration !== 0 && videoDuration >= 60
+          ? getMinuteAndSecond(videoDuration)
+          : (getSecond(videoDuration) as string),
     };
 
     return await this.lessonRepository.create(data);

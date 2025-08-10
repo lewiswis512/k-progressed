@@ -6,6 +6,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751826683/lesson-photos/cddigyxri0u5fo9x5m6y.png',
     lssn_is_free: true,
+    lssn_duration: '3:13',
   },
   {
     lssn_title: 'lesson 2',
@@ -14,6 +15,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751826726/lesson-photos/mj2t2hxptvdheg4yaey9.png',
     lssn_is_free: false,
+    lssn_duration: '6:40',
   },
   {
     lssn_title: 'lesson 3',
@@ -22,6 +24,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751826778/lesson-photos/ssmb9jrsybed6aegqiuw.png',
     lssn_is_free: false,
+    lssn_duration: '3:51',
   },
   {
     lssn_title: 'lesson 4',
@@ -30,6 +33,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751826824/lesson-photos/livelf9v3mqxkezxxi9l.png',
     lssn_is_free: false,
+    lssn_duration: '11:41',
   },
   {
     lssn_title: 'lesson 5',
@@ -38,6 +42,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827018/lesson-photos/slntsbji36n1pqqiilcj.png',
     lssn_is_free: false,
+    lssn_duration: '4:05',
   },
   {
     lssn_title: 'lesson 6',
@@ -46,6 +51,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827112/lesson-photos/sbdvvypid4nvdobiy5ho.png',
     lssn_is_free: false,
+    lssn_duration: '3:38',
   },
   {
     lssn_title: 'lesson 7',
@@ -54,6 +60,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827172/lesson-photos/sysp4vp9txvg6fcjfvyk.png',
     lssn_is_free: false,
+    lssn_duration: '1:30',
   },
   {
     lssn_title: 'lesson 8',
@@ -62,6 +69,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827209/lesson-photos/hdhsxurhlsnun9o931pk.png',
     lssn_is_free: false,
+    lssn_duration: '3:58',
   },
   {
     lssn_title: 'lesson 9',
@@ -70,6 +78,7 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827258/lesson-photos/lr02jwnyhyju4gxhailp.png',
     lssn_is_free: false,
+    lssn_duration: '3:09',
   },
   {
     lssn_title: 'lesson 10',
@@ -78,5 +87,6 @@ export const FINANCE_LESSONS = [
     lssn_video_photo:
       'https://res.cloudinary.com/k-progressed/image/upload/v1751827298/lesson-photos/isblluzfcwerjs79nsii.png',
     lssn_is_free: false,
+    lssn_duration: '3:21',
   },
 ];
