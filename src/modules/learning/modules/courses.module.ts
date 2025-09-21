@@ -1,52 +1,46 @@
 import { Module } from '@nestjs/common';
-import { CoursesController } from '../controllers/courses.controller';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Course, CourseSchema } from '../schemas/course.schema';
 import { JwtModule } from '@nestjs/jwt';
-import { Comment, CommentSchema } from '../../comments/schemas/comment.schema';
-import { Section, SectionSchema } from '../schemas/section.schema';
-import { Lesson, LessonSchema } from '../schemas/lesson.schema';
-import { CourseRepository } from '../repositories/course.repository';
-import { UserRepository } from '../../../modules/users/repository/user.repository';
-import { CommentRepository } from '../../../modules/comments/repository/comment.repository';
-import { User, UserSchema } from '../../../modules/users/schemas/user.schema';
-import { SectionRepository } from '../repositories/section.repository';
-import { LessonRepository } from '../repositories/lesson.repository';
+import { MongooseModule } from '@nestjs/mongoose';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
-import { PurchaseRepository } from '../../../modules/purchases/repository/purchase.repository';
+import { CoursesController } from '../controllers/courses.controller';
+import { CourseRepository } from '../repositories/course.repository';
+import { Course, CourseSchema } from '../schemas/course.schema';
+import { AddCourseService } from '../services/courses/add.service';
+import { DeleteCourseService } from '../services/courses/delete.service';
+import { CoursesByAuthorService } from '../services/courses/get-by-author.service';
+import { CoursesByCategoryService } from '../services/courses/get-by-category.service';
+import { GetCourseByIdService } from '../services/courses/get-by-id.service';
+import { GetCoursesBySlugService } from '../services/courses/get-by-slug.service';
+import { CourseContentService } from '../services/courses/get-content.service';
+import { CourseSectionsService } from '../services/courses/get-sections.service';
+import { GetCourseWithRatingService } from '../services/courses/get-with-rating.service';
+import { CoursesService } from '../services/courses/list.service';
+import { UpdateCourseService } from '../services/courses/update.service';
+import { SectionLessonsWithDurationService } from '../services/lessons/section-with-duration.service';
+import { SectionLessonsService } from '../services/lessons/section.service';
+import { CategoriesModule } from './category.module';
+import { TeachersModule } from './teachers.module';
+import { SectionsModule } from './sections.module';
+import { LessonsModule } from './lessons.module';
+import { CommentsModule } from '../../comments/comments.module';
+import { PurchasesModule } from '../../purchases/purchases.module';
+import { CommentRepository } from '../../comments/repository/comment.repository';
+import { PurchaseRepository } from '../../purchases/repository/purchase.repository';
+import { UserRepository } from '../../users/repository/user.repository';
+import { Comment, CommentSchema } from '../../comments/schemas/comment.schema';
 import {
   Purchase,
   PurchaseSchema,
-} from '../../../modules/purchases/schemas/purchase.schema';
-import { CategoryRepository } from '../repositories/category.repository';
-import { Category, CategorySchema } from '../schemas/category.schema';
-import { Teacher, TeacherSchema } from '../schemas/teachers/teacher.schema';
-import { TeacherRepository } from '../repositories/teacher.repository';
-import { GetCourseByIdService } from '../services/courses/get-by-id.service';
-import { CourseContentService } from '../services/courses/get-content.service';
-import { CourseSectionsService } from '../services/courses/get-sections.service';
-import { SectionLessonsService } from '../services/lessons/section.service';
-import { SectionLessonsWithDurationService } from '../services/lessons/section-with-duration.service';
-import { CoursesService } from '../services/courses/list.service';
-import { GetCourseWithRatingService } from '../services/courses/get-with-rating.service';
-import { CoursesByAuthorService } from '../services/courses/get-by-author.service';
-import { GetCoursesBySlugService } from '../services/courses/get-by-slug.service';
-import { AddCourseService } from '../services/courses/add.service';
-import { UpdateCourseService } from '../services/courses/update.service';
-import { DeleteCourseService } from '../services/courses/delete.service';
-import { CoursesByCategoryService } from '../services/courses/get-by-category.service';
+} from '../../purchases/schemas/purchase.schema';
+import { User, UserSchema } from '../../users/schemas/user.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Course.name, schema: CourseSchema },
-      { name: Category.name, schema: CategorySchema },
-      { name: Teacher.name, schema: TeacherSchema },
-      { name: User.name, schema: UserSchema },
       { name: Comment.name, schema: CommentSchema },
-      { name: Section.name, schema: SectionSchema },
-      { name: Lesson.name, schema: LessonSchema },
       { name: Purchase.name, schema: PurchaseSchema },
+      { name: User.name, schema: UserSchema },
     ]),
     JwtModule.registerAsync({
       useFactory: async () => ({
@@ -55,6 +49,12 @@ import { CoursesByCategoryService } from '../services/courses/get-by-category.se
         signOptions: { expiresIn: process.env.JWT_EXPIRATION_TIME },
       }),
     }),
+    CategoriesModule,
+    TeachersModule,
+    SectionsModule,
+    LessonsModule,
+    CommentsModule,
+    PurchasesModule,
   ],
   controllers: [CoursesController],
   providers: [
@@ -71,15 +71,11 @@ import { CoursesByCategoryService } from '../services/courses/get-by-category.se
     AddCourseService,
     UpdateCourseService,
     DeleteCourseService,
-    CourseRepository,
-    CategoryRepository,
-    TeacherRepository,
-    UserRepository,
-    CommentRepository,
-    SectionRepository,
-    LessonRepository,
-    PurchaseRepository,
     CloudinaryUploadStrategy,
+    CourseRepository,
+    CommentRepository,
+    PurchaseRepository,
+    UserRepository,
   ],
   exports: [
     GetCourseWithRatingService,
