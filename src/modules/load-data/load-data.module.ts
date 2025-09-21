@@ -37,6 +37,7 @@ import { GetCourseByIdService } from '../learning/services/courses/get-by-id.ser
 import { CoursesService } from '../learning/services/courses/list.service';
 import { CoursesByCategoryService } from '../learning/services/courses/get-by-category.service';
 import { GetCourseWithRatingService } from '../learning/services/courses/get-with-rating.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -47,10 +48,8 @@ import { GetCourseWithRatingService } from '../learning/services/courses/get-wit
         signOptions: { expiresIn: process.env.JWT_EXPIRATION_TIME },
       }),
     }),
+    UsersModule,
     MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema },
-      { name: UserReset.name, schema: UserResetSchema },
-      { name: StripeCustomer.name, schema: StripeCustomerSchema },
       { name: Category.name, schema: CategorySchema },
       { name: Teacher.name, schema: TeacherSchema },
       { name: Course.name, schema: CourseSchema },

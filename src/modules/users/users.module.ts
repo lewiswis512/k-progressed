@@ -10,12 +10,18 @@ import { UserRepository } from './repository/user.repository';
 import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary-upload-strategy';
 import { MongoRepository } from '../../common/repository/mongo.repository';
 import { CheckingController } from './controllers/checking.controller';
+import { StripeCustomerRepository } from './repository/stripe-customer.repository';
+import {
+  StripeCustomer,
+  StripeCustomerSchema,
+} from '../payment/schemas/stripe-customer.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: UserReset.name, schema: UserResetSchema },
+      { name: StripeCustomer.name, schema: StripeCustomerSchema },
     ]),
     JwtModule.registerAsync({
       useFactory: async () => ({
@@ -29,10 +35,11 @@ import { CheckingController } from './controllers/checking.controller';
     UsersService,
     UserRepository,
     UserResetRepository,
+    StripeCustomerRepository,
     CloudinaryUploadStrategy,
     MongoRepository,
   ],
-  exports: [UsersService],
+  exports: [MongooseModule, UsersService, StripeCustomerRepository],
   controllers: [UsersController, CheckingController],
 })
 export class UsersModule {}
