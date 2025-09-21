@@ -38,6 +38,7 @@ import { CoursesService } from '../learning/services/courses/list.service';
 import { CoursesByCategoryService } from '../learning/services/courses/get-by-category.service';
 import { GetCourseWithRatingService } from '../learning/services/courses/get-with-rating.service';
 import { UsersModule } from '../users/users.module';
+import { CategoriesModule } from '../learning/modules/category.module';
 
 @Module({
   imports: [
@@ -49,8 +50,8 @@ import { UsersModule } from '../users/users.module';
       }),
     }),
     UsersModule,
+    CategoriesModule,
     MongooseModule.forFeature([
-      { name: Category.name, schema: CategorySchema },
       { name: Teacher.name, schema: TeacherSchema },
       { name: Course.name, schema: CourseSchema },
       { name: Section.name, schema: SectionSchema },

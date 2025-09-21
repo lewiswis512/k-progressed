@@ -21,5 +21,6 @@ import { CategoryRepository } from '../repositories/category.repository';
   ],
   controllers: [CategoriesController],
   providers: [CategoryService, CategoryRepository],
+  exports: [MongooseModule],
 })
 export class CategoriesModule {}
