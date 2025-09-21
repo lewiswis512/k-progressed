@@ -40,5 +40,6 @@ import { LessonsService } from '../services/lessons/list.service';
     FreeLessonService,
   ],
   controllers: [LessonsController],
+  exports: [LessonRepository],
 })
 export class LessonsModule {}

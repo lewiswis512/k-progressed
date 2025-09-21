@@ -43,5 +43,6 @@ import { ForgotPasswordService } from './services/forgot-password.service';
     StripeCustomerRepository,
     UserResetRepository,
   ],
+  exports: [MongooseModule, AuthService],
 })
 export class AuthModule {}

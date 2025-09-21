@@ -29,7 +29,6 @@ import { Section } from '../learning/schemas/section.schema';
 import { Teacher } from '../learning/schemas/teachers/teacher.schema';
 import { UserRepository } from '../users/repository/user.repository';
 import { User } from '../users/schemas/user.schema';
-import { CoursesService } from '../learning/services/courses/list.service';
 import { CoursesByCategoryService } from '../learning/services/courses/get-by-category.service';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];

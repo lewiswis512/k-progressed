@@ -39,7 +39,7 @@ import {
     CloudinaryUploadStrategy,
     MongoRepository,
   ],
-  exports: [MongooseModule, UsersService, StripeCustomerRepository],
+  exports: [UsersService, StripeCustomerRepository, UserRepository],
   controllers: [UsersController, CheckingController],
 })
 export class UsersModule {}

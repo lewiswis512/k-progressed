@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
+import { CourseRepository } from '../learning/repositories/course.repository';
+import { LessonRepository } from '../learning/repositories/lesson.repository';
+import { Course, CourseSchema } from '../learning/schemas/course.schema';
+import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
 import { UserRepository } from '../users/repository/user.repository';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { CommentsController } from './comments.controller';
 import { CommentsService } from './comments.service';
 import { CommentRepository } from './repository/comment.repository';
 import { Comment, CommentSchema } from './schemas/comment.schema';
-import { CourseRepository } from '../learning/repositories/course.repository';
-import { Course, CourseSchema } from '../learning/schemas/course.schema';
-import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
-import { LessonRepository } from '../learning/repositories/lesson.repository';
 
 @Module({
   imports: [

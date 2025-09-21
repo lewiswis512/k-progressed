@@ -34,6 +34,7 @@ import { GetCoursesBySlugService } from '../services/courses/get-by-slug.service
 import { AddCourseService } from '../services/courses/add.service';
 import { UpdateCourseService } from '../services/courses/update.service';
 import { DeleteCourseService } from '../services/courses/delete.service';
+import { CoursesByCategoryService } from '../services/courses/get-by-category.service';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { DeleteCourseService } from '../services/courses/delete.service';
     SectionLessonsService,
     SectionLessonsWithDurationService,
     GetCourseWithRatingService,
+    CoursesByCategoryService,
     CoursesByAuthorService,
     GetCoursesBySlugService,
     AddCourseService,
@@ -78,6 +80,11 @@ import { DeleteCourseService } from '../services/courses/delete.service';
     LessonRepository,
     PurchaseRepository,
     CloudinaryUploadStrategy,
+  ],
+  exports: [
+    GetCourseWithRatingService,
+    CoursesByCategoryService,
+    CourseRepository,
   ],
 })
 export class CoursesModule {}

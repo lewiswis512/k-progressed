@@ -35,5 +35,6 @@ import { SectionsController } from '../controllers/sections.controller';
     LessonRepository,
     CourseRepository,
   ],
+  exports: [SectionRepository],
 })
 export class SectionsModule {}
