@@ -2,10 +2,10 @@ import { Vimeo } from '@vimeo/vimeo';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { IVideoUpload } from './video-upload.interface';
+import { IVideoUploader } from './video-upload.interface';
 
 export class VimeoVideoUploadStrategy
-  implements IVideoUpload<{ path: string }>
+  implements IVideoUploader<{ path: string }>
 {
   private vimeo: Vimeo;
 
