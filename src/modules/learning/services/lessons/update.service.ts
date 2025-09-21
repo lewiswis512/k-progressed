@@ -4,7 +4,6 @@ import { EditLesson } from '../../dtos/lessons/edit-lesson.dto';
 import { Lesson } from '../../schemas/lesson.schema';
 import { AuthorLessonService } from './author.service';
 import { CloudinaryUploadStrategy } from '../../../../utils/uploads/cloudinary-upload-strategy';
-import { videoUploaderProvider } from '../../../../utils/uploads/video-uploader-provider';
 import {
   PATH_LESSON_PHOTOS_CLOUDINARY,
   PATH_UPLOAD_LESSON_VIDEOS,
@@ -13,6 +12,9 @@ import { LessonRepository } from '../../repositories/lesson.repository';
 import { DeleteLessonService } from './delete.service';
 import { videoLink } from '../../../../utils/uploads/video-link';
 import { LessonService } from './find-one-by-id.service';
+import { VideoUploadStrategy } from 'src/utils/uploads/video-upload-strategy';
+import { CloudinaryVideoUploadStrategy } from 'src/utils/uploads/cloudinary-video-upload-strategy';
+import { ScreenShot } from 'src/utils/uploads/take-screen-shot';
 
 @Injectable()
 export class UpdateLessonservice {
@@ -46,12 +48,16 @@ export class UpdateLessonservice {
       await this.deleteLessonService.deleteVideoLesson(lesson);
       await this.deleteLessonService.deleteLessonPhoto(lesson);
 
-      let { secure_url: videoPath } = await videoUploaderProvider.uploadVideo(
+      const videoUploadStrategy = new VideoUploadStrategy(
+        new CloudinaryVideoUploadStrategy(),
+      );
+
+      let { path: videoPath } = await videoUploadStrategy.upload(
         file,
         PATH_UPLOAD_LESSON_VIDEOS,
       );
 
-      lessonPhotoFilename = await this.cloudinaryUploadStrategy.takeScreenshot(
+      lessonPhotoFilename = await new ScreenShot().takeFrom(
         videoLink(videoPath),
         PATH_LESSON_PHOTOS_CLOUDINARY,
       );

@@ -1,17 +1,18 @@
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import * as dotenv from 'dotenv';
-import { Readable } from 'stream';
-import { VideoUploadStrategy } from './video-upload-strategy';
-import { promisify } from 'util';
+import * as _ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
-import * as _ffmpeg from 'fluent-ffmpeg';
+import { Readable } from 'stream';
+import { promisify } from 'util';
 const ffmpeg = _ffmpeg.default;
 
+import { readFile, unlink, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { writeFile, readFile, unlink } from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
+import { IDeleteVideoUploaded } from './delete-video-uploaded.interface';
+import { IVideoUploader } from './video-upload.interface';
 
 dotenv.config();
 
@@ -24,12 +25,12 @@ cloudinary.config({
 const unlinkAsync = promisify(fs.unlink);
 
 export class CloudinaryVideoUploadStrategy
-  implements VideoUploadStrategy<{ secure_url: string }>
+  implements IVideoUploader<{ path: string }>, IDeleteVideoUploaded
 {
-  async uploadVideo(
+  async upload(
     file: Express.Multer.File,
     destination: string,
-  ): Promise<{ secure_url: string; thumbnail?: string }> {
+  ): Promise<{ path: string }> {
     try {
       const compressedBuffer = await this.compressVideo(file.buffer);
 
@@ -42,15 +43,6 @@ export class CloudinaryVideoUploadStrategy
               { width: 1280, height: 720, crop: 'limit' },
               { quality: 'auto:eco' },
             ],
-            eager: [
-              {
-                format: 'jpg',
-                transformation: [
-                  { width: 320, height: 180, crop: 'thumb', gravity: 'auto' },
-                ],
-              },
-            ],
-            eager_async: true,
           },
           (error, result) => {
             if (error) return reject(error);
@@ -62,8 +54,7 @@ export class CloudinaryVideoUploadStrategy
       });
 
       return {
-        secure_url: result.secure_url,
-        thumbnail: result.eager?.[0]?.secure_url,
+        path: result.secure_url,
       };
     } catch (error) {
       console.error('Cloudinary video upload error:', error);

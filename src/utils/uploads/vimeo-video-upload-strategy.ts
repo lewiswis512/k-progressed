@@ -1,11 +1,11 @@
-import { VideoUploadStrategy } from './video-upload-strategy';
 import { Vimeo } from '@vimeo/vimeo';
 import { promisify } from 'util';
 import * as fs from 'fs';
 import * as path from 'path';
+import { IVideoUpload } from './video-upload.interface';
 
 export class VimeoVideoUploadStrategy
-  implements VideoUploadStrategy<{ secure_url: string }>
+  implements IVideoUpload<{ path: string }>
 {
   private vimeo: Vimeo;
 
@@ -20,10 +20,7 @@ export class VimeoVideoUploadStrategy
   writeFile = promisify(fs.writeFile);
   unlink = promisify(fs.unlink);
 
-  async uploadVideo(
-    file: Express.Multer.File,
-    destination: string,
-  ): Promise<any> {
+  async upload(file: Express.Multer.File, destination: string): Promise<any> {
     console.log({ vimeo: this.vimeo });
 
     const tempDir = path.resolve(__dirname, '..', '..', 'temp');

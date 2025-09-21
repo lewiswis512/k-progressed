@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { AddLesson } from '../../dtos/lessons/add-lesson.dto';
-import { Lesson } from '../../schemas/lesson.schema';
-import { videoUploaderProvider } from '../../../../utils/uploads/video-uploader-provider';
 import {
   PATH_LESSON_PHOTOS_CLOUDINARY,
   PATH_UPLOAD_LESSON_VIDEOS,
 } from '../../../../utils/constants/uploads/path-upload';
-import { CloudinaryUploadStrategy } from '../../../../utils/uploads/cloudinary-upload-strategy';
 import { videoLink } from '../../../../utils/uploads/video-link';
 import { SectionRepository } from '../../repositories/section.repository';
 import { LessonRepository } from '../../repositories/lesson.repository';
@@ -16,25 +13,31 @@ import {
   getSecond,
   getVideoDuration,
 } from '../../../../utils/times/duration';
+import { VideoUploadStrategy } from 'src/utils/uploads/video-upload-strategy';
+import { CloudinaryVideoUploadStrategy } from 'src/utils/uploads/cloudinary-video-upload-strategy';
+import { ScreenShot } from 'src/utils/uploads/take-screen-shot';
 
 @Injectable()
 export class AddLessonService {
   constructor(
-    private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
   ) {}
 
   async store(addLesson: AddLesson, file: Express.Multer.File): Promise<any> {
-    let { secure_url: videoPath } = await videoUploaderProvider.uploadVideo(
+    const videoUploadStrategy = new VideoUploadStrategy(
+      new CloudinaryVideoUploadStrategy(),
+    );
+
+    let { path: videoPath } = await videoUploadStrategy.upload(
       file,
       PATH_UPLOAD_LESSON_VIDEOS,
     );
-    const lessonPhotoFilename: string =
-      await this.cloudinaryUploadStrategy.takeScreenshot(
-        videoLink(videoPath),
-        PATH_LESSON_PHOTOS_CLOUDINARY,
-      );
+
+    const lessonPhotoFilename: string = await new ScreenShot().takeFrom(
+      videoLink(videoPath),
+      PATH_LESSON_PHOTOS_CLOUDINARY,
+    );
 
     const section = await this.sectionRepository.findById(
       new Types.ObjectId(addLesson.section_id),

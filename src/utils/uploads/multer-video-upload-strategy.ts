@@ -1,13 +1,13 @@
 import { extname, join } from 'path';
 import * as fs from 'fs';
 import { slugify } from '../slugify';
-import { VideoUploadStrategy } from './video-upload-strategy';
+import { IVideoUploader } from './video-upload.interface';
 
-export class MulterVideoUploadStrategy implements VideoUploadStrategy {
-  async uploadVideo(
+export class MulterVideoUploadStrategy implements IVideoUploader {
+  async upload(
     file: Express.Multer.File,
     destination: string,
-  ): Promise<{ secure_url: string }> {
+  ): Promise<{ path: string }> {
     const [basename] = file.originalname.split('.');
     const extension: string = extname(file.originalname);
     const randomName: string = Array(10)
@@ -23,8 +23,6 @@ export class MulterVideoUploadStrategy implements VideoUploadStrategy {
 
     fs.writeFileSync(fullPath, file.buffer);
 
-    return { secure_url: filename };
+    return { path: filename };
   }
-
-  async delete(publicId: string): Promise<void> {}
 }
