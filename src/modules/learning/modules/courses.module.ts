@@ -26,7 +26,6 @@ import { CourseSectionsService } from '../services/courses/get-sections.service'
 import { GetCoursesWithRatingService } from '../services/courses/get-with-rating.service';
 import { CoursesService } from '../services/courses/list.service';
 import { UpdateCourseService } from '../services/courses/update.service';
-import { SectionLessonsWithDurationService } from '../services/lessons/section-with-duration.service';
 import { SectionLessonsService } from '../services/lessons/section.service';
 import { CategoriesModule } from './category.module';
 import { LessonsModule } from './lessons.module';
@@ -58,7 +57,6 @@ import { GetCourseWithRatingService } from '../services/courses/get-one-with-rat
     CourseContentService,
     CourseSectionsService,
     SectionLessonsService,
-    SectionLessonsWithDurationService,
     GetCoursesWithRatingService,
     GetCourseWithRatingService,
     CoursesByCategoryService,

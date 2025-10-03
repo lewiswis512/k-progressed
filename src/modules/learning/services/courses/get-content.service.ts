@@ -3,7 +3,6 @@ import { Types } from 'mongoose';
 import { ICourseContents } from '../../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { SectionRepository } from '../../repositories/section.repository';
-import { SectionLessonsWithDurationService } from '../lessons/section-with-duration.service';
 import { SectionLessonsService } from '../lessons/section.service';
 import { GetCourseByIdService } from './get-by-id.service';
 import { CourseSectionsService } from './get-sections.service';
@@ -15,7 +14,6 @@ export class CourseContentService {
     private readonly getCourseByIdService: GetCourseByIdService,
     private readonly courseSectionsService: CourseSectionsService,
     private readonly sectionLessonsService: SectionLessonsService,
-    private readonly sectionLessonsWithDurationService: SectionLessonsWithDurationService,
   ) {}
 
   async get(
@@ -34,20 +32,29 @@ export class CourseContentService {
     let totalDurationSeconds = 0;
 
     const courseContents: ICourseContents[] = [];
+    const sectionIds = sections.map((s) => new Types.ObjectId(s._id));
 
-    for (const section of sections) {
-      const sectionDoc = await this.sectionRepository.findById(
-        new Types.ObjectId(section._id),
-      );
+    const sectionDocs = await this.sectionRepository.find({
+      _id: { $in: sectionIds },
+    });
 
-      const lessonsInSection = await this.sectionLessonsService.get(sectionDoc);
+    const lessons = sectionDocs.map((sectionDoc) =>
+      this.sectionLessonsService.get(sectionDoc),
+    );
+
+    const lessonsResults = await Promise.all(lessons);
+
+    lessonsResults.forEach((lessonsInSection, index) => {
+      const sectionDoc = sectionDocs[index];
       totalLessons += lessonsInSection.length;
 
-      const lessonsWithDuration =
-        await this.sectionLessonsWithDurationService.get(
-          lessonsInSection,
-          isFree,
-        );
+      const lessonsWithDuration = lessonsInSection.map((lesson) => ({
+        _id: lesson._id,
+        lssn_title: lesson.lssn_title,
+        lssn_is_free: lesson.lssn_is_free,
+        lssn_video_link: isFree === false ? '' : lesson.lssn_video_link,
+        lssn_duration_in_min_sec: lesson.lssn_duration,
+      }));
 
       const sectionDurationSeconds = this.calculateTotalSeconds(
         lessonsWithDuration.map((l) => l.lssn_duration_in_min_sec),
@@ -61,7 +68,7 @@ export class CourseContentService {
         countLesson: lessonsInSection.length,
         countDurationInMinute: this.formatDuration(sectionDurationSeconds),
       });
-    }
+    });
 
     return {
       courseContents,
