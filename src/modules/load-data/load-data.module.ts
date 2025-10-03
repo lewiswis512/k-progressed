@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from '../auth/auth.module';
 import { CategoriesModule } from '../learning/modules/category.module';
 import { CoursesModule } from '../learning/modules/courses.module';
@@ -12,13 +11,6 @@ import { LoadDataService } from './load-data.service';
 
 @Module({
   imports: [
-    JwtModule.registerAsync({
-      useFactory: async () => ({
-        global: true,
-        secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: process.env.JWT_EXPIRATION_TIME },
-      }),
-    }),
     AuthModule,
     UsersModule,
     CategoriesModule,
