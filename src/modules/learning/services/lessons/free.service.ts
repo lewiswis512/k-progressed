@@ -31,24 +31,24 @@ export class FreeLessonService {
     const sections: Section[] = await this.sectionRepository.find({
       course: courseId,
     });
+    const sectionIds = sections.map((section) => section._id);
 
-    let freeLessons: IFreeLesson[] = [];
+    const lessons = await this.lessonRepository.find({
+      section: { $in: sectionIds },
+      lssn_is_free: true,
+    });
 
-    for (const section of sections) {
-      let lessons = await this.lessonRepository.find({
-        section,
-        lssn_is_free: true,
-      });
-
-      for (const lesson of lessons) {
+    const freeLessons = await Promise.all(
+      lessons.map(async (lesson) => {
         const durationInSeconds = await getVideoDuration(
           videoLink(lesson.lssn_video_link),
         );
         const formattedDuration =
-          durationInSeconds != 0 && durationInSeconds >= 60
+          durationInSeconds >= 60
             ? getMinuteAndSecond(durationInSeconds)
             : getSecond(durationInSeconds);
-        freeLessons.push({
+
+        return {
           _id: lesson._id,
           lssn_title: lesson.lssn_title,
           lssn_video_link: lesson.lssn_video_link,
@@ -56,9 +56,9 @@ export class FreeLessonService {
           lssn_is_free: lesson.lssn_is_free,
           section: lesson.section,
           duration: formattedDuration,
-        });
-      }
-    }
+        };
+      }),
+    );
 
     return freeLessons;
   }
