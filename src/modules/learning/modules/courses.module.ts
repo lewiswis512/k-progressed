@@ -22,7 +22,6 @@ import { CoursesByCategoryService } from '../services/courses/get-by-category.se
 import { GetCourseByIdService } from '../services/courses/get-by-id.service';
 import { GetCoursesBySlugService } from '../services/courses/get-by-slug.service';
 import { CourseContentService } from '../services/courses/get-content.service';
-import { CourseSectionsService } from '../services/courses/get-sections.service';
 import { GetCoursesWithRatingService } from '../services/courses/get-with-rating.service';
 import { CoursesService } from '../services/courses/list.service';
 import { UpdateCourseService } from '../services/courses/update.service';
@@ -55,7 +54,6 @@ import { GetCourseWithRatingService } from '../services/courses/get-one-with-rat
     CoursesService,
     GetCourseByIdService,
     CourseContentService,
-    CourseSectionsService,
     SectionLessonsService,
     GetCoursesWithRatingService,
     GetCourseWithRatingService,

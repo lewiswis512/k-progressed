@@ -5,14 +5,12 @@ import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../../int
 import { SectionRepository } from '../../repositories/section.repository';
 import { SectionLessonsService } from '../lessons/section.service';
 import { GetCourseByIdService } from './get-by-id.service';
-import { CourseSectionsService } from './get-sections.service';
 
 @Injectable()
 export class CourseContentService {
   constructor(
     private readonly sectionRepository: SectionRepository,
     private readonly getCourseByIdService: GetCourseByIdService,
-    private readonly courseSectionsService: CourseSectionsService,
     private readonly sectionLessonsService: SectionLessonsService,
   ) {}
 
@@ -21,41 +19,19 @@ export class CourseContentService {
     isFree: boolean,
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
     const course = await this.getCourseByIdService.byId(courseId);
+    const sections = await this.getCourseSections(course);
 
-    const sections = await this.courseSectionsService.get(
-      course._id,
-      course.teacher.author,
-    );
-
-    const totalSections = sections.length;
     let totalLessons = 0;
     let totalDurationSeconds = 0;
 
     const courseContents: ICourseContents[] = [];
-    const sectionIds = sections.map((s) => new Types.ObjectId(s._id));
 
-    const sectionDocs = await this.sectionRepository.find({
-      _id: { $in: sectionIds },
-    });
+    for (const section of sections) {
+      const lessonsInSection = await this.getLessonsForSection(section);
 
-    const lessons = sectionDocs.map((sectionDoc) =>
-      this.sectionLessonsService.get(sectionDoc),
-    );
-
-    const lessonsResults = await Promise.all(lessons);
-
-    lessonsResults.forEach((lessonsInSection, index) => {
-      const sectionDoc = sectionDocs[index];
       totalLessons += lessonsInSection.length;
 
-      const lessonsWithDuration = lessonsInSection.map((lesson) => ({
-        _id: lesson._id,
-        lssn_title: lesson.lssn_title,
-        lssn_is_free: lesson.lssn_is_free,
-        lssn_video_link: isFree === false ? '' : lesson.lssn_video_link,
-        lssn_duration_in_min_sec: lesson.lssn_duration,
-      }));
-
+      const lessonsWithDuration = this.mapLessons(lessonsInSection, isFree);
       const sectionDurationSeconds = this.calculateTotalSeconds(
         lessonsWithDuration.map((l) => l.lssn_duration_in_min_sec),
       );
@@ -63,19 +39,46 @@ export class CourseContentService {
       totalDurationSeconds += sectionDurationSeconds;
 
       courseContents.push({
-        section: sectionDoc,
+        section,
         lessons: lessonsWithDuration,
         countLesson: lessonsInSection.length,
         countDurationInMinute: this.formatDuration(sectionDurationSeconds),
       });
-    });
+    }
 
     return {
       courseContents,
-      totalSections,
+      totalSections: sections.length,
       totalLessons,
       totalDuration: this.formatDuration(totalDurationSeconds),
     };
+  }
+
+  private async getCourseSections(course: any) {
+    return this.sectionRepository.find({
+      course: {
+        _id: course._id,
+        author: course.teacher.author,
+      },
+    });
+  }
+
+  private async getLessonsForSection(section: any) {
+    const sectionDoc = await this.sectionRepository.findById(
+      new Types.ObjectId(String(section._id)),
+    );
+
+    return this.sectionLessonsService.get(sectionDoc);
+  }
+
+  private mapLessons(lessons: any[], isFree: boolean) {
+    return lessons.map((lesson) => ({
+      _id: lesson._id,
+      lssn_title: lesson.lssn_title,
+      lssn_is_free: lesson.lssn_is_free,
+      lssn_video_link: isFree ? lesson.lssn_video_link : '',
+      lssn_duration_in_min_sec: lesson.lssn_duration,
+    }));
   }
 
   private calculateTotalSeconds(durations: (string | number)[]): number {
@@ -90,26 +93,38 @@ export class CourseContentService {
         const parts = str
           .split(':')
           .map(Number)
-          .map((v) => (isNaN(v) ? 0 : v));
+          .map((v) => {
+            if (isNaN(v)) {
+              return 0;
+            } else {
+              return v;
+            }
+          });
 
-        let hours = 0,
-          minutes = 0,
-          seconds = 0;
+        let hours = 0;
+        let minutes = 0;
+        let seconds = 0;
 
         if (parts.length === 3) {
-          [hours, minutes, seconds] = parts;
+          hours = parts[0];
+          minutes = parts[1];
+          seconds = parts[2];
         } else if (parts.length === 2) {
-          [minutes, seconds] = parts;
+          minutes = parts[0];
+          seconds = parts[1];
         } else if (parts.length === 1) {
-          [seconds] = parts;
+          seconds = parts[0];
         }
 
         return total + hours * 3600 + minutes * 60 + seconds;
       }
 
       const seconds = Number(str);
-
-      return total + (isNaN(seconds) ? 0 : Math.round(seconds));
+      if (isNaN(seconds)) {
+        return total;
+      } else {
+        return total + Math.round(seconds);
+      }
     }, 0);
   }
 
@@ -118,12 +133,9 @@ export class CourseContentService {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    if (hours > 0) {
-      return `${hours} h ${minutes} min`;
-    } else if (minutes > 0) {
-      return `${minutes}:${seconds}`;
-    } else {
-      return `${seconds}s`;
-    }
+    if (hours > 0) return `${hours} h ${minutes} min`;
+    if (minutes > 0) return `${minutes}:${seconds}`;
+
+    return `${seconds}s`;
   }
 }
