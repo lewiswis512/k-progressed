@@ -24,27 +24,38 @@ export class CourseContentService {
     let totalLessons = 0;
     let totalDurationSeconds = 0;
 
-    const courseContents: ICourseContents[] = [];
+    const sectionsWithLessons = await Promise.all(
+      sections.map(async (section) => {
+        const lessonsInSection = await this.getLessonsForSection(section);
+        const lessonsWithDuration = this.mapLessons(lessonsInSection, isFree);
 
-    for (const section of sections) {
-      const lessonsInSection = await this.getLessonsForSection(section);
+        const sectionDurationSeconds = this.calculateTotalSeconds(
+          lessonsWithDuration.map((l) => l.lssn_duration_in_min_sec),
+        );
 
-      totalLessons += lessonsInSection.length;
+        return {
+          section,
+          lessons: lessonsWithDuration,
+          countLesson: lessonsInSection.length,
+          countDurationInMinute: this.formatDuration(sectionDurationSeconds),
+          sectionDurationSeconds,
+        };
+      }),
+    );
 
-      const lessonsWithDuration = this.mapLessons(lessonsInSection, isFree);
-      const sectionDurationSeconds = this.calculateTotalSeconds(
-        lessonsWithDuration.map((l) => l.lssn_duration_in_min_sec),
-      );
+    sectionsWithLessons.forEach((s) => {
+      totalLessons += s.countLesson;
+      totalDurationSeconds += s.sectionDurationSeconds;
+    });
 
-      totalDurationSeconds += sectionDurationSeconds;
-
-      courseContents.push({
+    const courseContents: ICourseContents[] = sectionsWithLessons.map(
+      ({ section, lessons, countLesson, countDurationInMinute }) => ({
         section,
-        lessons: lessonsWithDuration,
-        countLesson: lessonsInSection.length,
-        countDurationInMinute: this.formatDuration(sectionDurationSeconds),
-      });
-    }
+        lessons,
+        countLesson,
+        countDurationInMinute,
+      }),
+    );
 
     return {
       courseContents,
