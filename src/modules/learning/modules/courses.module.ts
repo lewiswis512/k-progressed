@@ -23,7 +23,7 @@ import { GetCourseByIdService } from '../services/courses/get-by-id.service';
 import { GetCoursesBySlugService } from '../services/courses/get-by-slug.service';
 import { CourseContentService } from '../services/courses/get-content.service';
 import { CourseSectionsService } from '../services/courses/get-sections.service';
-import { GetCourseWithRatingService } from '../services/courses/get-with-rating.service';
+import { GetCoursesWithRatingService } from '../services/courses/get-with-rating.service';
 import { CoursesService } from '../services/courses/list.service';
 import { UpdateCourseService } from '../services/courses/update.service';
 import { SectionLessonsWithDurationService } from '../services/lessons/section-with-duration.service';
@@ -33,6 +33,7 @@ import { LessonsModule } from './lessons.module';
 import { SectionsModule } from './sections.module';
 import { TeachersModule } from './teachers.module';
 import { AuthModule } from '../../auth/auth.module';
+import { GetCourseWithRatingService } from '../services/courses/get-one-with-rating.service';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { AuthModule } from '../../auth/auth.module';
     CourseSectionsService,
     SectionLessonsService,
     SectionLessonsWithDurationService,
+    GetCoursesWithRatingService,
     GetCourseWithRatingService,
     CoursesByCategoryService,
     CoursesByAuthorService,
@@ -72,7 +74,7 @@ import { AuthModule } from '../../auth/auth.module';
     UserRepository,
   ],
   exports: [
-    GetCourseWithRatingService,
+    GetCoursesWithRatingService,
     CoursesByCategoryService,
     CourseRepository,
   ],

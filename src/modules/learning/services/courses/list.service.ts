@@ -5,13 +5,13 @@ import { pagination } from '../../../../utils/pagination';
 import { ICoursePagination } from '../../interfaces/ICoursePagination';
 import { CourseRepository } from '../../repositories/course.repository';
 import { Course } from '../../schemas/course.schema';
-import { GetCourseWithRatingService } from './get-with-rating.service';
+import { GetCoursesWithRatingService } from './get-with-rating.service';
 
 @Injectable()
 export class CoursesService {
   public constructor(
     private courseRepository: CourseRepository,
-    private getCourseWithRatingService: GetCourseWithRatingService,
+    private GetCoursesWithRatingService: GetCoursesWithRatingService,
   ) {}
 
   async get(
@@ -102,7 +102,7 @@ export class CoursesService {
       await this.courseRepository.aggregate(courseAggregation);
 
     const coursesWithAverageRating: ICourseWithAverageRating[] =
-      await this.getCourseWithRatingService.get(courses);
+      await this.GetCoursesWithRatingService.get(courses);
     const paginatedData: ICourseWithAverageRating[] = pagination(
       coursesWithAverageRating,
       page,

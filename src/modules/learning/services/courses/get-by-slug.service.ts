@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ICourseWithAverageRating } from '../../../../interfaces/courses/ICourseWithAverageRating';
 import { CourseRepository } from '../../repositories/course.repository';
-import { GetCourseWithRatingService } from './get-with-rating.service';
+import { GetCourseWithRatingService } from './get-one-with-rating.service';
 
 @Injectable()
 export class GetCoursesBySlugService {
   public constructor(
     private courseRepository: CourseRepository,
-    private getCourseWithRatingService: GetCourseWithRatingService,
+    private GetCourseWithRatingService: GetCourseWithRatingService,
   ) {}
 
   async findBy(slug: string): Promise<ICourseWithAverageRating> {
@@ -39,6 +39,6 @@ export class GetCoursesBySlugService {
       throw new NotFoundException(`Course not found`);
     }
 
-    return this.getCourseWithRatingService.get(course)[0];
+    return this.GetCourseWithRatingService.get(course);
   }
 }

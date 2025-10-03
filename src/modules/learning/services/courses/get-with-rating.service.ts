@@ -6,7 +6,7 @@ import { Comment } from '../../../../modules/comments/schemas/comment.schema';
 import { PurchaseRepository } from '../../../../modules/purchases/repository/purchase.repository';
 
 @Injectable()
-export class GetCourseWithRatingService {
+export class GetCoursesWithRatingService {
   constructor(
     private readonly commentRepository: CommentRepository,
     private readonly purchaseRepository: PurchaseRepository,
