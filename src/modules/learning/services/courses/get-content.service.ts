@@ -24,36 +24,24 @@ export class CourseContentService {
     let totalLessons = 0;
     let totalDurationSeconds = 0;
 
-    const sectionsWithLessons = await Promise.all(
+    const courseContents: ICourseContents[] = await Promise.all(
       sections.map(async (section) => {
         const lessonsInSection = await this.getLessonsForSection(section);
-        const lessonsWithDuration = this.mapLessons(lessonsInSection, isFree);
+        totalLessons += lessonsInSection.length;
 
+        const lessonsWithDuration = this.mapLessons(lessonsInSection, isFree);
         const sectionDurationSeconds = this.calculateTotalSeconds(
           lessonsWithDuration.map((l) => l.lssn_duration_in_min_sec),
         );
+
+        totalDurationSeconds += sectionDurationSeconds;
 
         return {
           section,
           lessons: lessonsWithDuration,
           countLesson: lessonsInSection.length,
           countDurationInMinute: this.formatDuration(sectionDurationSeconds),
-          sectionDurationSeconds,
         };
-      }),
-    );
-
-    sectionsWithLessons.forEach((s) => {
-      totalLessons += s.countLesson;
-      totalDurationSeconds += s.sectionDurationSeconds;
-    });
-
-    const courseContents: ICourseContents[] = sectionsWithLessons.map(
-      ({ section, lessons, countLesson, countDurationInMinute }) => ({
-        section,
-        lessons,
-        countLesson,
-        countDurationInMinute,
       }),
     );
 
