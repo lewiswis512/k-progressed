@@ -40,14 +40,6 @@ export class FreeLessonService {
 
     const freeLessons = await Promise.all(
       lessons.map(async (lesson) => {
-        const durationInSeconds = await getVideoDuration(
-          videoLink(lesson.lssn_video_link),
-        );
-        const formattedDuration =
-          durationInSeconds >= 60
-            ? getMinuteAndSecond(durationInSeconds)
-            : getSecond(durationInSeconds);
-
         return {
           _id: lesson._id,
           lssn_title: lesson.lssn_title,
@@ -55,7 +47,7 @@ export class FreeLessonService {
           lssn_video_photo: lesson.lssn_video_photo,
           lssn_is_free: lesson.lssn_is_free,
           section: lesson.section,
-          duration: formattedDuration,
+          duration: lesson.lssn_duration,
         };
       }),
     );
