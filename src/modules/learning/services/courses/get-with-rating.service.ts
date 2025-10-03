@@ -7,57 +7,87 @@ import { PurchaseRepository } from '../../../../modules/purchases/repository/pur
 
 @Injectable()
 export class GetCourseWithRatingService {
-  public constructor(
-    private commentRepository: CommentRepository,
-    private purchaseRepository: PurchaseRepository,
+  constructor(
+    private readonly commentRepository: CommentRepository,
+    private readonly purchaseRepository: PurchaseRepository,
   ) {}
 
-  async get(course: Course) {
-    let courseWithAverageRating: ICourseWithAverageRating | {} = {};
-    let averageRating: number = 0;
-    const courseId = course._id;
-
+  async get(courses: Course[]): Promise<ICourseWithAverageRating[]> {
+    const courseIds: string[] = courses.map((course) => course._id.toString());
     const comments: Comment[] = await this.commentRepository.find({
-      'course._id': courseId,
+      'course._id': { $in: courseIds },
     });
 
-    const getCountParticipants = await this.purchaseRepository.aggregate([
-      { $match: { purch_is_paid: true } },
-      { $unwind: '$purchaseItems' },
-      { $match: { 'purchaseItems.id': courseId.toString() } },
-      {
-        $group: {
-          _id: '$user.id',
-        },
-      },
-      {
-        $count: 'countParticipants',
-      },
-    ]);
+    const commentsByCourse: Record<string, Comment[]> = comments.reduce<
+      Record<string, Comment[]>
+    >((acc, comment) => {
+      const courseId = comment.course._id.toString();
 
-    const countParticipants =
-      getCountParticipants && getCountParticipants[0]
-        ? getCountParticipants[0].countParticipants
-        : 0;
+      if (!acc[courseId]) {
+        acc[courseId] = [];
+      }
 
-    let totalCommentByCourse: number = comments.length;
+      acc[courseId].push(comment);
 
-    if (totalCommentByCourse !== 0) {
-      let totalRatingByCourse: number = comments.reduce(
-        (accumulator: number, comment: Comment) =>
-          accumulator + Number(comment.comm_rating),
+      return acc;
+    }, {});
+
+    const purchases = await this.purchaseRepository.find({
+      purch_is_paid: true,
+      'purchaseItems.id': { $in: courseIds },
+    });
+
+    const courseIdSet = new Set(courseIds);
+
+    const participantsByCourse: Record<string, Set<string>> = purchases.reduce<
+      Record<string, Set<string>>
+    >((acc, purchase) => {
+      const userId = purchase.user.id;
+
+      purchase.purchaseItems
+        .filter((item) => courseIdSet.has(item.id))
+        .forEach((item) => {
+          if (!acc[item.id]) {
+            acc[item.id] = new Set();
+          }
+          acc[item.id].add(userId);
+        });
+
+      return acc;
+    }, {});
+
+    const ratingsByCourse: Record<string, { average: number; count: number }> =
+      {};
+
+    for (const courseId of Object.keys(commentsByCourse)) {
+      const courseComments = commentsByCourse[courseId];
+      const totalComments = courseComments.length;
+
+      const sumRatings = courseComments.reduce(
+        (sum, comment) => sum + Number(comment.comm_rating),
         0,
       );
-      averageRating = totalRatingByCourse / totalCommentByCourse;
-      averageRating = Number(averageRating.toFixed(1));
+
+      ratingsByCourse[courseId] = {
+        average:
+          totalComments > 0
+            ? Number((sumRatings / totalComments).toFixed(1))
+            : 0,
+        count: totalComments,
+      };
     }
 
-    return {
-      ...courseWithAverageRating,
-      course,
-      averageRating,
-      totalCommentByCourse,
-      countParticipants,
-    };
+    return courses.map((course) => {
+      const courseId = course._id.toString();
+      const ratings = ratingsByCourse[courseId] ?? { average: 0, count: 0 };
+      const countParticipants = participantsByCourse[courseId]?.size ?? 0;
+
+      return {
+        course,
+        averageRating: ratings.average,
+        totalCommentByCourse: ratings.count,
+        countParticipants,
+      };
+    });
   }
 }

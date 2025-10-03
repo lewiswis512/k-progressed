@@ -102,10 +102,7 @@ export class CoursesService {
       await this.courseRepository.aggregate(courseAggregation);
 
     const coursesWithAverageRating: ICourseWithAverageRating[] =
-      await Promise.all(
-        courses.map((course) => this.getCourseWithRatingService.get(course)),
-      );
-
+      await this.getCourseWithRatingService.get(courses);
     const paginatedData: ICourseWithAverageRating[] = pagination(
       coursesWithAverageRating,
       page,

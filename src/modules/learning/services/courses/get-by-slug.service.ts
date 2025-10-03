@@ -39,6 +39,6 @@ export class GetCoursesBySlugService {
       throw new NotFoundException(`Course not found`);
     }
 
-    return this.getCourseWithRatingService.get(course);
+    return this.getCourseWithRatingService.get(course)[0];
   }
 }
