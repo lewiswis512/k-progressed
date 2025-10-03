@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
+import { AuthModule } from '../../auth/auth.module';
 import { CloudinaryUploadStrategy } from '../../../utils/uploads/cloudinary-upload-strategy';
 import { LessonsController } from '../controllers/lessons.controller';
 import { LessonRepository } from '../repositories/lesson.repository';
@@ -15,13 +15,7 @@ import { SectionsModule } from './sections.module';
 
 @Module({
   imports: [
-    JwtModule.registerAsync({
-      useFactory: async () => ({
-        global: true,
-        secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: process.env.JWT_EXPIRATION_TIME },
-      }),
-    }),
+    AuthModule,
     MongooseModule.forFeature([{ name: Lesson.name, schema: LessonSchema }]),
     SectionsModule,
   ],

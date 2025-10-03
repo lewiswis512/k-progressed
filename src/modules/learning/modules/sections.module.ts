@@ -1,27 +1,21 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Lesson, LessonSchema } from '../schemas/lesson.schema';
-import { Section, SectionSchema } from '../schemas/section.schema';
-import { SectionsService } from '../services/sections.service';
 import { CourseRepository } from '../../../modules/learning/repositories/course.repository';
 import {
   Course,
   CourseSchema,
 } from '../../../modules/learning/schemas/course.schema';
-import { SectionRepository } from '../repositories/section.repository';
-import { LessonRepository } from '../repositories/lesson.repository';
+import { AuthModule } from '../../auth/auth.module';
 import { SectionsController } from '../controllers/sections.controller';
+import { LessonRepository } from '../repositories/lesson.repository';
+import { SectionRepository } from '../repositories/section.repository';
+import { Lesson, LessonSchema } from '../schemas/lesson.schema';
+import { Section, SectionSchema } from '../schemas/section.schema';
+import { SectionsService } from '../services/sections.service';
 
 @Module({
   imports: [
-    JwtModule.registerAsync({
-      useFactory: async () => ({
-        global: true,
-        secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: process.env.JWT_EXPIRATION_TIME },
-      }),
-    }),
+    AuthModule,
     MongooseModule.forFeature([
       { name: Section.name, schema: SectionSchema },
       { name: Lesson.name, schema: LessonSchema },

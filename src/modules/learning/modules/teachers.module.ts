@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '../../users/schemas/user.schema';
 import { UserRepository } from '../../users/repository/user.repository';
@@ -7,16 +6,11 @@ import { Teacher, TeacherSchema } from '../schemas/teachers/teacher.schema';
 import { TeachersController } from '../controllers/teachers.controller';
 import { TeachersService } from '../services/teachers.service';
 import { TeacherRepository } from '../repositories/teacher.repository';
+import { AuthModule } from '../../auth/auth.module';
 
 @Module({
   imports: [
-    JwtModule.registerAsync({
-      useFactory: async () => ({
-        global: true,
-        secret: process.env.JWT_SECRET,
-        signOptions: { expiresIn: process.env.JWT_EXPIRATION_TIME },
-      }),
-    }),
+    AuthModule,
     MongooseModule.forFeature([
       { name: Teacher.name, schema: TeacherSchema },
       { name: User.name, schema: UserSchema },
