@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { ICourseContents } from '../../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
+import { LessonRepository } from '../../repositories/lesson.repository';
 import { SectionRepository } from '../../repositories/section.repository';
-import { SectionLessonsService } from '../lessons/section.service';
+import { Section } from '../../schemas/section.schema';
 import { GetCourseByIdService } from './get-by-id.service';
 
 @Injectable()
@@ -11,7 +12,7 @@ export class CourseContentService {
   constructor(
     private readonly sectionRepository: SectionRepository,
     private readonly getCourseByIdService: GetCourseByIdService,
-    private readonly sectionLessonsService: SectionLessonsService,
+    private lessonRepository: LessonRepository,
   ) {}
 
   async get(
@@ -67,7 +68,13 @@ export class CourseContentService {
       new Types.ObjectId(String(section._id)),
     );
 
-    return this.sectionLessonsService.get(sectionDoc);
+    return this.getSectionLessons(sectionDoc);
+  }
+
+  private async getSectionLessons(sectionDoc: Section) {
+    return await this.lessonRepository.find({
+      section: sectionDoc._id,
+    });
   }
 
   private mapLessons(lessons: any[], isFree: boolean) {
@@ -133,7 +140,7 @@ export class CourseContentService {
     const seconds = totalSeconds % 60;
 
     if (hours > 0) return `${hours} h ${minutes} min`;
-    if (minutes > 0) return `${minutes}:${seconds}`;
+    if (minutes > 0) return `${minutes}:${String(seconds).padStart(2, '0')}`;
 
     return `${seconds}s`;
   }
