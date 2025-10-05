@@ -58,7 +58,7 @@ export class CommentsService {
     const filterCommentByLesson = {
       parent_comment: null,
       ...(Number(source) === Number(CommentEnum.COURSE)
-        ? { 'course._id': id }
+        ? { course: id }
         : { 'lesson._id': id }),
     };
 
@@ -70,30 +70,14 @@ export class CommentsService {
     commentDto: IAddCommentDto,
     source: CommentEnum,
   ): Promise<Comment> {
-    let parentComment: Comment = null;
-    let commentId: Types.ObjectId = commentDto.comment_id;
-    let course: Course = null;
-    let lesson: Lesson = null;
-
-    if (null !== commentId) {
-      parentComment = await this.findById(String(commentId));
-    }
+    const commentId: Types.ObjectId = commentDto.comment_id;
+    const parentComment: Comment = await this.getParentComment(commentId);
+    const course: Course = await this.getCourse(source, commentDto.course_id);
+    const lesson: Lesson = await this.getLesson(source, commentDto.lesson_id);
 
     const author: User = await this.userRepository.findById(
       new Types.ObjectId(authorId),
     );
-
-    if (source == CommentEnum.LESSON) {
-      lesson = await this.lessonRepository.findById(
-        new Types.ObjectId(commentDto.lesson_id),
-      );
-    }
-
-    if (source == CommentEnum.COURSE) {
-      course = await this.courseRepository.findById(
-        new Types.ObjectId(commentDto.course_id),
-      );
-    }
 
     let data: any = {
       ...commentDto,
@@ -105,13 +89,7 @@ export class CommentsService {
         usr_lastname: author.usr_lastname ?? null,
       },
       comm_source: source,
-      course:
-        source == CommentEnum.COURSE
-          ? {
-              _id: course._id,
-              crs_title: course.crs_title,
-            }
-          : null,
+      course: source == CommentEnum.COURSE ? course : null,
       lesson:
         source == CommentEnum.LESSON
           ? {
@@ -156,6 +134,46 @@ export class CommentsService {
     }
 
     return comment;
+  }
+
+  private async getParentComment(commentId: Types.ObjectId): Promise<Comment> {
+    let parentComment: Comment = null;
+
+    if (null !== commentId) {
+      parentComment = await this.findById(String(commentId));
+    }
+
+    return parentComment;
+  }
+
+  private async getCourse(
+    source: CommentEnum,
+    courseId: Types.ObjectId | null,
+  ): Promise<Course> {
+    let course: Course = null;
+
+    if (source == CommentEnum.COURSE) {
+      course = await this.courseRepository.findById(
+        new Types.ObjectId(courseId),
+      );
+    }
+
+    return course;
+  }
+
+  private async getLesson(
+    source: CommentEnum,
+    lessonId: Types.ObjectId | null,
+  ): Promise<Lesson> {
+    let lesson: Lesson = null;
+
+    if (source == CommentEnum.LESSON) {
+      lesson = await this.lessonRepository.findById(
+        new Types.ObjectId(lessonId),
+      );
+    }
+
+    return lesson;
   }
 
   async update(

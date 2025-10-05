@@ -15,7 +15,7 @@ export class GetCoursesWithRatingService {
   async get(courses: Course[]): Promise<ICourseWithAverageRating[]> {
     const courseIds: string[] = courses.map((course) => course._id.toString());
     const comments: Comment[] = await this.commentRepository.find({
-      'course._id': { $in: courseIds },
+      course: { $in: courseIds },
     });
 
     const commentsByCourse: Record<string, Comment[]> = comments.reduce<
