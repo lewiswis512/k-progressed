@@ -2,12 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Types } from 'mongoose';
 import { Course } from 'src/modules/learning/schemas/course.schema';
 import { AbstractDocument } from '../../../common/document/abstract.document';
-import { ICommentAuthor } from '../../../interfaces/comments/ICommentAuthor';
 import { ICommentLesson } from '../../../interfaces/comments/ICommentLesson';
 import { ICommentReplies } from '../../../interfaces/comments/ICommentReplies';
 import { CommentEnum } from '../../../utils/enums/comment.enum';
 import { User } from '../../users/schemas/user.schema';
-import { CommentAuthor } from './comment-author.schema';
 import { CommentLesson } from './comment-lesson.schema';
 import { CommentReplies } from './comment-replies.schema';
 
@@ -24,8 +22,8 @@ export class Comment extends AbstractDocument {
   @Prop({ type: Number, trim: true, required: true, enum: CommentEnum })
   comm_source: CommentEnum;
 
-  @Prop({ type: CommentAuthor })
-  author: ICommentAuthor;
+  @Prop({ type: mongoose.Schema.ObjectId, ref: 'User' })
+  author: User;
 
   @Prop({ type: mongoose.Schema.ObjectId, ref: 'Course' })
   course: Course;

@@ -2,7 +2,6 @@ import { Types } from 'mongoose';
 import { Course } from 'src/modules/learning/schemas/course.schema';
 import { User } from '../../modules/users/schemas/user.schema';
 import { CommentEnum } from '../../utils/enums/comment.enum';
-import { ICommentAuthor } from './ICommentAuthor';
 import { ICommentLesson } from './ICommentLesson';
 
 export interface ICommentReplies {
@@ -10,7 +9,7 @@ export interface ICommentReplies {
   comm_rating?: number;
   comm_content: string;
   comm_source: CommentEnum;
-  author: ICommentAuthor;
+  author: User;
   course: Course;
   lesson: ICommentLesson;
   comm_count_like: number;

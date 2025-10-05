@@ -81,13 +81,7 @@ export class CommentsService {
 
     let data: any = {
       ...commentDto,
-      author: {
-        _id: author._id,
-        usr_photo: author.usr_photo ?? null,
-        usr_username: author.usr_username,
-        usr_firstname: author.usr_firstname ?? null,
-        usr_lastname: author.usr_lastname ?? null,
-      },
+      author,
       comm_source: source,
       course: source == CommentEnum.COURSE ? course : null,
       lesson:
