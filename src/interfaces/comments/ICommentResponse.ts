@@ -7,13 +7,7 @@ export interface ICommentResponse {
   comm_rating?: number;
   comm_content: string;
   comm_source: CommentEnum;
-  author: {
-    _id: Types.ObjectId;
-    usr_photo: string;
-    usr_username: string;
-    usr_firstname: string;
-    usr_lastname: string;
-  };
+  author: User;
   course: {
     _id: Types.ObjectId;
     crs_title: string;

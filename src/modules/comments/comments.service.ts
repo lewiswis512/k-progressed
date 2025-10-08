@@ -165,65 +165,49 @@ export class CommentsService {
   }
 
   private async mapperComment(comment: Comment): Promise<ICommentResponse> {
-    let author = null;
+    let author = comment.author;
     let lesson = null;
     let course = null;
 
     if (comment.author instanceof Types.ObjectId) {
-      const user: User = await this.userRepository.findById(comment.author._id);
-      author = {
-        _id: user._id,
-        usr_photo: user.usr_photo,
-        usr_username: user.usr_username,
-        usr_firstname: user.usr_firstname,
-        usr_lastname: user.usr_lastname,
-      };
-    } else {
-      author = {
-        _id: comment.author._id,
-        usr_photo: comment.author.usr_photo,
-        usr_username: comment.author.usr_username,
-        usr_firstname: comment.author.usr_firstname,
-        usr_lastname: comment.author.usr_lastname,
-      };
+      author = await this.userRepository.findById(comment.author._id, {
+        select: 'author _id usr_photo usr_username usr_firstname usr_lastname',
+      });
     }
 
     if (comment.lesson) {
-      const lessonInfo: Lesson = await this.lessonRepository.findById(
-        comment.lesson._id,
-      );
-
-      if (lessonInfo) {
-        lesson = {
-          _id: lessonInfo._id,
-          lssn_title: lessonInfo.lssn_title,
-        };
-      }
+      lesson = await this.lessonRepository.findById(comment.lesson._id, {
+        select: '_id lssn_title',
+      });
     }
 
     if (comment.course) {
-      const courseInfo: Course = await this.courseRepository.findById(
-        comment.course?._id,
-      );
-
-      if (courseInfo) {
-        course = {
-          _id: courseInfo._id,
-          crs_title: courseInfo.crs_title,
-        };
-      }
+      course = await this.courseRepository.findById(comment.course._id, {
+        select: '_id crs_title',
+      });
     }
 
-    let replies = comment.replies;
+    let replies: Comment[] = comment.replies;
 
     if (comment.replies.length > 0) {
       replies = await Promise.all(
-        replies.map(
-          async (replyId) =>
-            await this.commentRepository.findById(
-              new Types.ObjectId(String(replyId)),
-            ),
-        ),
+        replies.map(async (replyId) => {
+          const reply = await this.commentRepository.findById(
+            new Types.ObjectId(String(replyId)),
+          );
+
+          const author = await this.userRepository.findById(
+            new Types.ObjectId(String(reply.author)),
+            {
+              select:
+                'author _id usr_photo usr_username usr_firstname usr_lastname',
+            },
+          );
+
+          reply.author = author;
+
+          return reply;
+        }),
       );
     }
 
