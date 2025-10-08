@@ -234,23 +234,7 @@ export class CommentsService {
     id: string,
     editCommentDto: EditCommentCourse | EditCommentLesson,
   ): Promise<Comment> {
-    const comment = await this.findById(id);
-    const parentCommentId = comment.parent_comment;
-
-    if (parentCommentId !== null) {
-      const commentParent = await this.findById(String(parentCommentId));
-
-      const commentReply = commentParent.replies.find(
-        (reply) => String(reply._id) === id,
-      );
-
-      commentReply.comm_content = editCommentDto.comm_content;
-
-      return await this.commentRepository.findByIdAndUpdate(
-        new Types.ObjectId(String(parentCommentId)),
-        commentParent,
-      );
-    }
+    await this.findById(id);
 
     return await this.commentRepository.findByIdAndUpdate(
       new Types.ObjectId(id),
