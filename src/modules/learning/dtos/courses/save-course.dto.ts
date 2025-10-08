@@ -4,9 +4,8 @@ import { IsNotEmpty, IsOptional, Min } from 'class-validator';
 import { LevelEnum } from '../../../../utils/enums/level.enum';
 import { uppercaseFirstLetter } from '../../../../utils/string/uppercaseFirstLetter';
 
-const levels = Object.entries(LevelEnum).slice(
-  0,
-  Object.entries(LevelEnum).length / 2,
+const levels = Object.entries(LevelEnum).filter(
+  ([levelId]) => !isNaN(Number(levelId)),
 );
 
 const levelsIdAndlevelsName = levels
