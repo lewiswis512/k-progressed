@@ -67,12 +67,42 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
 
   constructor(protected readonly model: Model<TDocument>) {}
 
-  async find(filterQuery?: FilterQuery<TDocument>): Promise<TDocument[]> {
-    return await this.model.find(filterQuery).sort({ created_at: -1 });
+  async find(
+    filterQuery?: FilterQuery<TDocument>,
+    options?: { select?: string; populate?: any },
+  ): Promise<TDocument[]> {
+    let query = this.model.find(filterQuery);
+
+    if (options?.select) {
+      query = query.select(options.select);
+    }
+
+    if (options?.populate) {
+      query = query.populate(options.populate);
+    }
+
+    query = query.sort({ created_at: -1 });
+
+    const document = await query;
+
+    return document;
   }
 
-  async findById(id: Types.ObjectId): Promise<TDocument> {
-    const document = await this.model.findById(id);
+  async findById(
+    id: Types.ObjectId,
+    options?: { select?: string; lean?: boolean; populate?: any },
+  ): Promise<TDocument> {
+    let query = this.model.findById(id);
+
+    if (options?.select) {
+      query = query.select(options.select);
+    }
+
+    if (options?.populate) {
+      query = query.populate(options.populate);
+    }
+
+    const document = await query;
 
     if (!document) {
       throw new NotFoundException(`${this.model.modelName} not found`);
