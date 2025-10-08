@@ -48,8 +48,6 @@ export class CommentsService {
       lessonId,
     );
 
-    console.log(comments);
-
     return {
       comments,
       totalComment: comments.length,
@@ -242,7 +240,7 @@ export class CommentsService {
       comm_liked_by: comment.comm_liked_by,
       comm_count_dislike: comment.comm_count_dislike,
       comm_disliked_by: comment.comm_disliked_by,
-      replies: comment.replies as ICommentResponse[],
+      replies: replies as ICommentResponse[],
       created_at: comment.created_at,
       updated_at: comment.updated_at,
     };
