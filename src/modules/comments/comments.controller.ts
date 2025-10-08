@@ -27,6 +27,9 @@ import { AddCommentCourse } from './dto/add-comment-course.dto';
 import { AddCommentLesson } from './dto/add-comment-lesson.dto';
 import { EditCommentCourse } from './dto/edit-comment-course.dto';
 import { EditCommentLesson } from './dto/edit-comment-lesson.dto';
+import { ICommentResponse } from '../../interfaces/comments/ICommentResponse';
+import { ICommentBySource } from '../../interfaces/comments/ICommentBySource';
+import { Comment } from './schemas/comment.schema';
 
 @Controller('comments')
 export class CommentsController {
@@ -36,7 +39,7 @@ export class CommentsController {
   @ApiOkResponse({
     description: 'The comment has been successfully retrieved.',
   })
-  async findById(@Param('id') id: string) {
+  async findById(@Param('id') id: string): Promise<Comment> {
     return await this.commentsService.findById(id);
   }
 
@@ -44,7 +47,9 @@ export class CommentsController {
   @ApiOkResponse({
     description: 'The comments by course have been successfully retrieved.',
   })
-  async findByCourse(@Param('courseId') courseId: string) {
+  async findByCourse(
+    @Param('courseId') courseId: string,
+  ): Promise<ICommentBySource> {
     return await this.commentsService.findByCourse(courseId);
   }
 
@@ -52,7 +57,9 @@ export class CommentsController {
   @ApiOkResponse({
     description: 'The comments by lesson have been successfully retrieved.',
   })
-  async findByLesson(@Param('lessonId') lessonId: string) {
+  async findByLesson(
+    @Param('lessonId') lessonId: string,
+  ): Promise<ICommentBySource> {
     return await this.commentsService.findByLesson(lessonId);
   }
 
@@ -62,7 +69,10 @@ export class CommentsController {
   @ApiCreatedResponse({
     description: 'The comment of a course has been successfully created.',
   })
-  async addCourse(@Req() req: any, @Body() addCommentCourse: AddCommentCourse) {
+  async addCourse(
+    @Req() req: any,
+    @Body() addCommentCourse: AddCommentCourse,
+  ): Promise<ICommentResponse> {
     return await this.commentsService.store(
       req.user.id,
       addCommentCourse,
@@ -76,7 +86,10 @@ export class CommentsController {
   @ApiCreatedResponse({
     description: 'The comment of a lesson has been successfully created.',
   })
-  async addLesson(@Req() req: any, @Body() addCommentLesson: AddCommentLesson) {
+  async addLesson(
+    @Req() req: any,
+    @Body() addCommentLesson: AddCommentLesson,
+  ): Promise<ICommentResponse> {
     return await this.commentsService.store(
       req.user.id,
       addCommentLesson,

@@ -1,8 +1,8 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
+import { ICommentResponse } from '../../interfaces/comments/ICommentResponse';
 import { IAddCommentDto } from '../../interfaces/comments/IAddCommentDto';
 import { ICommentBySource } from '../../interfaces/comments/ICommentBySource';
-import { ICommentReplies } from '../../interfaces/comments/ICommentReplies';
 import { IReactionTypeAndReacter } from '../../interfaces/comments/IReactionTypeAndReacter';
 import { CommentEnum } from '../../utils/enums/comment.enum';
 import { CourseRepository } from '../learning/repositories/course.repository';
@@ -48,28 +48,37 @@ export class CommentsService {
       lessonId,
     );
 
+    console.log(comments);
+
     return {
       comments,
       totalComment: comments.length,
     };
   }
 
-  async findByCommentSource(source: string, id: string): Promise<Comment[]> {
-    const filterCommentByLesson = {
+  async findByCommentSource(source: string, id: string): Promise<any> {
+    const criteria: any = {
       parent_comment: null,
-      ...(Number(source) === Number(CommentEnum.COURSE)
-        ? { course: id }
-        : { 'lesson._id': id }),
     };
 
-    return await this.commentRepository.find(filterCommentByLesson);
+    if (Number(source) === Number(CommentEnum.COURSE)) {
+      criteria.course = id;
+    } else if (Number(source) === Number(CommentEnum.LESSON)) {
+      criteria.lesson = id;
+    }
+
+    const comments = await this.commentRepository.find(criteria);
+
+    return await Promise.all(
+      comments.map((comment) => this.mapperComment(comment)),
+    );
   }
 
   async store(
     authorId: string,
     commentDto: IAddCommentDto,
     source: CommentEnum,
-  ): Promise<Comment> {
+  ): Promise<ICommentResponse> {
     const commentId: Types.ObjectId = commentDto.comment_id;
     const parentComment: Comment = await this.getParentComment(commentId);
     const course: Course = await this.getCourse(source, commentDto.course_id);
@@ -79,55 +88,42 @@ export class CommentsService {
       new Types.ObjectId(authorId),
     );
 
-    let data: any = {
+    let data = {
       ...commentDto,
       author,
       comm_source: source,
       course: source == CommentEnum.COURSE ? course : null,
-      lesson:
-        source == CommentEnum.LESSON
-          ? {
-              _id: lesson._id,
-              lssn_title: lesson.lssn_title,
-            }
-          : null,
+      lesson: source == CommentEnum.LESSON ? lesson : null,
       comm_count_like: 0,
       comm_liked_by: [],
       comm_count_dislike: 0,
       comm_disliked_by: [],
+      replies: [],
       ...(parentComment
         ? { parent_comment: parentComment._id }
         : { parent_comment: null }),
     };
 
     let comment: Comment = await this.commentRepository.create(data);
+    let commentToReturn = null;
 
     if (parentComment) {
-      const commentSaved: Comment = await this.commentRepository.findById(
+      const childComment: Comment = await this.commentRepository.findById(
         comment._id,
       );
 
-      const commentDetailed: Partial<ICommentReplies> = {
-        _id: commentSaved._id,
-        comm_content: commentSaved.comm_content,
-        comm_source: commentSaved.comm_source,
-        author: commentSaved.author,
-        course: commentSaved.course,
-        lesson: commentSaved.lesson,
-        comm_count_like: commentSaved.comm_count_like,
-        comm_liked_by: commentSaved.comm_liked_by,
-        comm_count_dislike: commentSaved.comm_count_dislike,
-        comm_disliked_by: commentSaved.comm_disliked_by,
-      };
+      parentComment.replies.push(childComment);
 
-      return await this.commentRepository.findByIdAndUpdate(parentComment._id, {
-        $push: {
-          replies: commentDetailed,
-        },
+      await this.commentRepository.findByIdAndUpdate(parentComment._id, {
+        replies: parentComment.replies,
       });
+
+      commentToReturn = childComment;
+    } else {
+      commentToReturn = comment;
     }
 
-    return comment;
+    return this.mapperComment(commentToReturn);
   }
 
   private async getParentComment(commentId: Types.ObjectId): Promise<Comment> {
@@ -168,6 +164,88 @@ export class CommentsService {
     }
 
     return lesson;
+  }
+
+  private async mapperComment(comment: Comment): Promise<ICommentResponse> {
+    let author = null;
+    let lesson = null;
+    let course = null;
+
+    if (comment.author instanceof Types.ObjectId) {
+      const user: User = await this.userRepository.findById(comment.author._id);
+      author = {
+        _id: user._id,
+        usr_photo: user.usr_photo,
+        usr_username: user.usr_username,
+        usr_firstname: user.usr_firstname,
+        usr_lastname: user.usr_lastname,
+      };
+    } else {
+      author = {
+        _id: comment.author._id,
+        usr_photo: comment.author.usr_photo,
+        usr_username: comment.author.usr_username,
+        usr_firstname: comment.author.usr_firstname,
+        usr_lastname: comment.author.usr_lastname,
+      };
+    }
+
+    if (comment.lesson) {
+      const lessonInfo: Lesson = await this.lessonRepository.findById(
+        comment.lesson._id,
+      );
+
+      if (lessonInfo) {
+        lesson = {
+          _id: lessonInfo._id,
+          lssn_title: lessonInfo.lssn_title,
+        };
+      }
+    }
+
+    if (comment.course) {
+      const courseInfo: Course = await this.courseRepository.findById(
+        comment.course?._id,
+      );
+
+      if (courseInfo) {
+        course = {
+          _id: courseInfo._id,
+          crs_title: courseInfo.crs_title,
+        };
+      }
+    }
+
+    let replies = comment.replies;
+
+    if (comment.replies.length > 0) {
+      replies = await Promise.all(
+        replies.map(
+          async (replyId) =>
+            await this.commentRepository.findById(
+              new Types.ObjectId(String(replyId)),
+            ),
+        ),
+      );
+    }
+
+    return {
+      _id: comment._id,
+      comm_rating: comment.comm_rating,
+      comm_content: comment.comm_content,
+      comm_source: comment.comm_source,
+      author,
+      course,
+      lesson,
+      parent_comment: comment.parent_comment,
+      comm_count_like: comment.comm_count_like,
+      comm_liked_by: comment.comm_liked_by,
+      comm_count_dislike: comment.comm_count_dislike,
+      comm_disliked_by: comment.comm_disliked_by,
+      replies: comment.replies as ICommentResponse[],
+      created_at: comment.created_at,
+      updated_at: comment.updated_at,
+    };
   }
 
   async update(
@@ -252,8 +330,7 @@ export class CommentsService {
       );
 
       if (commentReplyIndex >= 0) {
-        const replyComment: ICommentReplies =
-          parentComment.replies[commentReplyIndex];
+        const replyComment = parentComment.replies[commentReplyIndex];
 
         const updateReactionAndReacter = this.updateReactionAndReacter(
           replyComment,
@@ -261,7 +338,7 @@ export class CommentsService {
           reactionType,
         );
 
-        const commentReply: ICommentReplies = {
+        const commentReply = {
           _id: replyComment._id,
           comm_content: replyComment.comm_content,
           comm_source: replyComment.comm_source,

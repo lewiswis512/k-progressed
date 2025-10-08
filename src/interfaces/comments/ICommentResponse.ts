@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { User } from '../../modules/users/schemas/user.schema';
 import { CommentEnum } from '../../utils/enums/comment.enum';
 
-export interface IAddCommentResponse {
+export interface ICommentResponse {
   _id: Types.ObjectId;
   comm_rating?: number;
   comm_content: string;
@@ -23,7 +23,7 @@ export interface IAddCommentResponse {
     lssn_title: string;
   };
   parent_comment: Types.ObjectId;
-  replies: IAddCommentResponse[];
+  replies: ICommentResponse[];
   comm_count_like: number;
   comm_liked_by: User[];
   comm_count_dislike: number;

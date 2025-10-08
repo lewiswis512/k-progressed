@@ -1,13 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Types } from 'mongoose';
-import { Course } from 'src/modules/learning/schemas/course.schema';
 import { AbstractDocument } from '../../../common/document/abstract.document';
-import { ICommentLesson } from '../../../interfaces/comments/ICommentLesson';
-import { ICommentReplies } from '../../../interfaces/comments/ICommentReplies';
 import { CommentEnum } from '../../../utils/enums/comment.enum';
+import { Course } from '../../learning/schemas/course.schema';
+import { Lesson } from '../../learning/schemas/lesson.schema';
 import { User } from '../../users/schemas/user.schema';
-import { CommentLesson } from './comment-lesson.schema';
-import { CommentReplies } from './comment-replies.schema';
 
 @Schema({
   collection: 'comments',
@@ -28,14 +25,14 @@ export class Comment extends AbstractDocument {
   @Prop({ type: mongoose.Schema.ObjectId, ref: 'Course' })
   course: Course;
 
-  @Prop({ type: CommentLesson })
-  lesson: ICommentLesson;
+  @Prop({ type: mongoose.Schema.ObjectId, ref: 'Lesson' })
+  lesson: Lesson;
 
   @Prop({ type: Types.ObjectId, ref: 'Comment', default: null })
   parent_comment: Types.ObjectId;
 
-  @Prop({ type: [CommentReplies] })
-  replies: [ICommentReplies];
+  @Prop({ type: [mongoose.Schema.ObjectId], ref: 'Comment' })
+  replies: Comment[];
 
   @Prop({ type: Number, default: 0 })
   comm_count_like: number;
