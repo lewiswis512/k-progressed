@@ -1,6 +1,6 @@
-import { Comment } from '../../modules/comments/schemas/comment.schema';
+import { ICommentResponse } from './ICommentResponse';
 
 export interface ICommentBySource {
-  comments: Comment[];
+  comments: ICommentResponse[];
   totalComment: number;
 }

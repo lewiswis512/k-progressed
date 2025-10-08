@@ -205,4 +205,8 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   async deleteMany(filterQuery: FilterQuery<TDocument>): Promise<void> {
     await this.model.deleteMany(filterQuery);
   }
+
+  async countDocuments(filterQuery?: FilterQuery<TDocument>): Promise<number> {
+    return await this.model.countDocuments(filterQuery ?? {});
+  }
 }

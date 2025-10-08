@@ -31,45 +31,61 @@ export class CommentsService {
   }
 
   async findByCourse(courseId: string): Promise<ICommentBySource> {
-    const comments: Comment[] = await this.findByCommentSource(
+    const { comments, totalComments } = await this.findByCommentSource(
       String(CommentEnum.COURSE),
       courseId,
     );
 
     return {
       comments,
-      totalComment: comments.length,
+      totalComment: totalComments,
     };
   }
 
   async findByLesson(lessonId: string): Promise<ICommentBySource> {
-    const comments = await this.findByCommentSource(
+    const { comments, totalComments } = await this.findByCommentSource(
       String(CommentEnum.LESSON),
       lessonId,
     );
 
     return {
       comments,
-      totalComment: comments.length,
+      totalComment: totalComments,
     };
   }
 
-  async findByCommentSource(source: string, id: string): Promise<any> {
-    const criteria: any = {
-      parent_comment: null,
-    };
-
+  private getCriteriaBySource(source: string, id: string, criteria: any) {
     if (Number(source) === Number(CommentEnum.COURSE)) {
       criteria.course = id;
     } else if (Number(source) === Number(CommentEnum.LESSON)) {
       criteria.lesson = id;
     }
 
-    const comments = await this.commentRepository.find(criteria);
+    return criteria;
+  }
 
-    return await Promise.all(
-      comments.map((comment) => this.mapperComment(comment)),
+  async findByCommentSource(source: string, id: string) {
+    let criteria: any = {
+      parent_comment: null,
+    };
+
+    criteria = this.getCriteriaBySource(source, id, criteria);
+
+    const parentComments: Comment[] =
+      await this.commentRepository.find(criteria);
+
+    const comments: ICommentResponse[] = await Promise.all(
+      parentComments.map((comment) => this.mapperComment(comment)),
     );
+
+    const criteriaCount = this.getCriteriaBySource(source, id, {});
+    const totalComments =
+      await this.commentRepository.countDocuments(criteriaCount);
+
+    return {
+      comments,
+      totalComments,
+    };
   }
 
   async store(
