@@ -268,16 +268,7 @@ export class CommentsService {
     }
 
     if (comment.parent_comment) {
-      const parentCommentId = comment.parent_comment;
-
-      const parentComment = await this.findById(String(parentCommentId));
-      const updatedReplies = parentComment.replies.filter(
-        (replyComment) => String(replyComment._id) !== String(comment._id),
-      );
-
-      await this.commentRepository.findByIdAndUpdate(parentCommentId, {
-        replies: updatedReplies,
-      });
+      await this.commentRepository.deleteMany({ parent_comment: comment._id });
 
       return await this.commentRepository.findByIdAndDelete(comment._id);
     } else {
@@ -302,73 +293,13 @@ export class CommentsService {
     await this.userRepository.findById(new Types.ObjectId(userId));
 
     let comment: Comment = await this.findById(commentId);
-    const parentCommentId: Types.ObjectId = comment.parent_comment;
-
-    if (parentCommentId !== null) {
-      const parentComment = await this.findById(String(parentCommentId));
-
-      const commentReplyIndex = parentComment.replies.findIndex(
-        (commentReply) => String(commentReply._id) === commentId,
-      );
-
-      if (commentReplyIndex >= 0) {
-        const replyComment = parentComment.replies[commentReplyIndex];
-
-        const updateReactionAndReacter = this.updateReactionAndReacter(
-          replyComment,
-          userId,
-          reactionType,
-        );
-
-        const commentReply = {
-          _id: replyComment._id,
-          comm_content: replyComment.comm_content,
-          comm_source: replyComment.comm_source,
-          author: replyComment.author,
-          course: replyComment.course,
-          lesson: replyComment.lesson,
-          parent_comment: replyComment.parent_comment,
-          replies: replyComment.replies,
-          comm_count_like:
-            updateReactionAndReacter.comm_count_like ??
-            replyComment.comm_count_like,
-          comm_liked_by:
-            updateReactionAndReacter.comm_liked_by ??
-            replyComment.comm_liked_by,
-          comm_count_dislike:
-            updateReactionAndReacter.comm_count_dislike ??
-            replyComment.comm_count_dislike,
-          comm_disliked_by:
-            updateReactionAndReacter.comm_disliked_by ??
-            replyComment.comm_disliked_by,
-        };
-
-        parentComment.replies[commentReplyIndex] = commentReply;
-
-        await this.commentRepository.findByIdAndUpdate(
-          new Types.ObjectId(String(parentCommentId)),
-          { replies: parentComment.replies },
-        );
-      }
-
-      return parentComment;
-    }
-
     let updateReactionAndReacter = this.updateReactionAndReacter(
       comment,
       userId,
       reactionType,
     );
 
-    let data: Comment = {
-      _id: comment._id,
-      comm_content: comment.comm_content,
-      comm_source: comment.comm_source,
-      author: comment.author,
-      course: comment.course,
-      lesson: comment.lesson,
-      parent_comment: comment.parent_comment,
-      replies: comment.replies,
+    let data = {
       comm_count_like:
         updateReactionAndReacter.comm_count_like ?? comment.comm_count_like,
       comm_liked_by:

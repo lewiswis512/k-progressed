@@ -115,7 +115,7 @@ export class CommentsController {
   async updateCourse(
     @Param('id') id: string,
     @Body() editCommentDto: EditCommentCourse,
-  ) {
+  ): Promise<Comment> {
     return await this.commentsService.update(id, editCommentDto);
   }
 
@@ -137,7 +137,7 @@ export class CommentsController {
   async update(
     @Param('id') id: string,
     @Body() editCommentDto: EditCommentLesson,
-  ) {
+  ): Promise<Comment> {
     return await this.commentsService.update(id, editCommentDto);
   }
 
@@ -148,7 +148,7 @@ export class CommentsController {
   @ApiNoContentResponse({
     description: 'The comment have been successfully deleted.',
   })
-  async delete(@Req() req: any, @Param('id') id: string) {
+  async delete(@Req() req: any, @Param('id') id: string): Promise<void> {
     return await this.commentsService.delete(id, req.user.id);
   }
 
@@ -158,7 +158,7 @@ export class CommentsController {
   @ApiOkResponse({
     description: 'The comment has been successfully liked.',
   })
-  async like(@Param('id') id: string, @Req() req: any) {
+  async like(@Param('id') id: string, @Req() req: any): Promise<Comment> {
     return await this.commentsService.like(id, req.user.id);
   }
 
@@ -168,7 +168,7 @@ export class CommentsController {
   @ApiOkResponse({
     description: 'The comment has been successfully disliked.',
   })
-  async dislike(@Param('id') id: string, @Req() req: any) {
+  async dislike(@Param('id') id: string, @Req() req: any): Promise<Comment> {
     return await this.commentsService.dislike(id, req.user.id);
   }
 }
