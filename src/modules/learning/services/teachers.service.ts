@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { Aggregation } from '../../../common/repository/abstract.repository';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { RoleEnum } from '../../../utils/enums/role.enum';
 import { UserTypeEnum } from '../../../utils/enums/user-type.enum';
@@ -15,95 +14,39 @@ export class TeachersService {
     private teacherRepository: TeacherRepository,
   ) {}
 
-  async findAll() {
-    const teacherAggregation: Aggregation[] = [
-      { $project: { __v: 0 } },
+  async findAll(): Promise<Teacher[]> {
+    return this.teacherRepository.find(
+      {},
       {
-        $lookup: {
-          from: 'users',
-          localField: 'author',
-          foreignField: '_id',
-          pipeline: [
-            {
-              $project: {
-                usr_username: 1,
-                usr_firstname: 1,
-                usr_lastname: 1,
-                usr_email: 1,
-                usr_photo: 1,
-              },
-            },
-          ],
-          as: 'author',
+        populate: {
+          path: 'author',
+          select: 'usr_username usr_firstname usr_lastname usr_email usr_photo',
         },
       },
-      { $unwind: '$author' },
-    ];
-
-    return this.teacherRepository.aggregate(teacherAggregation);
+    );
   }
 
-  async findById(id: string) {
-    const teacherAggregation = [
-      { $match: { _id: new Types.ObjectId(id) } },
-      { $project: { __v: 0 } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'author',
-          foreignField: '_id',
-          pipeline: [
-            {
-              $project: {
-                usr_username: 1,
-                usr_firstname: 1,
-                usr_lastname: 1,
-                usr_email: 1,
-                usr_photo: 1,
-              },
-            },
-          ],
-          as: 'author',
-        },
+  async findById(id: string): Promise<Teacher> {
+    return await this.teacherRepository.findById(new Types.ObjectId(id), {
+      populate: {
+        path: 'author',
+        select: 'usr_username usr_firstname usr_lastname usr_email usr_photo',
       },
-      { $unwind: '$author' },
-    ];
-
-    const teacher = await this.teacherRepository.aggregate(teacherAggregation);
-
-    return teacher[0];
+    });
   }
 
-  async findByUserSlug(slug: string) {
-    const teacherAggregation = [
-      { $project: { __v: 0 } },
+  async findByUserSlug(slug: string): Promise<Teacher> {
+    return await this.teacherRepository.findOne(
       {
-        $lookup: {
-          from: 'users',
-          localField: 'author',
-          foreignField: '_id',
-          pipeline: [
-            {
-              $project: {
-                usr_username: 1,
-                usr_firstname: 1,
-                usr_lastname: 1,
-                usr_email: 1,
-                usr_photo: 1,
-                usr_slug: 1,
-              },
-            },
-          ],
-          as: 'author',
+        'author.usr_slug': slug,
+      },
+      {
+        populate: {
+          path: 'author',
+          select: 'usr_username usr_firstname usr_lastname usr_email usr_photo',
         },
       },
-      { $unwind: '$author' },
-      { $match: { 'author.usr_slug': slug } },
-    ];
-
-    const teacher = await this.teacherRepository.aggregate(teacherAggregation);
-
-    return teacher[0];
+    );
   }
 
   async findByUserId(userId: string) {
