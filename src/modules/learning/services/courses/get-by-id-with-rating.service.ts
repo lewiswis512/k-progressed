@@ -12,29 +12,15 @@ export class GetCourseByIdWithRatingService {
   ) {}
 
   async findByIdWithRating(id: string): Promise<ICourseWithAverageRating> {
-    const [course] = await this.courseRepository.aggregate([
-      { $project: { __v: 0 } },
-      { $match: { _id: new Types.ObjectId(id) } },
+    const course = await this.courseRepository.findById(
+      new Types.ObjectId(id),
       {
-        $lookup: {
-          from: 'users',
-          localField: 'author',
-          foreignField: '_id',
-          pipeline: [
-            {
-              $project: {
-                _id: 0,
-                usr_username: 1,
-                usr_firstname: 1,
-                usr_lastname: 1,
-              },
-            },
-          ],
-          as: 'author',
+        populate: {
+          path: 'author',
+          select: 'usr_username usr_firstname usr_lastname',
         },
       },
-      { $unwind: '$author' },
-    ]);
+    );
 
     if (!course) {
       throw new NotFoundException(`Course not found`);
