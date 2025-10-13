@@ -1,14 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { Section } from '../../schemas/section.schema';
-import { SectionRepository } from '../../repositories/section.repository';
 import { LessonRepository } from '../../repositories/lesson.repository';
-import {
-  getMinuteAndSecond,
-  getSecond,
-  getVideoDuration,
-} from '../../../../utils/times/duration';
-import { videoLink } from '../../../../utils/uploads/video-link';
+import { SectionRepository } from '../../repositories/section.repository';
+import { Section } from '../../schemas/section.schema';
 
 export interface IFreeLesson {
   _id: Types.ObjectId;

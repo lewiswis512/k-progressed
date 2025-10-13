@@ -1,26 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { EditLesson } from '../../dtos/lessons/edit-lesson.dto';
-import { Lesson } from '../../schemas/lesson.schema';
-import { AuthorLessonService } from './author.service';
-import { CloudinaryUploadStrategy } from '../../../../utils/uploads/cloudinary-upload-strategy';
+import { CloudinaryVideoUploadStrategy } from 'src/utils/uploads/cloudinary-video-upload-strategy';
+import { ScreenShot } from 'src/utils/uploads/take-screen-shot';
+import { VideoUploadStrategy } from 'src/utils/uploads/video-upload-strategy';
 import {
   PATH_LESSON_PHOTOS_CLOUDINARY,
   PATH_UPLOAD_LESSON_VIDEOS,
 } from '../../../../utils/constants/uploads/path-upload';
-import { LessonRepository } from '../../repositories/lesson.repository';
-import { DeleteLessonService } from './delete.service';
 import { videoLink } from '../../../../utils/uploads/video-link';
+import { EditLesson } from '../../dtos/lessons/edit-lesson.dto';
+import { LessonRepository } from '../../repositories/lesson.repository';
+import { Lesson } from '../../schemas/lesson.schema';
+import { AuthorLessonService } from './author.service';
+import { DeleteLessonService } from './delete.service';
 import { LessonService } from './find-one-by-id.service';
-import { VideoUploadStrategy } from 'src/utils/uploads/video-upload-strategy';
-import { CloudinaryVideoUploadStrategy } from 'src/utils/uploads/cloudinary-video-upload-strategy';
-import { ScreenShot } from 'src/utils/uploads/take-screen-shot';
 
 @Injectable()
 export class UpdateLessonservice {
   constructor(
     private lessonService: LessonService,
-    private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
     private lessonRepository: LessonRepository,
     private deleteLessonService: DeleteLessonService,
   ) {}

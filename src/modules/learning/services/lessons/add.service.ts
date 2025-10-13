@@ -13,9 +13,9 @@ import {
   getSecond,
   getVideoDuration,
 } from '../../../../utils/times/duration';
-import { VideoUploadStrategy } from 'src/utils/uploads/video-upload-strategy';
-import { CloudinaryVideoUploadStrategy } from 'src/utils/uploads/cloudinary-video-upload-strategy';
-import { ScreenShot } from 'src/utils/uploads/take-screen-shot';
+import { VideoUploadStrategy } from '../../../../utils/uploads/video-upload-strategy';
+import { CloudinaryVideoUploadStrategy } from '../../../../utils/uploads/cloudinary-video-upload-strategy';
+import { ScreenShot } from '../../../../utils/uploads/take-screen-shot';
 
 @Injectable()
 export class AddLessonService {
