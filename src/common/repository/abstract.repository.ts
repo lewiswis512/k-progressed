@@ -111,8 +111,21 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     return document;
   }
 
-  async findOne(filterQuery: FilterQuery<TDocument>): Promise<TDocument> {
-    const document = await this.model.findOne(filterQuery);
+  async findOne(
+    filterQuery: FilterQuery<TDocument>,
+    options?: { select?: string; lean?: boolean; populate?: any },
+  ): Promise<TDocument> {
+    let query = this.model.findOne(filterQuery);
+
+    if (options?.select) {
+      query = query.select(options.select);
+    }
+
+    if (options?.populate) {
+      query = query.populate(options.populate);
+    }
+
+    const document = await query;
 
     if (!document) {
       throw new NotFoundException(`${this.model.modelName} not found`);

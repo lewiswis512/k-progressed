@@ -1,31 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { Aggregation } from 'src/common/repository/abstract.repository';
 import { CourseRepository } from '../../repositories/course.repository';
+import { Course } from '../../schemas/course.schema';
 
 @Injectable()
 export class CoursesByCategoryService {
   public constructor(private courseRepository: CourseRepository) {}
 
-  async findBy(categoryName: string) {
-    const courseAggregation: Aggregation[] = [
-      { $project: { __v: 0 } },
+  async findBy(categoryName: string): Promise<Course[]> {
+    return await this.courseRepository.find(
+      { 'category.ctgr_name': new RegExp(categoryName, 'i') },
       {
-        $lookup: {
-          from: 'categories',
-          foreignField: '_id',
-          localField: 'category',
-          pipeline: [{ $project: { _id: 0, ctgr_name: 1 } }],
-          as: 'category',
+        populate: {
+          path: 'category',
+          select: '_id ctgr_name',
         },
       },
-    ];
-
-    courseAggregation.push({
-      $match: {
-        'category.ctgr_name': new RegExp(categoryName, 'i'),
-      },
-    });
-
-    return await this.courseRepository.aggregate(courseAggregation);
+    );
   }
 }
