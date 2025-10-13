@@ -11,29 +11,15 @@ export class GetCoursesBySlugService {
   ) {}
 
   async findBy(slug: string): Promise<ICourseWithAverageRating> {
-    const [course] = await this.courseRepository.aggregate([
-      { $project: { __v: 0 } },
-      { $match: { crs_slug: slug } },
+    const course = await this.courseRepository.findOne(
+      { crs_slug: slug },
       {
-        $lookup: {
-          from: 'users',
-          localField: 'author',
-          foreignField: '_id',
-          pipeline: [
-            {
-              $project: {
-                _id: 0,
-                usr_username: 1,
-                usr_firstname: 1,
-                usr_lastname: 1,
-              },
-            },
-          ],
-          as: 'author',
+        populate: {
+          path: 'author',
+          select: 'usr_username usr_firstname usr_lastname',
         },
       },
-      { $unwind: '$author' },
-    ]);
+    );
 
     if (!course) {
       throw new NotFoundException(`Course not found`);
