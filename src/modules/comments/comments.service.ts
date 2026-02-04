@@ -31,27 +31,11 @@ export class CommentsService {
   }
 
   async findByCourse(courseId: string): Promise<ICommentBySource> {
-    const { comments, totalComments } = await this.findByCommentSource(
-      String(CommentEnum.COURSE),
-      courseId,
-    );
-
-    return {
-      comments,
-      totalComment: totalComments,
-    };
+    return await this.findByCommentSource(String(CommentEnum.COURSE), courseId);
   }
 
   async findByLesson(lessonId: string): Promise<ICommentBySource> {
-    const { comments, totalComments } = await this.findByCommentSource(
-      String(CommentEnum.LESSON),
-      lessonId,
-    );
-
-    return {
-      comments,
-      totalComment: totalComments,
-    };
+    return await this.findByCommentSource(String(CommentEnum.LESSON), lessonId);
   }
 
   private getCriteriaBySource(source: string, id: string, criteria: any) {
