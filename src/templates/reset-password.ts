@@ -1,4 +1,4 @@
-import { LOGO } from '../main';
+import { LOGO } from '../utils/constants/app';
 import { User } from '../modules/users/schemas/user.schema';
 
 export const resetPasswordTemplate = (

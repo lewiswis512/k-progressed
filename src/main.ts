@@ -10,8 +10,9 @@ import { Request, Response, NextFunction } from 'express';
 import * as bodyParser from 'body-parser';
 import { join } from 'path';
 
+import { LOGO } from './utils/constants/app';
+
 const siteName = 'K-Progressed';
-export const LOGO = `${process.env.API_URL}/assets/img/${siteName.toLowerCase()}.png`;
 
 async function bootstrap() {
   dotenv.config();

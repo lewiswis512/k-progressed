@@ -1,4 +1,4 @@
-import { LOGO } from '../main';
+import { LOGO } from '../utils/constants/app';
 import { dateTimeFormatted } from '../utils/dates/dateTimeFormatted';
 import { combineDateAndTime } from '../utils/dates/combineDateAndTime';
 import { IBookingInformation } from '../modules/learning/services/mentor-booking-notification.service';
