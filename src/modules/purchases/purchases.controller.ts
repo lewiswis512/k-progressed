@@ -23,7 +23,7 @@ export class PurchasesController {
     return await this.purchaseService.findAll();
   }
 
-  @Get()
+  @Get(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   async show(@Param('id') id: string) {
