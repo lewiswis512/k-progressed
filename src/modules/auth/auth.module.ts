@@ -3,7 +3,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { StripeCustomerService } from '../../modules/auth/stripe-customer.service';
 import { UserRepository } from '../../modules/users/repository/user.repository';
-import { UsersModule } from '../../modules/users/users.module';
 import { SendMailModule } from '../../shared/mailer/send-mail.module';
 import {
   StripeCustomer,
@@ -19,7 +18,6 @@ import { ForgotPasswordService } from './services/forgot-password.service';
 
 @Module({
   imports: [
-    UsersModule,
     JwtModule.registerAsync({
       useFactory: async () => ({
         global: true,

@@ -9,13 +9,14 @@ import { UserReset } from '../../../modules/users/schemas/user-reset.schema';
 import { User } from '../../../modules/users/schemas/user.schema';
 import { formatDateTime } from '../../../utils/dates/format-datetime';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
-import { UsersService } from '../../../modules/users/users.service';
+import { UserResetRepository } from '../../../modules/users/repository/user-reset.repository';
+import { hashPassword } from '../../../utils/auths/hashPassword';
 
 @Injectable()
 export class ForgotPasswordService {
   public constructor(
     private userRepository: UserRepository,
-    private usersService: UsersService,
+    private userResetRepository: UserResetRepository,
   ) {}
 
   async forgotPassword(
@@ -29,17 +30,22 @@ export class ForgotPasswordService {
 
     this.checkTokenExpiration(isTokenValid.usr_rest_expired_at);
 
-    await this.usersService.changePassword(user._id, password);
-    await this.usersService.deleteEmailTokenForgetPassword(email, token);
+    await this.userRepository.findByIdAndUpdate(user._id, {
+      usr_password: await hashPassword(password),
+    });
+    await this.userResetRepository.findOneAndDelete({
+      usr_rest_email: email,
+      usr_rest_token: token,
+    });
 
     return res.status(200).json({ status: 'success' });
   }
 
   async checkTokenValidity(email: string, token: string) {
-    const isTokenValid = await this.usersService.checkEmailTokenForgetPassword(
-      email,
-      token,
-    );
+    const isTokenValid = await this.userResetRepository.findOne({
+      usr_rest_email: email,
+      usr_rest_token: token,
+    });
 
     if (isTokenValid === null) {
       throw new InternalServerErrorException('Token may be not valid');

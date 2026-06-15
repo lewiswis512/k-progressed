@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongoRepository } from '../../common/repository/mongo.repository';
 import { CloudinaryUploadStrategy } from '../../utils/uploads/cloudinary-upload-strategy';
@@ -18,7 +18,7 @@ import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    forwardRef(() => AuthModule),
+    AuthModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: UserReset.name, schema: UserResetSchema },
