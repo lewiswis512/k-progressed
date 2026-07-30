@@ -36,9 +36,11 @@ export class TeachersService {
   }
 
   async findByUserSlug(slug: string): Promise<Teacher> {
+    const author = await this.userRepository.findOne({ usr_slug: slug });
+
     return await this.teacherRepository.findOne(
       {
-        'author.usr_slug': slug,
+        author
       },
       {
         populate: {
