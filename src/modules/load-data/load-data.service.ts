@@ -18,6 +18,9 @@ import { getTeacherUsers } from '../../data/users/teacher-users';
 import { RoleEnum } from '../../utils/enums/role.enum';
 import { UserTypeEnum } from '../../utils/enums/user-type.enum';
 import { AuthService } from '../auth/services/auth.service';
+import { FaqRepository } from '../faq/repositories/faq.repository';
+import { Faq } from '../faq/schemas/faq.schema';
+import { FAQS } from '../../data/faqs/faqs';
 import { CategoryRepository } from '../learning/repositories/category.repository';
 import { CourseRepository } from '../learning/repositories/course.repository';
 import { LessonRepository } from '../learning/repositories/lesson.repository';
@@ -44,6 +47,7 @@ export class LoadDataService {
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
     private coursesByCategoryService: CoursesByCategoryService,
+    private faqRepository: FaqRepository,
   ) {}
 
   async loadData() {
@@ -53,6 +57,7 @@ export class LoadDataService {
     await this.courseRepository.deleteMany({});
     await this.sectionRepository.deleteMany({});
     await this.lessonRepository.deleteMany({});
+    await this.faqRepository.deleteMany({});
 
     await this.loadUsers();
     await this.loadCategories();
@@ -64,6 +69,8 @@ export class LoadDataService {
 
     await this.loadMarketingLessons();
     await this.loadFinanceLessons();
+
+    await this.loadFaqs();
   }
 
   async loadUsers() {
@@ -90,6 +97,10 @@ export class LoadDataService {
     }));
 
     return await this.categoryRepository.insertMany(categories);
+  }
+
+  async loadFaqs(): Promise<Faq[]> {
+    return await this.faqRepository.insertMany(FAQS);
   }
 
   createTeachers = (

@@ -6,6 +6,7 @@ import { LessonsModule } from '../learning/modules/lessons.module';
 import { SectionsModule } from '../learning/modules/sections.module';
 import { TeachersModule } from '../learning/modules/teachers.module';
 import { UsersModule } from '../users/users.module';
+import { FaqModule } from '../faq/faq.module';
 import { LoadDataController } from './load-data.controller';
 import { LoadDataService } from './load-data.service';
 
@@ -18,6 +19,7 @@ import { LoadDataService } from './load-data.service';
     CoursesModule,
     SectionsModule,
     LessonsModule,
+    FaqModule,
   ],
   controllers: [LoadDataController],
   providers: [LoadDataService],
