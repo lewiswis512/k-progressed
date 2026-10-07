@@ -9,12 +9,16 @@ export class WebhookController {
 
   @Post()
   @ApiExcludeEndpoint()
-  post(
+  async post(
     @Headers('stripe-signature') stripeSignature: string,
     @Req() request: Request,
   ) {
     const webhookSecret = process.env.WEBHOOK_STRIPE_SECRET;
 
-    this.paymentService.webhook(request.body, stripeSignature, webhookSecret);
+    await this.paymentService.webhook(
+      request.body,
+      stripeSignature,
+      webhookSecret,
+    );
   }
 }

@@ -148,6 +148,7 @@ export class PaymentService extends StripeService {
         console.error(
           `Webhook signature verification failed. ${error.message}`,
         );
+        return;
       }
     } else {
       throw new Error('Failed to fetch the webhook secret');
@@ -164,7 +165,7 @@ export class PaymentService extends StripeService {
         const charge: Stripe.Charge = event.data.object;
         const { metadata } = charge;
 
-        await this.savePaymentInformation(charge);
+        await this.savePaymentInformation(charge).catch(() => null);
 
         if (metadata.purchaseId) {
           await this.purchaseService.validatePurchase(metadata.purchaseId);
@@ -199,7 +200,11 @@ export class PaymentService extends StripeService {
             teacherEmail: metadata.teacherEmail,
           };
 
-          this.mentorBookingNotificationService.send(bookingInfo);
+          await this.mentorBookingNotificationService
+            .send(bookingInfo)
+            .catch((error) =>
+              console.error('Error sending booking notification:', error),
+            );
         }
 
         console.info('Charge succeeded');
