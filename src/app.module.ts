@@ -18,6 +18,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { PurchasesModule } from './modules/purchases/purchases.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { FaqModule } from './modules/faq/faq.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AuthModule } from './modules/auth/auth.module';
     LearningModule,
     LoadDataModule,
     MentoringModule,
+    FaqModule,
   ],
   controllers: [AppController],
   providers: [AppService, IsUniqueConstraint, MongoRepository],
