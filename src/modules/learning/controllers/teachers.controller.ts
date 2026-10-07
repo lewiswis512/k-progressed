@@ -15,6 +15,7 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -34,6 +35,14 @@ export class TeachersController {
   })
   async list() {
     return await this.teachersService.findAll();
+  }
+
+  @Get('mentors')
+  @ApiOkResponse({
+    description: 'The teachers offering mentoring calls.',
+  })
+  async mentors() {
+    return await this.teachersService.findMentors();
   }
 
   @Get(':id')
@@ -91,8 +100,15 @@ export class TeachersController {
   @ApiBadRequestResponse({
     description: 'Bad request.',
   })
-  async update(@Param('id') id: string, @Body() saveTeacher: SaveTeacher) {
-    return await this.teachersService.update(id, saveTeacher);
+  @ApiForbiddenResponse({
+    description: 'You are not authorized to update this teacher profile.',
+  })
+  async update(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Body() saveTeacher: SaveTeacher,
+  ) {
+    return await this.teachersService.update(id, saveTeacher, req.user);
   }
 
   @Delete(':id')

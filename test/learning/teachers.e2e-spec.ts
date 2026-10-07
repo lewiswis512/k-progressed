@@ -13,6 +13,7 @@ describe('Teachers (e2e)', () => {
   let userModel: Model<User>;
   let teacherModel: Model<Teacher>;
   let accessToken: string;
+  let otherAccessToken: string;
   let teacherId: string;
   let userId: string;
 
@@ -22,24 +23,48 @@ describe('Teachers (e2e)', () => {
     usr_password: 'Password123',
   };
 
+  const otherUser = {
+    usr_username: 'teachers_other_e2e',
+    usr_email: 'teachers_other_e2e@test.com',
+    usr_password: 'Password123',
+  };
+
   beforeAll(async () => {
     ({ app, moduleRef } = await createApp());
     userModel = moduleRef.get(getModelToken(User.name));
     teacherModel = moduleRef.get(getModelToken(Teacher.name));
 
-    await userModel.deleteMany({ usr_email: testUser.usr_email });
-    const signupRes = await request(app.getHttpServer()).post('/api/signup').send(testUser);
+    await userModel.deleteMany({
+      usr_email: { $in: [testUser.usr_email, otherUser.usr_email] },
+    });
+    const signupRes = await request(app.getHttpServer())
+      .post('/api/signup')
+      .send(testUser);
     userId = signupRes.body._id;
 
     const loginRes = await request(app.getHttpServer())
       .post('/api/login')
-      .send({ usr_email: testUser.usr_email, usr_password: testUser.usr_password });
+      .send({
+        usr_email: testUser.usr_email,
+        usr_password: testUser.usr_password,
+      });
     accessToken = loginRes.body.accessToken;
+
+    await request(app.getHttpServer()).post('/api/signup').send(otherUser);
+    const otherLoginRes = await request(app.getHttpServer())
+      .post('/api/login')
+      .send({
+        usr_email: otherUser.usr_email,
+        usr_password: otherUser.usr_password,
+      });
+    otherAccessToken = otherLoginRes.body.accessToken;
   });
 
   afterAll(async () => {
     if (teacherId) await teacherModel.findByIdAndDelete(teacherId);
-    await userModel.deleteMany({ usr_email: testUser.usr_email });
+    await userModel.deleteMany({
+      usr_email: { $in: [testUser.usr_email, otherUser.usr_email] },
+    });
     await app.close();
   });
 
@@ -49,7 +74,8 @@ describe('Teachers (e2e)', () => {
         .post('/api/teachers')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          tchr_biography: 'A passionate e2e test teacher with years of experience.',
+          tchr_biography:
+            'A passionate e2e test teacher with years of experience.',
           tchr_title: 'E2E Trainer',
           user_id: userId,
         })
@@ -57,6 +83,8 @@ describe('Teachers (e2e)', () => {
 
       teacherId = res.body._id;
       expect(res.body.tchr_title).toBe('E2E Trainer');
+      expect(res.body.tchr_is_mentor).toBe(false);
+      expect(res.body.tchr_hourly_rate).toBe(0);
     });
 
     it('should return 401 without a token', async () => {
@@ -77,7 +105,9 @@ describe('Teachers (e2e)', () => {
 
   describe('list teachers', () => {
     it('should return the list of teachers', async () => {
-      const res = await request(app.getHttpServer()).get('/api/teachers').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/api/teachers')
+        .expect(200);
 
       expect(Array.isArray(res.body)).toBe(true);
     });
@@ -119,6 +149,84 @@ describe('Teachers (e2e)', () => {
         .patch(`/api/teachers/${teacherId}`)
         .send({ tchr_title: 'Unauthorized' })
         .expect(401);
+    });
+  });
+
+  describe('mentoring', () => {
+    const profile = {
+      tchr_biography: 'Updated biography for the e2e teacher.',
+      tchr_title: 'Senior E2E Trainer',
+    };
+    const booking = () => ({ teacherId, date: '2026-10-21', time: '14:30' });
+    const isListedAsMentor = async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/teachers/mentors')
+        .expect(200);
+
+      return res.body.find((t: any) => t._id === teacherId);
+    };
+
+    it('should not list a teacher who is not a mentor', async () => {
+      expect(await isListedAsMentor()).toBeUndefined();
+    });
+
+    it('should refuse a mentoring payment for a teacher who is not a mentor', async () => {
+      await request(app.getHttpServer())
+        .post('/api/payment-intent/mentoring')
+        .set('Authorization', `Bearer ${otherAccessToken}`)
+        .send(booking())
+        .expect(400);
+    });
+
+    it('should return 400 when a mentor has no hourly rate', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/teachers/${teacherId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ ...profile, tchr_is_mentor: true })
+        .expect(400);
+    });
+
+    it('should return 400 when the hourly rate has more than 2 decimals', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/teachers/${teacherId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ ...profile, tchr_is_mentor: true, tchr_hourly_rate: 10.555 })
+        .expect(400);
+    });
+
+    it('should return 403 when another user updates the profile', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/teachers/${teacherId}`)
+        .set('Authorization', `Bearer ${otherAccessToken}`)
+        .send({ ...profile, tchr_hourly_rate: 1 })
+        .expect(403);
+    });
+
+    it('should become a mentor with an hourly rate', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/teachers/${teacherId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ ...profile, tchr_is_mentor: true, tchr_hourly_rate: 65.5 })
+        .expect(200);
+
+      expect(res.body.tchr_is_mentor).toBe(true);
+      expect(res.body.tchr_hourly_rate).toBe(65.5);
+      expect((await isListedAsMentor()).tchr_hourly_rate).toBe(65.5);
+    });
+
+    it('should return 401 on a mentoring payment without a token', async () => {
+      await request(app.getHttpServer())
+        .post('/api/payment-intent/mentoring')
+        .send(booking())
+        .expect(401);
+    });
+
+    it('should return 400 on a mentoring payment with an invalid booking', async () => {
+      await request(app.getHttpServer())
+        .post('/api/payment-intent/mentoring')
+        .set('Authorization', `Bearer ${otherAccessToken}`)
+        .send({ teacherId: 'abc', date: 'tomorrow', time: '2pm' })
+        .expect(400);
     });
   });
 

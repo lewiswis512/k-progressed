@@ -1,5 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class SaveTeacher {
   @ApiProperty({
@@ -16,4 +24,26 @@ export class SaveTeacher {
   })
   @IsNotEmpty({ message: 'Title is required' })
   tchr_title: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'The teacher offers one-to-one mentoring calls',
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'Is mentor must be a boolean' })
+  tchr_is_mentor?: boolean;
+
+  @ApiPropertyOptional({
+    example: 50,
+    description: 'Price of a one hour mentoring call, in euros',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: 'Hourly rate must be a number with at most 2 decimals' },
+  )
+  @Min(0, { message: 'Hourly rate must be 0 or more' })
+  @Max(10000, { message: 'Hourly rate must be 10000 or less' })
+  tchr_hourly_rate?: number;
 }

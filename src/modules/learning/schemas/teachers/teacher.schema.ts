@@ -13,6 +13,12 @@ export class Teacher extends AbstractDocument {
   @Prop({ type: String, trim: true })
   tchr_biography: string;
 
+  @Prop({ type: Boolean, default: false })
+  tchr_is_mentor: boolean;
+
+  @Prop({ type: Number, default: 0, min: 0 })
+  tchr_hourly_rate: number;
+
   @Prop({ type: mongoose.Schema.ObjectId, ref: 'User' })
   author: User;
 }

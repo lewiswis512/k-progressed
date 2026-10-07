@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { StripeService } from '../../../modules/payment/service/stripe.service';
 import { StripePaymentIntentRepository } from '../repository/stripePaymentIntent.repository';
 import { IBillingDetail } from '../schemas/stripe-payment-intent.schema';
 import Stripe from 'stripe';
+import { TeacherRepository } from '../../../modules/learning/repositories/teacher.repository';
+import { CreateMentoringPaymentIntent } from '../dto/create-mentoring-payment-intent.dto';
 import { PurchasesService } from '../../../modules/purchases/purchases.service';
 import {
   IBookingInformation,
@@ -20,12 +23,21 @@ interface IPayInfoData {
   strp_customer_id: string;
 }
 
+export interface IBooker {
+  username: string;
+  firstname?: string;
+  lastname?: string;
+  email: string;
+  customerId?: string;
+}
+
 @Injectable()
 export class PaymentService extends StripeService {
   constructor(
     private stripePaymentIntentRepository: StripePaymentIntentRepository,
     private purchaseService: PurchasesService,
     private mentorBookingNotificationService: MentorBookingNotificationService,
+    private teacherRepository: TeacherRepository,
   ) {
     super();
   }
@@ -37,6 +49,49 @@ export class PaymentService extends StripeService {
       console.error('Error creating payment intent:', error);
       throw error;
     }
+  }
+
+  async createMentoringPaymentIntent(
+    booking: CreateMentoringPaymentIntent,
+    booker: IBooker,
+  ): Promise<{ client_secret: string; amount: number }> {
+    const teacher = await this.teacherRepository.findById(
+      new Types.ObjectId(booking.teacherId),
+      {
+        populate: {
+          path: 'author',
+          select: 'usr_username usr_firstname usr_lastname usr_email',
+        },
+      },
+    );
+
+    if (!teacher.tchr_is_mentor || !(teacher.tchr_hourly_rate > 0)) {
+      throw new BadRequestException('This teacher does not offer mentoring');
+    }
+
+    const author = teacher.author;
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount: Math.round(teacher.tchr_hourly_rate * 100),
+      currency: 'eur',
+      customer: booker.customerId || undefined,
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        teacherId: teacher._id.toString(),
+        date: booking.date,
+        time: booking.time,
+        bookerFirstname: booker.firstname || booker.username,
+        bookerLastname: booker.lastname || booker.username,
+        bookerEmail: booker.email,
+        teacherFirstname: author.usr_firstname || author.usr_username,
+        teacherLastname: author.usr_lastname || author.usr_username,
+        teacherEmail: author.usr_email,
+      },
+    });
+
+    return {
+      client_secret: paymentIntent.client_secret,
+      amount: teacher.tchr_hourly_rate,
+    };
   }
 
   async savePaymentInformation(charge: Stripe.Charge) {

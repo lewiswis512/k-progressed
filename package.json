@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed:users": "ts-node src/scripts/seed-users.ts",
     "migrate:course-status": "ts-node src/scripts/migrate-course-status.ts",
-    "migrate:section-order": "ts-node src/scripts/migrate-section-order.ts"
+    "migrate:section-order": "ts-node src/scripts/migrate-section-order.ts",
+    "migrate:teacher-mentoring": "ts-node src/scripts/migrate-teacher-mentoring.ts"
   },
   "dependencies": {
     "@faker-js/faker": "^9.8.0",

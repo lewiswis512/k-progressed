@@ -112,6 +112,8 @@ export class LoadDataService {
     return users.slice(startIndex, endIndex).map((user, index) => ({
       tchr_title: domain.title[index],
       tchr_biography: domain.biography[index],
+      tchr_is_mentor: domain.is_mentor[index],
+      tchr_hourly_rate: domain.hourly_rate[index],
       author: user,
       created_at: new Date(),
       updated_at: new Date(),

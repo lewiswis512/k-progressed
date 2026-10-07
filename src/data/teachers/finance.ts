@@ -13,4 +13,6 @@ export const FINANCE = {
     'Elle conseille des investisseurs privés sur la diversification de portefeuille et la gestion des actifs.',
     'Coach passionné, il vulgarise les concepts financiers pour permettre à chacun de mieux gérer son argent.',
   ],
+  is_mentor: [true, true, false, true, true],
+  hourly_rate: [210, 165, 0, 240, 110],
 };

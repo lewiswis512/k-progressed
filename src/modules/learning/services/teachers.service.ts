@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { RoleEnum } from '../../../utils/enums/role.enum';
@@ -26,6 +30,18 @@ export class TeachersService {
     );
   }
 
+  async findMentors(): Promise<Teacher[]> {
+    return this.teacherRepository.find(
+      { tchr_is_mentor: true },
+      {
+        populate: {
+          path: 'author',
+          select: 'usr_username usr_firstname usr_lastname usr_email usr_photo',
+        },
+      },
+    );
+  }
+
   async findById(id: string): Promise<Teacher> {
     return await this.teacherRepository.findById(new Types.ObjectId(id), {
       populate: {
@@ -40,7 +56,7 @@ export class TeachersService {
 
     return await this.teacherRepository.findOne(
       {
-        author
+        author,
       },
       {
         populate: {
@@ -59,6 +75,12 @@ export class TeachersService {
     const author = await this.userRepository.findById(
       new Types.ObjectId(userId),
     );
+    if (addTeacher.tchr_is_mentor && !(addTeacher.tchr_hourly_rate > 0)) {
+      throw new BadRequestException(
+        'A mentor must have an hourly rate greater than 0',
+      );
+    }
+
     let data = {
       ...addTeacher,
       author,
@@ -88,8 +110,30 @@ export class TeachersService {
     }
   }
 
-  async update(id: string, teacher: SaveTeacher) {
-    await this.findById(id);
+  async update(
+    id: string,
+    teacher: SaveTeacher,
+    user: { id: string; role: RoleEnum },
+  ) {
+    const current = await this.findById(id);
+
+    if (
+      current.author?._id.toString() !== user.id &&
+      user.role !== RoleEnum.SUPERADMIN
+    ) {
+      throw new ForbiddenException(
+        "You can't update a teacher profile who don't belong to you",
+      );
+    }
+
+    const isMentor = teacher.tchr_is_mentor ?? current.tchr_is_mentor;
+    const hourlyRate = teacher.tchr_hourly_rate ?? current.tchr_hourly_rate;
+
+    if (isMentor && !(hourlyRate > 0)) {
+      throw new BadRequestException(
+        'A mentor must have an hourly rate greater than 0',
+      );
+    }
 
     return this.teacherRepository.findByIdAndUpdate(
       new Types.ObjectId(id),

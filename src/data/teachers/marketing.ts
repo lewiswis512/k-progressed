@@ -13,4 +13,6 @@ export const MARKETING = {
     'Elle forme les futurs professionnels du marketing B2B avec des cas concrets issus de l’industrie.',
     'Coach indépendant, il aide les entreprises à définir et mettre en œuvre leur stratégie de contenu.',
   ],
+  is_mentor: [true, true, true, false, true],
+  hourly_rate: [120, 150, 185, 0, 135],
 };
