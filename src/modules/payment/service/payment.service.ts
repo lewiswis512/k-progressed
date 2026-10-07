@@ -6,6 +6,7 @@ import { IBillingDetail } from '../schemas/stripe-payment-intent.schema';
 import Stripe from 'stripe';
 import { TeacherRepository } from '../../../modules/learning/repositories/teacher.repository';
 import { CreateMentoringPaymentIntent } from '../dto/create-mentoring-payment-intent.dto';
+import { BookingsService } from '../../../modules/learning/services/bookings.service';
 import { PurchasesService } from '../../../modules/purchases/purchases.service';
 import {
   IBookingInformation,
@@ -24,6 +25,7 @@ interface IPayInfoData {
 }
 
 export interface IBooker {
+  id: string;
   username: string;
   firstname?: string;
   lastname?: string;
@@ -38,6 +40,7 @@ export class PaymentService extends StripeService {
     private purchaseService: PurchasesService,
     private mentorBookingNotificationService: MentorBookingNotificationService,
     private teacherRepository: TeacherRepository,
+    private bookingsService: BookingsService,
   ) {
     super();
   }
@@ -52,11 +55,11 @@ export class PaymentService extends StripeService {
   }
 
   async createMentoringPaymentIntent(
-    booking: CreateMentoringPaymentIntent,
+    bookingRequest: CreateMentoringPaymentIntent,
     booker: IBooker,
   ): Promise<{ client_secret: string; amount: number }> {
     const teacher = await this.teacherRepository.findById(
-      new Types.ObjectId(booking.teacherId),
+      new Types.ObjectId(bookingRequest.teacherId),
       {
         populate: {
           path: 'author',
@@ -69,6 +72,13 @@ export class PaymentService extends StripeService {
       throw new BadRequestException('This teacher does not offer mentoring');
     }
 
+    const booking = await this.bookingsService.hold({
+      teacherId: teacher._id.toString(),
+      bookerId: booker.id,
+      date: bookingRequest.date,
+      time: bookingRequest.time,
+    });
+
     const author = teacher.author;
     const paymentIntent = await this.stripe.paymentIntents.create({
       amount: Math.round(teacher.tchr_hourly_rate * 100),
@@ -77,8 +87,9 @@ export class PaymentService extends StripeService {
       automatic_payment_methods: { enabled: true },
       metadata: {
         teacherId: teacher._id.toString(),
-        date: booking.date,
-        time: booking.time,
+        bookingId: booking._id.toString(),
+        date: bookingRequest.date,
+        time: bookingRequest.time,
         bookerFirstname: booker.firstname || booker.username,
         bookerLastname: booker.lastname || booker.username,
         bookerEmail: booker.email,
@@ -87,6 +98,11 @@ export class PaymentService extends StripeService {
         teacherEmail: author.usr_email,
       },
     });
+
+    await this.bookingsService.attachPaymentIntent(
+      booking._id,
+      paymentIntent.id,
+    );
 
     return {
       client_secret: paymentIntent.client_secret,
@@ -152,6 +168,14 @@ export class PaymentService extends StripeService {
 
         if (metadata.purchaseId) {
           await this.purchaseService.validatePurchase(metadata.purchaseId);
+        }
+
+        if (metadata.bookingId) {
+          try {
+            await this.bookingsService.confirm(metadata.bookingId);
+          } catch (error) {
+            console.error('Error confirming booking:', error);
+          }
         }
 
         if (

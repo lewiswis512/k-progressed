@@ -17,6 +17,7 @@ import { MentorBookingNotificationService } from '../learning/services/mentor-bo
 import { UserRepository } from '../users/repository/user.repository';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { AuthModule } from '../auth/auth.module';
+import { MentoringModule } from '../learning/modules/mentoring.module';
 import { TeacherRepository } from '../learning/repositories/teacher.repository';
 import {
   Teacher,
@@ -26,6 +27,7 @@ import {
 @Module({
   imports: [
     AuthModule,
+    MentoringModule,
     MongooseModule.forFeature([
       { name: StripePaymentIntent.name, schema: StripePaymentIntentSchema },
       { name: Purchase.name, schema: PurchaseSchema },
