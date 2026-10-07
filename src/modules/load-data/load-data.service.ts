@@ -213,8 +213,9 @@ export class LoadDataService {
     });
     const courses: Course[] = await this.courseRepository.find({ category });
     const sections: Omit<Section, '_id'>[] = courses.flatMap((course) =>
-      sectionDomain.map((sectionTitle) => ({
+      sectionDomain.map((sectionTitle, index) => ({
         sect_title: sectionTitle,
+        sect_order: index + 1,
         course,
         created_at: new Date(),
         updated_at: new Date(),

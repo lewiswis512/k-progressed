@@ -45,15 +45,24 @@ describe('Sections (e2e)', () => {
   let sectionModel: Model<Section>;
   let teacherModel: Model<Teacher>;
   let accessToken: string;
+  let otherAccessToken: string;
   let categoryId: string;
   let teacherId: string;
   let courseId: string;
   let sectionId: string;
+  let secondSectionId: string;
+  let thirdSectionId: string;
   let userId: string;
 
   const testUser = {
     usr_username: 'sections_e2e',
     usr_email: 'sections_e2e@test.com',
+    usr_password: 'Password123',
+  };
+
+  const otherUser = {
+    usr_username: 'sections_other_e2e',
+    usr_email: 'sections_other_e2e@test.com',
     usr_password: 'Password123',
   };
 
@@ -67,7 +76,9 @@ describe('Sections (e2e)', () => {
     sectionModel = moduleRef.get(getModelToken(Section.name));
     teacherModel = moduleRef.get(getModelToken(Teacher.name));
 
-    await userModel.deleteMany({ usr_email: testUser.usr_email });
+    await userModel.deleteMany({
+      usr_email: { $in: [testUser.usr_email, otherUser.usr_email] },
+    });
     const signupRes = await request(app.getHttpServer()).post('/api/signup').send(testUser);
     userId = signupRes.body._id;
 
@@ -75,6 +86,12 @@ describe('Sections (e2e)', () => {
       .post('/api/login')
       .send({ usr_email: testUser.usr_email, usr_password: testUser.usr_password });
     accessToken = loginRes.body.accessToken;
+
+    await request(app.getHttpServer()).post('/api/signup').send(otherUser);
+    const otherLoginRes = await request(app.getHttpServer())
+      .post('/api/login')
+      .send({ usr_email: otherUser.usr_email, usr_password: otherUser.usr_password });
+    otherAccessToken = otherLoginRes.body.accessToken;
 
     const catRes = await request(app.getHttpServer())
       .post('/api/categories')
@@ -102,11 +119,13 @@ describe('Sections (e2e)', () => {
   });
 
   afterAll(async () => {
-    if (sectionId) await sectionModel.findByIdAndDelete(sectionId);
+    if (courseId) await sectionModel.deleteMany({ course: courseId });
     if (courseId) await courseModel.findByIdAndDelete(courseId);
     if (teacherId) await teacherModel.findByIdAndDelete(teacherId);
     if (categoryId) await categoryModel.findByIdAndDelete(categoryId);
-    await userModel.deleteMany({ usr_email: testUser.usr_email });
+    await userModel.deleteMany({
+      usr_email: { $in: [testUser.usr_email, otherUser.usr_email] },
+    });
     await app.close();
   });
 
@@ -120,6 +139,7 @@ describe('Sections (e2e)', () => {
 
       sectionId = res.body._id;
       expect(res.body.sect_title).toBe('E2E Section');
+      expect(res.body.sect_order).toBe(1);
     });
 
     it('should return 401 without a token', async () => {
@@ -171,6 +191,93 @@ describe('Sections (e2e)', () => {
 
       expect(Array.isArray(res.body)).toBe(true);
       expect(res.body.some((s: any) => s._id === sectionId)).toBe(true);
+    });
+  });
+
+  describe('reorder sections', () => {
+    const reorderUrl = () => `/api/sections/course/${courseId}/reorder`;
+    const orderOf = (sections: any[]) => sections.map((s: any) => s._id);
+
+    it('should append new sections at the end of the course', async () => {
+      const second = await request(app.getHttpServer())
+        .post('/api/sections')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ sect_title: 'E2E Section 2', course_id: courseId })
+        .expect(201);
+      const third = await request(app.getHttpServer())
+        .post('/api/sections')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ sect_title: 'E2E Section 3', course_id: courseId })
+        .expect(201);
+
+      secondSectionId = second.body._id;
+      thirdSectionId = third.body._id;
+      expect(second.body.sect_order).toBe(2);
+      expect(third.body.sect_order).toBe(3);
+    });
+
+    it('should list the sections of the course by display order', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/sections/course/${courseId}`)
+        .expect(200);
+
+      expect(orderOf(res.body)).toEqual([sectionId, secondSectionId, thirdSectionId]);
+    });
+
+    it('should return 401 without a token', async () => {
+      await request(app.getHttpServer())
+        .patch(reorderUrl())
+        .send({ ids: [thirdSectionId, sectionId, secondSectionId] })
+        .expect(401);
+    });
+
+    it('should return 403 when the user is not the course author', async () => {
+      await request(app.getHttpServer())
+        .patch(reorderUrl())
+        .set('Authorization', `Bearer ${otherAccessToken}`)
+        .send({ ids: [thirdSectionId, sectionId, secondSectionId] })
+        .expect(403);
+    });
+
+    it('should return 400 when a section of the course is missing', async () => {
+      await request(app.getHttpServer())
+        .patch(reorderUrl())
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ ids: [thirdSectionId, sectionId] })
+        .expect(400);
+    });
+
+    it('should return 400 when an id is invalid', async () => {
+      await request(app.getHttpServer())
+        .patch(reorderUrl())
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ ids: ['abc'] })
+        .expect(400);
+    });
+
+    it('should return 404 for an unknown course', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/sections/course/${new Types.ObjectId()}/reorder`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ ids: [thirdSectionId, sectionId, secondSectionId] })
+        .expect(404);
+    });
+
+    it('should save the new order of the sections', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(reorderUrl())
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ ids: [thirdSectionId, sectionId, secondSectionId] })
+        .expect(200);
+
+      expect(orderOf(res.body)).toEqual([thirdSectionId, sectionId, secondSectionId]);
+      expect(res.body.map((s: any) => s.sect_order)).toEqual([1, 2, 3]);
+
+      const list = await request(app.getHttpServer())
+        .get(`/api/sections/course/${courseId}`)
+        .expect(200);
+
+      expect(orderOf(list.body)).toEqual([thirdSectionId, sectionId, secondSectionId]);
     });
   });
 

@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CourseRepository } from '../../../modules/learning/repositories/course.repository';
 import { AddSection } from '../dtos/sections/add-section.dto';
@@ -30,7 +34,7 @@ export class SectionsService {
         course: new Types.ObjectId(id),
       },
       {
-        select: '_id sect_title created_at updated_at',
+        select: '_id sect_title sect_order created_at updated_at',
         populate: {
           path: 'course',
           select: '_id crs_title category',
@@ -60,6 +64,7 @@ export class SectionsService {
 
     let data: Partial<Section> = {
       sect_title: addSectionDto.sect_title,
+      sect_order: await this.sectionRepository.nextOrder(course._id),
       course,
     };
 
@@ -92,6 +97,39 @@ export class SectionsService {
       new Types.ObjectId(id),
       editSectionDto,
     );
+  }
+
+  async reorder(
+    courseId: string,
+    ids: string[],
+    authorId: string,
+  ): Promise<Section[]> {
+    const course = await this.courseRepository.findById(
+      new Types.ObjectId(courseId),
+    );
+
+    if (course.author._id.toString() !== authorId) {
+      throw new ForbiddenException(
+        "You can't reorder the sections of a course who don't belong to you",
+      );
+    }
+
+    const sections = await this.sectionRepository.find({ course: course._id });
+    const courseSectionIds = sections.map((section) => section._id.toString());
+    const isSameSet =
+      ids.length === courseSectionIds.length &&
+      new Set(ids).size === ids.length &&
+      ids.every((id) => courseSectionIds.includes(id));
+
+    if (!isSameSet) {
+      throw new BadRequestException(
+        'Ids must contain every section of the course exactly once',
+      );
+    }
+
+    await this.sectionRepository.reorder(course._id, ids);
+
+    return this.findByCourse(courseId);
   }
 
   async delete(id: string, authorId: string): Promise<void> {

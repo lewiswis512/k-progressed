@@ -26,6 +26,7 @@ import { Section } from '../schemas/section.schema';
 import { AuthGuard } from '../../../common/guards/auth.guard';
 import { AddSection } from '../dtos/sections/add-section.dto';
 import { EditSection } from '../dtos/sections/edit-section.dto';
+import { ReorderSections } from '../dtos/sections/reorder-sections.dto';
 
 @Controller('sections')
 export class SectionsController {
@@ -79,6 +80,33 @@ export class SectionsController {
   })
   async add(@Body() addSectionDto: AddSection): Promise<Section> {
     return await this.sectionService.store(addSectionDto);
+  }
+
+  @Patch('course/:courseId/reorder')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @ApiOkResponse({
+    description: 'The sections of the course have been successfully reordered.',
+  })
+  @ApiNotFoundResponse({
+    description: 'The course is not found.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request.',
+  })
+  @ApiForbiddenResponse({
+    description: 'You are not authorized to reorder the sections.',
+  })
+  async reorder(
+    @Param('courseId') courseId: string,
+    @Req() req: any,
+    @Body() reorderSections: ReorderSections,
+  ): Promise<Section[]> {
+    return await this.sectionService.reorder(
+      courseId,
+      reorderSections.ids,
+      req.user.id,
+    );
   }
 
   @Patch(':id')

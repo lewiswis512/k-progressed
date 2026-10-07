@@ -10,6 +10,9 @@ export class Section extends AbstractDocument {
   @Prop({ type: String, required: true, trim: true })
   sect_title: string;
 
+  @Prop({ type: Number, default: 0 })
+  sect_order: number;
+
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Course' })
   course: Course;
 }
