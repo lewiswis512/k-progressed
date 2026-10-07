@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { AbstractDocument } from '../../../common/document/abstract.document';
 import { LevelEnum } from '../../../utils/enums/level.enum';
+import { CourseStatusEnum } from '../../../utils/enums/course-status.enum';
 import { Category } from './category.schema';
 import { User } from '../../../modules/users/schemas/user.schema';
 import { Teacher } from './teachers/teacher.schema';
@@ -25,17 +26,18 @@ export class Course extends AbstractDocument {
   @Prop({ type: Boolean, default: false })
   crs_isPaid: boolean;
 
-  @Prop({ type: Boolean, default: false })
-  crs_isValid: boolean;
+  @Prop({
+    type: Number,
+    enum: CourseStatusEnum,
+    default: CourseStatusEnum.PENDING,
+  })
+  crs_status: CourseStatusEnum;
 
   @Prop({ type: String, default: '' })
   crs_photo: string;
 
   @Prop({ type: Number, enum: LevelEnum })
   level_id: LevelEnum;
-
-  @Prop({ type: Boolean, default: false })
-  crs_isApprouved: boolean;
 
   @Prop({ type: mongoose.Schema.ObjectId, ref: 'User' })
   author: User;

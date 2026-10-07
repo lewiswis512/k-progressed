@@ -58,6 +58,7 @@ export class UpdateCourseService {
     let data: any = {
       ...editCourseDto,
       crs_photo: photoLink,
+      crs_status: course.crs_status,
       category,
     };
 

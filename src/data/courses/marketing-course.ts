@@ -1,4 +1,5 @@
 import { LevelEnum } from '../../utils/enums/level.enum';
+import { CourseStatusEnum } from '../../utils/enums/course-status.enum';
 
 export const MARKETING_COURSE = [
   {
@@ -11,8 +12,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://plus.unsplash.com/premium_photo-1664474834472-6c7d1e3198e2?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     level_id: LevelEnum.ADVANCED,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: 'Créer une marque forte et cohérente',
@@ -24,8 +24,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8JUMzJUE5cXVpcGUlMjBtYXJrZXRpbmd8ZW58MHx8MHx8fDA%3D',
     level_id: LevelEnum.INTERMEDIATE,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: 'Publicité Facebook et Instagram avancée',
@@ -37,8 +36,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://plus.unsplash.com/premium_photo-1661277656560-1b89ee88ad3c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8JUMzJUE5cXVpcGUlMjBtYXJrZXRpbmd8ZW58MHx8MHx8fDA%3D',
     level_id: LevelEnum.ADVANCED,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: 'Email marketing : augmenter l’engagement client',
@@ -50,8 +48,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8JUMzJUE5cXVpcGUlMjBtYXJrZXRpbmd8ZW58MHx8MHx8fDA%3D',
     level_id: LevelEnum.BEGINNER,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: 'SEO : Améliorer le référencement naturel de votre site',
@@ -63,8 +60,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fCVDMyVBOXF1aXBlJTIwbWFya2V0aW5nfGVufDB8fDB8fHww',
     level_id: LevelEnum.ADVANCED,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: "Marketing d'influence : collaborer avec des créateurs",
@@ -76,8 +72,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://images.unsplash.com/photo-1681993302983-96d079223a70?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8JUMzJUE5cXVpcGUlMjBtYXJrZXRpbmd8ZW58MHx8MHx8fDA%3D',
     level_id: LevelEnum.ADVANCED,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: 'Créer une stratégie de contenu gagnante',
@@ -89,8 +84,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://images.unsplash.com/photo-1681993302983-96d079223a70?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8JUMzJUE5cXVpcGUlMjBtYXJrZXRpbmd8ZW58MHx8MHx8fDA%3D',
     level_id: LevelEnum.INTERMEDIATE,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: 'Lancer un produit avec succès grâce au marketing',
@@ -102,8 +96,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://plus.unsplash.com/premium_photo-1661767467261-4a4bed92a507?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fCVDMyVBOXF1aXBlJTIwbWFya2V0aW5nfGVufDB8fDB8fHww',
     level_id: LevelEnum.BEGINNER,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: 'Utiliser Google Analytics pour prendre des décisions marketing',
@@ -115,8 +108,7 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fCVDMyVBOXF1aXBlJTIwbWFya2V0aW5nfGVufDB8fDB8fHww',
     level_id: LevelEnum.INTERMEDIATE,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
   {
     crs_title: 'Growth Hacking : techniques de croissance rapide',
@@ -128,7 +120,6 @@ export const MARKETING_COURSE = [
     crs_photo:
       'https://plus.unsplash.com/premium_photo-1661414415246-3e502e2fb241?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fG1hcmtldGluZ3xlbnwwfHwwfHx8MA%3D%3D',
     level_id: LevelEnum.INTERMEDIATE,
-    crs_isApprouved: true,
-    crs_isValid: true,
+    crs_status: CourseStatusEnum.VALIDATED,
   },
 ];

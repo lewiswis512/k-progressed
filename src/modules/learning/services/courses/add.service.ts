@@ -11,6 +11,7 @@ import { UserRepository } from '../../../../modules/users/repository/user.reposi
 import { CategoryRepository } from '../../repositories/category.repository';
 import { TeacherRepository } from '../../repositories/teacher.repository';
 import { CourseRepository } from '../../repositories/course.repository';
+import { CourseStatusEnum } from '../../../../utils/enums/course-status.enum';
 
 @Injectable()
 export class AddCourseService {
@@ -41,6 +42,7 @@ export class AddCourseService {
     let courseData: Partial<Course> = {
       ...createCourseDto,
       crs_slug: slugify(createCourseDto.crs_title),
+      crs_status: CourseStatusEnum.PENDING,
       author,
       category,
       teacher,

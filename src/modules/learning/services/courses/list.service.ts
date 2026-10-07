@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CourseStatusEnum } from '../../../../utils/enums/course-status.enum';
 import { ICourseWithAverageRating } from '../../../../interfaces/courses/ICourseWithAverageRating';
 import { pagination } from '../../../../utils/pagination';
 import { ICoursePagination } from '../../interfaces/ICoursePagination';
@@ -19,7 +20,7 @@ export class CoursesService {
     limit: number,
   ): Promise<ICoursePagination> {
     const criteria: any = {
-      crs_isValid: true,
+      crs_status: CourseStatusEnum.VALIDATED,
     };
 
     if (keyword) {
