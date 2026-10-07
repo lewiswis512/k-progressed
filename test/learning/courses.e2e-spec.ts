@@ -33,6 +33,8 @@ import { User } from '../../src/modules/users/schemas/user.schema';
 import { Category } from '../../src/modules/learning/schemas/category.schema';
 import { Course } from '../../src/modules/learning/schemas/course.schema';
 import { Teacher } from '../../src/modules/learning/schemas/teachers/teacher.schema';
+import { CourseStatusEnum } from '../../src/utils/enums/course-status.enum';
+import { RoleEnum } from '../../src/utils/enums/role.enum';
 import { createApp } from './setup';
 
 describe('Courses (e2e)', () => {
@@ -43,6 +45,7 @@ describe('Courses (e2e)', () => {
   let courseModel: Model<Course>;
   let teacherModel: Model<Teacher>;
   let accessToken: string;
+  let superAdminToken: string;
   let categoryId: string;
   let teacherId: string;
   let courseId: string;
@@ -51,6 +54,12 @@ describe('Courses (e2e)', () => {
   const testUser = {
     usr_username: 'courses_e2e',
     usr_email: 'courses_e2e@test.com',
+    usr_password: 'Password123',
+  };
+
+  const superAdminUser = {
+    usr_username: 'courses_super_e2e',
+    usr_email: 'courses_super_e2e@test.com',
     usr_password: 'Password123',
   };
 
@@ -63,7 +72,9 @@ describe('Courses (e2e)', () => {
     courseModel = moduleRef.get(getModelToken(Course.name));
     teacherModel = moduleRef.get(getModelToken(Teacher.name));
 
-    await userModel.deleteMany({ usr_email: testUser.usr_email });
+    await userModel.deleteMany({
+      usr_email: { $in: [testUser.usr_email, superAdminUser.usr_email] },
+    });
     const signupRes = await request(app.getHttpServer()).post('/api/signup').send(testUser);
     userId = signupRes.body._id;
 
@@ -71,6 +82,16 @@ describe('Courses (e2e)', () => {
       .post('/api/login')
       .send({ usr_email: testUser.usr_email, usr_password: testUser.usr_password });
     accessToken = loginRes.body.accessToken;
+
+    await request(app.getHttpServer()).post('/api/signup').send(superAdminUser);
+    await userModel.updateOne(
+      { usr_email: superAdminUser.usr_email },
+      { usr_role: RoleEnum.SUPERADMIN },
+    );
+    const superLoginRes = await request(app.getHttpServer())
+      .post('/api/login')
+      .send({ usr_email: superAdminUser.usr_email, usr_password: superAdminUser.usr_password });
+    superAdminToken = superLoginRes.body.accessToken;
 
     const catRes = await request(app.getHttpServer())
       .post('/api/categories')
@@ -89,7 +110,9 @@ describe('Courses (e2e)', () => {
     if (courseId) await courseModel.findByIdAndDelete(courseId);
     if (teacherId) await teacherModel.findByIdAndDelete(teacherId);
     if (categoryId) await categoryModel.findByIdAndDelete(categoryId);
-    await userModel.deleteMany({ usr_email: testUser.usr_email });
+    await userModel.deleteMany({
+      usr_email: { $in: [testUser.usr_email, superAdminUser.usr_email] },
+    });
     await app.close();
   });
 
@@ -105,11 +128,13 @@ describe('Courses (e2e)', () => {
         .field('level_id', '1')
         .field('category_id', categoryId)
         .field('teacher_id', teacherId)
+        .field('crs_status', String(CourseStatusEnum.VALIDATED))
         .attach('file', fakeImage, { filename: 'course.jpg', contentType: 'image/jpeg' })
         .expect(201);
 
       courseId = res.body._id;
       expect(res.body.crs_title).toBe('E2E Course');
+      expect(res.body.crs_status).toBe(CourseStatusEnum.PENDING);
       expect(res.body.crs_photo).toBe('https://res.cloudinary.com/test/image/upload/test.jpg');
     });
 
@@ -188,6 +213,101 @@ describe('Courses (e2e)', () => {
     });
   });
 
+  describe('validate a course', () => {
+    it('should hide a pending course from the public list', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/courses?q=E2E Course')
+        .expect(200);
+
+      expect(res.body.data.some((c: any) => c.course._id === courseId)).toBe(false);
+    });
+
+    it('should return 401 on the admin list without a token', async () => {
+      await request(app.getHttpServer()).get('/api/courses/admin').expect(401);
+    });
+
+    it('should return 403 on the admin list for a non super admin', async () => {
+      await request(app.getHttpServer())
+        .get('/api/courses/admin')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(403);
+    });
+
+    it('should list every course for the super admin with search and pagination', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/courses/admin?q=E2E Course&page=1&limit=5')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .expect(200);
+
+      expect(res.body).toMatchObject({ page: 1, limit: 5 });
+      expect(res.body.total).toBeGreaterThanOrEqual(1);
+      const course = res.body.data.find((c: any) => c._id === courseId);
+      expect(course.crs_status).toBe(CourseStatusEnum.PENDING);
+      expect(course.author.usr_username).toBe(testUser.usr_username);
+      expect(course.author).not.toHaveProperty('usr_password');
+      expect(course.category.ctgr_name).toBe('Courses E2E Category');
+    });
+
+    it('should find the course by author name', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/courses/admin?q=${testUser.usr_username}`)
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .expect(200);
+
+      expect(res.body.data.some((c: any) => c._id === courseId)).toBe(true);
+    });
+
+    it('should return 400 for an invalid status filter', async () => {
+      await request(app.getHttpServer())
+        .get('/api/courses/admin?status=9')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .expect(400);
+    });
+
+    it('should return 403 when a non super admin changes the status', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/courses/${courseId}/status`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ crs_status: CourseStatusEnum.VALIDATED })
+        .expect(403);
+    });
+
+    it('should return 400 for an invalid status', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/courses/${courseId}/status`)
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ crs_status: 7 })
+        .expect(400);
+    });
+
+    it('should validate the course', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/courses/${courseId}/status`)
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ crs_status: CourseStatusEnum.VALIDATED })
+        .expect(200);
+
+      expect(res.body.crs_status).toBe(CourseStatusEnum.VALIDATED);
+    });
+
+    it('should show the validated course in the public list', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/courses?q=E2E Course&limit=50')
+        .expect(200);
+
+      expect(res.body.data.some((c: any) => c.course._id === courseId)).toBe(true);
+    });
+
+    it('should filter the admin list by status', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/courses/admin?q=E2E Course&status=${CourseStatusEnum.PENDING}`)
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .expect(200);
+
+      expect(res.body.data.some((c: any) => c._id === courseId)).toBe(false);
+    });
+  });
+
   describe('update a course', () => {
     it('should update the course details', async () => {
       const res = await request(app.getHttpServer())
@@ -198,9 +318,11 @@ describe('Courses (e2e)', () => {
         .field('crs_price', '39.99')
         .field('level_id', '2')
         .field('category_id', categoryId)
+        .field('crs_status', String(CourseStatusEnum.REJECTED))
         .expect(200);
 
       expect(res.body.crs_title).toBe('E2E Course Updated');
+      expect(res.body.crs_status).toBe(CourseStatusEnum.VALIDATED);
     });
 
     it('should return 401 without a token', async () => {

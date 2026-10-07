@@ -20,6 +20,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -27,13 +28,21 @@ import {
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 import { ImageFile } from '../../../common/decorators/image-file.decorator';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { AuthGuard } from '../../../common/guards/auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { RoleEnum } from '../../../utils/enums/role.enum';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { ICourseWithAverageRating } from '../../../interfaces/courses/ICourseWithAverageRating';
 import { PaginationDto } from '../../../shared/pagination/pagination.dto';
 import { SearchDto } from '../../../shared/search/search.dto';
 import { CreateCourse } from '../dtos/courses/create-course.dto';
 import { EditCourse } from '../dtos/courses/edit-course.dto';
+import { CourseStatusFilter } from '../dtos/courses/course-status-filter.dto';
+import { UpdateCourseStatus } from '../dtos/courses/update-course-status.dto';
+import { IAdminCoursePagination } from '../interfaces/IAdminCoursePagination';
+import { AdminCoursesService } from '../services/courses/list-admin.service';
+import { UpdateCourseStatusService } from '../services/courses/update-status.service';
 import { ICoursePagination } from '../interfaces/ICoursePagination';
 import { Course } from '../schemas/course.schema';
 import { CourseContentService } from '../services/courses/get-content.service';
@@ -56,6 +65,8 @@ export class CoursesController {
     private addCourseService: AddCourseService,
     private updateCourseService: UpdateCourseService,
     private deleteCourseService: DeleteCourseService,
+    private adminCoursesService: AdminCoursesService,
+    private updateCourseStatusService: UpdateCourseStatusService,
   ) {}
 
   @Get()
@@ -69,6 +80,29 @@ export class CoursesController {
     const { page, limit } = pagination;
 
     return await this.coursesService.get(search.q, page, limit);
+  }
+
+  @Get('admin')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(RoleEnum.SUPERADMIN)
+  @ApiOkResponse({
+    description: 'All courses of every author, searchable and paginated.',
+  })
+  @ApiForbiddenResponse({ description: 'Super admin role required.' })
+  async listForAdmin(
+    @Query() search: SearchDto,
+    @Query() pagination: PaginationDto,
+    @Query() filter: CourseStatusFilter,
+  ): Promise<IAdminCoursePagination> {
+    const { page, limit } = pagination;
+
+    return await this.adminCoursesService.get(
+      search.q,
+      page,
+      limit,
+      filter.status,
+    );
   }
 
   @Get('by/:authorId')
@@ -154,6 +188,28 @@ export class CoursesController {
       req.user.id,
       createCourseDto,
       file,
+    );
+  }
+
+  @Patch(':id/status')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(RoleEnum.SUPERADMIN)
+  @ApiOkResponse({
+    description: 'The course status has been successfully updated.',
+  })
+  @ApiNotFoundResponse({
+    description: 'The course is not found.',
+  })
+  @ApiBadRequestResponse({ description: 'Bad request.' })
+  @ApiForbiddenResponse({ description: 'Super admin role required.' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() updateCourseStatus: UpdateCourseStatus,
+  ): Promise<Course> {
+    return await this.updateCourseStatusService.update(
+      id,
+      updateCourseStatus.crs_status,
     );
   }
 

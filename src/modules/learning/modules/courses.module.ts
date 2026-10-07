@@ -31,6 +31,8 @@ import { SectionsModule } from './sections.module';
 import { TeachersModule } from './teachers.module';
 import { AuthModule } from '../../auth/auth.module';
 import { GetCourseWithRatingService } from '../services/courses/get-one-with-rating.service';
+import { AdminCoursesService } from '../services/courses/list-admin.service';
+import { UpdateCourseStatusService } from '../services/courses/update-status.service';
 
 @Module({
   imports: [
@@ -61,6 +63,8 @@ import { GetCourseWithRatingService } from '../services/courses/get-one-with-rat
     AddCourseService,
     UpdateCourseService,
     DeleteCourseService,
+    AdminCoursesService,
+    UpdateCourseStatusService,
     CloudinaryUploadStrategy,
     CourseRepository,
     CommentRepository,
