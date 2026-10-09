@@ -33,6 +33,7 @@ import { AuthModule } from '../../auth/auth.module';
 import { GetCourseWithRatingService } from '../services/courses/get-one-with-rating.service';
 import { AdminCoursesService } from '../services/courses/list-admin.service';
 import { UpdateCourseStatusService } from '../services/courses/update-status.service';
+import { CourseAccessService } from '../../../common/access/course-access.service';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { UpdateCourseStatusService } from '../services/courses/update-status.ser
     CommentRepository,
     PurchaseRepository,
     UserRepository,
+    CourseAccessService,
   ],
   exports: [
     GetCoursesWithRatingService,

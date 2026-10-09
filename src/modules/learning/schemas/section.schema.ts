@@ -18,3 +18,5 @@ export class Section extends AbstractDocument {
 }
 
 export const SectionSchema = SchemaFactory.createForClass(Section);
+
+SectionSchema.index({ course: 1, sect_order: 1 });

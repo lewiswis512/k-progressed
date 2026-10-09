@@ -1,10 +1,11 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
+import {
+  CourseAccessService,
+  IAccessUser,
+} from '../../../common/access/course-access.service';
 import { CourseRepository } from '../../../modules/learning/repositories/course.repository';
+import { deleteLessonMedia } from '../../../utils/uploads/delete-lesson-media';
 import { AddSection } from '../dtos/sections/add-section.dto';
 import { EditSection } from '../dtos/sections/edit-section.dto';
 import { LessonRepository } from '../repositories/lesson.repository';
@@ -14,10 +15,13 @@ import { Section } from '../schemas/section.schema';
 
 @Injectable()
 export class SectionsService {
+  private readonly logger = new Logger(SectionsService.name);
+
   constructor(
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
     private courseRepository: CourseRepository,
+    private courseAccessService: CourseAccessService,
   ) {}
 
   async findAll(): Promise<Section[]> {
@@ -47,72 +51,65 @@ export class SectionsService {
     );
   }
 
-  async getLessons(id: string): Promise<Lesson[]> {
-    await this.findById(id);
-
-    const lessons = await this.lessonRepository.find({
-      section: id,
-    });
-
-    return lessons;
-  }
-
-  async store(addSectionDto: AddSection): Promise<Section> {
-    const course = await this.courseRepository.findById(
-      new Types.ObjectId(String(addSectionDto.course_id)),
+  async assertSectionManager(
+    sectionId: string,
+    user: IAccessUser,
+  ): Promise<Section> {
+    const section = await this.sectionRepository.findById(
+      new Types.ObjectId(sectionId),
+      { populate: { path: 'course', select: '_id author' } },
     );
 
-    let data: Partial<Section> = {
+    this.courseAccessService.assertCanManage(user, section.course);
+
+    return section;
+  }
+
+  async getLessons(id: string, user: IAccessUser): Promise<Lesson[]> {
+    await this.assertSectionManager(id, user);
+
+    return this.lessonRepository.find({
+      section: new Types.ObjectId(id),
+    });
+  }
+
+  async store(addSectionDto: AddSection, user: IAccessUser): Promise<Section> {
+    const course = await this.courseRepository.findById(
+      new Types.ObjectId(addSectionDto.course_id),
+    );
+
+    this.courseAccessService.assertCanManage(user, course);
+
+    return await this.sectionRepository.create({
       sect_title: addSectionDto.sect_title,
       sect_order: await this.sectionRepository.nextOrder(course._id),
       course,
-    };
-
-    return await this.sectionRepository.create(data);
-  }
-
-  async isSectionAuthor(sectionId: string, authorId: string) {
-    const section = await this.sectionRepository.findById(
-      new Types.ObjectId(sectionId),
-    );
-    const course = await this.courseRepository.findById(section.course._id);
-
-    if (course.author._id.toString() !== authorId) {
-      throw new ForbiddenException(
-        "You can't update a section who don't belong to you",
-      );
-    }
+    });
   }
 
   async update(
     id: string,
     editSectionDto: EditSection,
-    authorId: string,
+    user: IAccessUser,
   ): Promise<Section> {
-    const section: Section = await this.findById(id);
+    await this.assertSectionManager(id, user);
 
-    this.isSectionAuthor(section._id.toString(), authorId);
-
-    return this.sectionRepository.findByIdAndUpdate(
-      new Types.ObjectId(id),
-      editSectionDto,
-    );
+    return this.sectionRepository.findByIdAndUpdate(new Types.ObjectId(id), {
+      sect_title: editSectionDto.sect_title,
+      updated_at: new Date(),
+    });
   }
 
   async reorder(
     courseId: string,
     ids: string[],
-    authorId: string,
+    user: IAccessUser,
   ): Promise<Section[]> {
     const course = await this.courseRepository.findById(
       new Types.ObjectId(courseId),
     );
 
-    if (course.author._id.toString() !== authorId) {
-      throw new ForbiddenException(
-        "You can't reorder the sections of a course who don't belong to you",
-      );
-    }
+    this.courseAccessService.assertCanManage(user, course);
 
     const sections = await this.sectionRepository.find({ course: course._id });
     const courseSectionIds = sections.map((section) => section._id.toString());
@@ -132,19 +129,30 @@ export class SectionsService {
     return this.findByCourse(courseId);
   }
 
-  async delete(id: string, authorId: string): Promise<void> {
-    const section = await this.findById(id);
-
-    this.isSectionAuthor(section._id.toString(), authorId);
-
-    const lessons: Lesson[] = await this.lessonRepository.find({
-      'section._id': new Types.ObjectId(section._id),
-    });
-
-    if (lessons.length > 0) {
-      this.lessonRepository.deleteMany(lessons);
+  async deleteWithLessons(sectionIds: Types.ObjectId[]): Promise<void> {
+    if (sectionIds.length === 0) {
+      return;
     }
 
-    await this.sectionRepository.findByIdAndDelete(new Types.ObjectId(id));
+    const lessons: Lesson[] = await this.lessonRepository.find({
+      section: { $in: sectionIds },
+    });
+
+    await Promise.all(
+      lessons.map((lesson) =>
+        deleteLessonMedia(lesson).catch((error) =>
+          this.logger.error('Failed to delete the lesson media', error?.stack),
+        ),
+      ),
+    );
+
+    await this.lessonRepository.deleteMany({ section: { $in: sectionIds } });
+    await this.sectionRepository.deleteMany({ _id: { $in: sectionIds } });
+  }
+
+  async delete(id: string, user: IAccessUser): Promise<void> {
+    const section = await this.assertSectionManager(id, user);
+
+    await this.deleteWithLessons([section._id]);
   }
 }

@@ -1,69 +1,49 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { AddLesson } from '../../dtos/lessons/add-lesson.dto';
 import {
-  PATH_LESSON_PHOTOS_CLOUDINARY,
-  PATH_UPLOAD_LESSON_VIDEOS,
-} from '../../../../utils/constants/uploads/path-upload';
-import { videoLink } from '../../../../utils/uploads/video-link';
+  CourseAccessService,
+  IAccessUser,
+} from '../../../../common/access/course-access.service';
+import { AddLesson } from '../../dtos/lessons/add-lesson.dto';
+import { PATH_LESSONS_CLOUDINARY } from '../../../../utils/constants/uploads/path-upload';
 import { SectionRepository } from '../../repositories/section.repository';
 import { LessonRepository } from '../../repositories/lesson.repository';
-import {
-  getMinuteAndSecond,
-  getSecond,
-  getVideoDuration,
-} from '../../../../utils/times/duration';
+import { formatLessonDuration } from '../../../../utils/times/duration';
 import { VideoUploadStrategy } from '../../../../utils/uploads/video-upload-strategy';
 import { CloudinaryVideoUploadStrategy } from '../../../../utils/uploads/cloudinary-video-upload-strategy';
-import { ScreenShot } from '../../../../utils/uploads/take-screen-shot';
+import { Lesson } from '../../schemas/lesson.schema';
 
 @Injectable()
 export class AddLessonService {
   constructor(
     private sectionRepository: SectionRepository,
     private lessonRepository: LessonRepository,
+    private courseAccessService: CourseAccessService,
   ) {}
 
-  async store(addLesson: AddLesson, file: Express.Multer.File): Promise<any> {
-    const videoUploadStrategy = new VideoUploadStrategy(
-      new CloudinaryVideoUploadStrategy(),
-    );
-
-    let { path: videoPath } = await videoUploadStrategy.upload(
-      file,
-      PATH_UPLOAD_LESSON_VIDEOS,
-    );
-
-    const lessonPhotoFilename: string = await new ScreenShot().takeFrom(
-      videoLink(videoPath),
-      PATH_LESSON_PHOTOS_CLOUDINARY,
-    );
-
+  async store(
+    addLesson: AddLesson,
+    file: Express.Multer.File,
+    user: IAccessUser,
+  ): Promise<Lesson> {
     const section = await this.sectionRepository.findById(
       new Types.ObjectId(addLesson.section_id),
+      { populate: { path: 'course', select: '_id author' } },
     );
 
-    let videoDuration = 0;
+    this.courseAccessService.assertCanManage(user, section.course);
 
-    if (videoPath.startsWith('https') || videoPath.startsWith('http')) {
-      videoDuration = await getVideoDuration(videoPath);
-    } else {
-      videoDuration = await getVideoDuration(
-        `${PATH_UPLOAD_LESSON_VIDEOS}/${videoPath}`,
-      );
-    }
+    const video = await new VideoUploadStrategy(
+      new CloudinaryVideoUploadStrategy(),
+    ).upload(file, PATH_LESSONS_CLOUDINARY);
 
-    let data = {
-      ...addLesson,
+    return await this.lessonRepository.create({
+      lssn_title: addLesson.lssn_title,
+      lssn_is_free: addLesson.lssn_is_free,
       section,
-      lssn_video_link: videoPath,
-      lssn_video_photo: lessonPhotoFilename,
-      lssn_duration:
-        videoDuration !== 0 && videoDuration >= 60
-          ? getMinuteAndSecond(videoDuration)
-          : (getSecond(videoDuration) as string),
-    };
-
-    return await this.lessonRepository.create(data);
+      lssn_video_link: video.path,
+      lssn_video_photo: video.thumbnail,
+      lssn_duration: formatLessonDuration(video.duration),
+    });
   }
 }

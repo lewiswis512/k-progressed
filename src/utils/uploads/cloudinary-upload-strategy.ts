@@ -1,7 +1,7 @@
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import * as dotenv from 'dotenv';
 import { PhotoUploadStrategy } from './photo-upload-strategy';
-import * as _ffmpeg from 'fluent-ffmpeg';
+import { cloudinaryPublicIdFromUrl } from './cloudinary-public-id';
 import { Readable } from 'stream';
 
 dotenv.config();
@@ -17,7 +17,7 @@ export class CloudinaryUploadStrategy implements PhotoUploadStrategy {
     try {
       const result: UploadApiResponse = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
-          { destination, resource_type: 'image' },
+          { folder: destination, resource_type: 'image' },
           (error, result) => {
             if (error) return reject(error);
             resolve(result);
@@ -29,7 +29,6 @@ export class CloudinaryUploadStrategy implements PhotoUploadStrategy {
 
       return result.secure_url;
     } catch (error) {
-      console.error('Cloudinary upload error:', error);
       throw new Error('Cloudinary upload failed');
     }
   }
@@ -38,16 +37,11 @@ export class CloudinaryUploadStrategy implements PhotoUploadStrategy {
     try {
       await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
     } catch (error) {
-      console.error('Cloudinary delete error:', error);
       throw new Error('Cloudinary delete failed');
     }
   }
 
   getPublicIdFromUrl(url: string): string {
-    const urlSpitted = url.split('/');
-    const uploadFolder = urlSpitted[urlSpitted.length - 2];
-    const filename = urlSpitted[urlSpitted.length - 1].split('.')[0];
-
-    return `${uploadFolder}/${filename}`;
+    return cloudinaryPublicIdFromUrl(url);
   }
 }

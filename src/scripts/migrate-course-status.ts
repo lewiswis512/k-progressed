@@ -1,10 +1,14 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
+import {
+  Course,
+  CourseSchema,
+} from '../modules/learning/schemas/course.schema';
 import { CourseStatusEnum } from '../utils/enums/course-status.enum';
 
 const migrate = async (): Promise<void> => {
   await mongoose.connect(process.env.MONGO_URI);
-  const courses = mongoose.connection.collection('courses');
+  const courses = mongoose.model(Course.name, CourseSchema);
 
   const validated = await courses.updateMany(
     { crs_status: { $exists: false }, crs_isValid: true },
@@ -24,6 +28,7 @@ const migrate = async (): Promise<void> => {
       ],
     },
     { $unset: { crs_isValid: '', crs_isApprouved: '' } },
+    { strict: false },
   );
 
   console.log(`Validated: ${validated.modifiedCount}`);

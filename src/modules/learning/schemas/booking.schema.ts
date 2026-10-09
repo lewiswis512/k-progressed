@@ -28,6 +28,24 @@ export class Booking extends AbstractDocument {
   @Prop({ type: String })
   bkng_payment_intent_id?: string;
 
+  @Prop({ type: Date })
+  bkng_starts_at?: Date;
+
+  @Prop({ type: Number })
+  bkng_amount?: number;
+
+  @Prop({ type: String })
+  bkng_meeting_url?: string;
+
+  @Prop({ type: Date })
+  bkng_cancelled_at?: Date;
+
+  @Prop({ type: String })
+  bkng_cancelled_by?: 'booker' | 'teacher' | 'admin' | 'system';
+
+  @Prop({ type: Boolean, default: false })
+  bkng_refunded?: boolean;
+
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Teacher',
@@ -50,3 +68,4 @@ BookingSchema.index(
     partialFilterExpression: { bkng_status: BookingStatusEnum.CONFIRMED },
   },
 );
+BookingSchema.index({ booker: 1, bkng_starts_at: -1 });

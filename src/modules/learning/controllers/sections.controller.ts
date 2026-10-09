@@ -27,6 +27,7 @@ import { AuthGuard } from '../../../common/guards/auth.guard';
 import { AddSection } from '../dtos/sections/add-section.dto';
 import { EditSection } from '../dtos/sections/edit-section.dto';
 import { ReorderSections } from '../dtos/sections/reorder-sections.dto';
+import { AuthenticatedRequest } from '../../../common/auth/authenticated-request';
 
 @Controller('sections')
 export class SectionsController {
@@ -68,8 +69,11 @@ export class SectionsController {
   @ApiNotFoundResponse({
     description: 'The section is not found.',
   })
-  async getLessons(@Param('id') id: string): Promise<Lesson[]> {
-    return await this.sectionService.getLessons(id);
+  async getLessons(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Lesson[]> {
+    return await this.sectionService.getLessons(id, req.user);
   }
 
   @Post()
@@ -78,8 +82,11 @@ export class SectionsController {
   @ApiCreatedResponse({
     description: 'The section has been successfully created.',
   })
-  async add(@Body() addSectionDto: AddSection): Promise<Section> {
-    return await this.sectionService.store(addSectionDto);
+  async add(
+    @Body() addSectionDto: AddSection,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Section> {
+    return await this.sectionService.store(addSectionDto, req.user);
   }
 
   @Patch('course/:courseId/reorder')
@@ -99,13 +106,13 @@ export class SectionsController {
   })
   async reorder(
     @Param('courseId') courseId: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() reorderSections: ReorderSections,
   ): Promise<Section[]> {
     return await this.sectionService.reorder(
       courseId,
       reorderSections.ids,
-      req.user.id,
+      req.user,
     );
   }
 
@@ -126,10 +133,10 @@ export class SectionsController {
   })
   async update(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() editSection: EditSection,
   ): Promise<Section> {
-    return await this.sectionService.update(id, editSection, req.user.id);
+    return await this.sectionService.update(id, editSection, req.user);
   }
 
   @Delete(':id')
@@ -139,7 +146,10 @@ export class SectionsController {
   @ApiNoContentResponse({
     description: 'The section have been successfully deleted.',
   })
-  async delete(@Param('id') id: string, @Req() req: any): Promise<void> {
-    await this.sectionService.delete(id, req.user.id);
+  async delete(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
+    await this.sectionService.delete(id, req.user);
   }
 }

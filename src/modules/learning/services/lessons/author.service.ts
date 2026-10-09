@@ -1,10 +1,14 @@
 import { ForbiddenException } from '@nestjs/common';
+import { RoleEnum } from '../../../../utils/enums/role.enum';
 
 export class AuthorLessonService {
-  static isAuthor(lessonAuthorId: string, authorId: string) {
-    if (lessonAuthorId !== authorId) {
+  static isAuthor(
+    lessonAuthorId: string,
+    user: { id: string; role?: RoleEnum },
+  ) {
+    if (lessonAuthorId !== user.id && user.role !== RoleEnum.SUPERADMIN) {
       throw new ForbiddenException(
-        "You can't delete a lesson that doesn't belong to you",
+        "You can't manage a lesson that doesn't belong to you",
       );
     }
   }

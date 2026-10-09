@@ -12,6 +12,14 @@ import { SectionRepository } from '../repositories/section.repository';
 import { Lesson, LessonSchema } from '../schemas/lesson.schema';
 import { Section, SectionSchema } from '../schemas/section.schema';
 import { SectionsService } from '../services/sections.service';
+import { CourseAccessService } from '../../../common/access/course-access.service';
+import { User, UserSchema } from '../../users/schemas/user.schema';
+import { UserRepository } from '../../users/repository/user.repository';
+import {
+  Purchase,
+  PurchaseSchema,
+} from '../../purchases/schemas/purchase.schema';
+import { PurchaseRepository } from '../../purchases/repository/purchase.repository';
 
 @Module({
   imports: [
@@ -20,6 +28,8 @@ import { SectionsService } from '../services/sections.service';
       { name: Section.name, schema: SectionSchema },
       { name: Lesson.name, schema: LessonSchema },
       { name: Course.name, schema: CourseSchema },
+      { name: User.name, schema: UserSchema },
+      { name: Purchase.name, schema: PurchaseSchema },
     ]),
   ],
   controllers: [SectionsController],
@@ -28,7 +38,10 @@ import { SectionsService } from '../services/sections.service';
     SectionRepository,
     LessonRepository,
     CourseRepository,
+    CourseAccessService,
+    UserRepository,
+    PurchaseRepository,
   ],
-  exports: [SectionRepository],
+  exports: [SectionRepository, SectionsService],
 })
 export class SectionsModule {}

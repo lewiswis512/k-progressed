@@ -1,7 +1,7 @@
 import { AbstractRepository } from '../../../common/repository/abstract.repository';
 import { Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { FilterQuery, Model, PopulateOptions, Types } from 'mongoose';
 import { Section } from '../schemas/section.schema';
 
 export class SectionRepository extends AbstractRepository<Section> {
@@ -13,7 +13,10 @@ export class SectionRepository extends AbstractRepository<Section> {
 
   async find(
     filterQuery?: FilterQuery<Section>,
-    options?: { select?: string; populate?: any },
+    options?: {
+      select?: string;
+      populate?: PopulateOptions | (PopulateOptions | string)[];
+    },
   ): Promise<Section[]> {
     let query = this.sectionModel.find(filterQuery);
 

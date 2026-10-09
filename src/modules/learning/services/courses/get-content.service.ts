@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { ICourseContents } from '../../../../interfaces/courses/ICourseContents';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
 import { LessonRepository } from '../../repositories/lesson.repository';
 import { SectionRepository } from '../../repositories/section.repository';
-import { Section } from '../../schemas/section.schema';
+import { Lesson } from '../../schemas/lesson.schema';
 import { GetCourseByIdService } from './get-by-id.service';
 
 @Injectable()
@@ -17,78 +16,63 @@ export class CourseContentService {
 
   async get(
     courseId: string,
-    isFree: boolean,
+    includeVideoLinks: boolean,
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
     const course = await this.getCourseByIdService.byId(courseId);
-    const sections = await this.getCourseSections(course);
+    const sections = await this.sectionRepository.find({ course: course._id });
+    const lessons = await this.lessonRepository.findInCourseOrder({
+      section: { $in: sections.map((section) => section._id) },
+    });
 
-    let totalLessons = 0;
     let totalDurationSeconds = 0;
 
-    const courseContents: ICourseContents[] = await Promise.all(
-      sections.map(async (section) => {
-        const lessonsInSection = await this.getLessonsForSection(section);
-        totalLessons += lessonsInSection.length;
+    const courseContents: ICourseContents[] = sections.map((section) => {
+      const lessonsInSection = lessons.filter(
+        (lesson) => String(lesson.section) === String(section._id),
+      );
+      const lessonsWithDuration = this.mapLessons(
+        lessonsInSection,
+        includeVideoLinks,
+      );
+      const sectionDurationSeconds = this.calculateTotalSeconds(
+        lessonsWithDuration.map((l) => l.lssn_duration_in_min_sec),
+      );
 
-        const lessonsWithDuration = this.mapLessons(lessonsInSection, isFree);
-        const sectionDurationSeconds = this.calculateTotalSeconds(
-          lessonsWithDuration.map((l) => l.lssn_duration_in_min_sec),
-        );
+      totalDurationSeconds += sectionDurationSeconds;
 
-        totalDurationSeconds += sectionDurationSeconds;
-
-        return {
-          section,
-          lessons: lessonsWithDuration,
-          countLesson: lessonsInSection.length,
-          countDurationInMinute: this.formatDuration(sectionDurationSeconds),
-        };
-      }),
-    );
+      return {
+        section,
+        lessons: lessonsWithDuration,
+        countLesson: lessonsInSection.length,
+        countDurationInMinute: this.formatDuration(sectionDurationSeconds),
+      };
+    });
 
     return {
       courseContents,
       totalSections: sections.length,
-      totalLessons,
+      totalLessons: lessons.length,
       totalDuration: this.formatDuration(totalDurationSeconds),
     };
   }
 
-  private async getCourseSections(course: any) {
-    return this.sectionRepository.find({
-      course: {
-        _id: course._id,
-        author: course.teacher.author,
-      },
-    });
-  }
-
-  private async getLessonsForSection(section: any) {
-    const sectionDoc = await this.sectionRepository.findById(
-      new Types.ObjectId(String(section._id)),
-    );
-
-    return this.getSectionLessons(sectionDoc);
-  }
-
-  private async getSectionLessons(sectionDoc: Section) {
-    return await this.lessonRepository.find({
-      section: sectionDoc._id,
-    });
-  }
-
-  private mapLessons(lessons: any[], isFree: boolean) {
+  private mapLessons(lessons: Lesson[], includeVideoLinks: boolean) {
     return lessons.map((lesson) => ({
       _id: lesson._id,
       lssn_title: lesson.lssn_title,
       lssn_is_free: lesson.lssn_is_free,
-      lssn_video_link: isFree ? lesson.lssn_video_link : '',
+      lssn_video_link:
+        includeVideoLinks || lesson.lssn_is_free ? lesson.lssn_video_link : '',
       lssn_duration_in_min_sec: lesson.lssn_duration,
     }));
   }
 
   private calculateTotalSeconds(durations: (string | number)[]): number {
     return durations.reduce<number>((total, time) => {
+      if (time === null || time === undefined) {
+        return total;
+      }
+
       if (typeof time === 'number') {
         return total + Math.round(time);
       }

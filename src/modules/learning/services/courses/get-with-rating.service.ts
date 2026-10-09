@@ -16,6 +16,8 @@ export class GetCoursesWithRatingService {
     const courseIds: string[] = courses.map((course) => course._id.toString());
     const comments: Comment[] = await this.commentRepository.find({
       course: { $in: courseIds },
+      parent_comment: null,
+      comm_rating: { $ne: null },
     });
 
     const commentsByCourse: Record<string, Comment[]> = comments.reduce<

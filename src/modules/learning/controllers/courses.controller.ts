@@ -27,9 +27,12 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
+import { MAX_SIZE_IN_BYTES_UPLOAD_PHOTO } from '../../../utils/constants/uploads/max-size-upload';
 import { ImageFile } from '../../../common/decorators/image-file.decorator';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { AuthGuard } from '../../../common/guards/auth.guard';
+import { CourseAccessService } from '../../../common/access/course-access.service';
+import { PublicCourseFilter } from '../dtos/courses/public-course-filter.dto';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { RoleEnum } from '../../../utils/enums/role.enum';
 import { ICourseContentsWithTotalSectionsLessonsDuration } from '../../../interfaces/courses/ICourseContentsWithTotalSectionsLessonsDuration';
@@ -53,6 +56,7 @@ import { UpdateCourseService } from '../services/courses/update.service';
 import { CoursesByAuthorService } from '../services/courses/get-by-author.service';
 import { AddCourseService } from '../services/courses/add.service';
 import { GetCoursesBySlugService } from '../services/courses/get-by-slug.service';
+import { AuthenticatedRequest } from '../../../common/auth/authenticated-request';
 
 @Controller('courses')
 export class CoursesController {
@@ -67,6 +71,7 @@ export class CoursesController {
     private deleteCourseService: DeleteCourseService,
     private adminCoursesService: AdminCoursesService,
     private updateCourseStatusService: UpdateCourseStatusService,
+    private courseAccessService: CourseAccessService,
   ) {}
 
   @Get()
@@ -76,10 +81,16 @@ export class CoursesController {
   async list(
     @Query() search: SearchDto,
     @Query() pagination: PaginationDto,
+    @Query() filter: PublicCourseFilter,
   ): Promise<ICoursePagination> {
     const { page, limit } = pagination;
 
-    return await this.coursesService.get(search.q, page, limit);
+    return await this.coursesService.get(search.q, page, limit, {
+      category: filter.category,
+      level: filter.level,
+      price: filter.price,
+      sort: filter.sort,
+    });
   }
 
   @Get('admin')
@@ -106,25 +117,34 @@ export class CoursesController {
   }
 
   @Get('by/:authorId')
+  @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The courses have been successfully retrieved.',
   })
-  async byAuthor(@Param('authorId') authorId: string): Promise<Course[]> {
-    return await this.coursesByAuthorService.byAuthor(authorId);
+  async byAuthor(
+    @Param('authorId') authorId: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Course[]> {
+    return await this.coursesByAuthorService.byAuthor(authorId, req.user);
   }
 
   @Get('show/:id')
+  @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The course have been successfully retrieved.',
   })
   @ApiNotFoundResponse({
     description: 'The course is not found.',
   })
-  async showById(@Param('id') id: string): Promise<Course> {
-    return await this.getCourseByIdService.byId(id);
+  async showById(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Course> {
+    return await this.getCourseByIdService.visibleById(id, req.user);
   }
 
   @Get('view/:slug')
+  @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The course have been successfully retrieved.',
   })
@@ -133,11 +153,13 @@ export class CoursesController {
   })
   async viewBySlug(
     @Param('slug') slug: string,
+    @Req() req: AuthenticatedRequest,
   ): Promise<ICourseWithAverageRating> {
-    return await this.getCoursesBySlugService.findBy(slug);
+    return await this.getCoursesBySlugService.findBy(slug, req.user);
   }
 
   @Get('contents/:id')
+  @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The course content have been successfully retrieved.',
   })
@@ -146,11 +168,16 @@ export class CoursesController {
   })
   async contents(
     @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
+    await this.getCourseByIdService.visibleById(id, req.user);
+
     return this.courseContentService.get(id, false);
   }
 
   @Get('view-lessons/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The lessons content have been successfully retrieved.',
   })
@@ -159,14 +186,25 @@ export class CoursesController {
   })
   async viewLessons(
     @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
   ): Promise<ICourseContentsWithTotalSectionsLessonsDuration> {
+    const course = await this.getCourseByIdService.visibleById(id, req.user);
+
+    await this.courseAccessService.assertAccess(req.user, course);
+
     return this.courseContentService.get(id, true);
   }
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPERADMIN)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_SIZE_IN_BYTES_UPLOAD_PHOTO },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse({
     description: 'The course has been successfully created.',
@@ -179,7 +217,7 @@ export class CoursesController {
     description: 'File is required.',
   })
   async add(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() createCourseDto: CreateCourse,
     @ImageFile({ fileIsRequired: true })
     file: Express.Multer.File,
@@ -216,7 +254,12 @@ export class CoursesController {
   @Patch(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_SIZE_IN_BYTES_UPLOAD_PHOTO },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiOkResponse({
     description: 'The course has been successfully updated.',
@@ -230,14 +273,14 @@ export class CoursesController {
   })
   async update(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() editCourseDto: EditCourse,
     @ImageFile({ fileIsRequired: false })
     file: Express.Multer.File,
   ): Promise<Course> {
     return await this.updateCourseService.update(
       id,
-      req.user.id,
+      req.user,
       editCourseDto,
       file,
     );
@@ -250,7 +293,10 @@ export class CoursesController {
   @ApiNoContentResponse({
     description: 'The course has been successfully deleted.',
   })
-  async delete(@Param('id') id: string, @Req() req: any): Promise<void> {
-    await this.deleteCourseService.delete(id, req.user.id);
+  async delete(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
+    await this.deleteCourseService.delete(id, req.user);
   }
 }

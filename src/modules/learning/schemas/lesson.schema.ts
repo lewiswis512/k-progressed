@@ -27,3 +27,5 @@ export class Lesson extends AbstractDocument {
 }
 
 export const LessonSchema = SchemaFactory.createForClass(Lesson);
+
+LessonSchema.index({ section: 1 });

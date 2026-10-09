@@ -1,6 +1,3 @@
-import { promises as fs } from 'fs';
-import * as ffmpeg from 'fluent-ffmpeg';
-
 export const getHourMinuteSecond = (duration: number = null): string => {
   if (duration === null) return null;
 
@@ -63,37 +60,6 @@ export const getSecond = (
   return secondLetter;
 };
 
-export const getVideoDurationByBuffer = async (
-  filePath: string,
-): Promise<number> => {
-  const buff = Buffer.alloc(100);
-  const header = Buffer.from('mvhd');
-
-  const file = await fs.open(filePath, 'r');
-  const { buffer } = await file.read(buff, 0, 100, 0);
-
-  await file.close();
-
-  const start = buffer.indexOf(header) + 17;
-  const timescale = buffer.readUInt32BE(start);
-  const duration = buffer.readUInt32BE(start + 4);
-  const videoDuration = duration / timescale;
-
-  return videoDuration;
-};
-
-export const getVideoDuration = async (
-  filePath: string,
-): Promise<number | null> => {
-  return new Promise((resolve, reject) => {
-    ffmpeg.ffprobe(filePath, (err: any, metadata: any) => {
-      if (err) {
-        reject(err);
-      } else {
-        const durationInSeconds = metadata.format.duration;
-
-        resolve(durationInSeconds || null);
-      }
-    });
-  });
+export const formatLessonDuration = (duration: number): string => {
+  return getMinuteAndSecond(duration > 0 ? duration : 0);
 };

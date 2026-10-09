@@ -16,7 +16,9 @@ export class GetCourseWithRatingService {
     const courseId = course._id.toString();
 
     const comments: Comment[] = await this.commentRepository.find({
-      course: course,
+      course: course._id,
+      parent_comment: null,
+      comm_rating: { $ne: null },
     });
 
     const totalComments = comments.length;

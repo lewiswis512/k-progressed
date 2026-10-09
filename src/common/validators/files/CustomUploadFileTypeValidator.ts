@@ -1,4 +1,5 @@
 import { FileValidator } from '@nestjs/common';
+import { detectMediaKind } from './file-signature';
 
 export interface CustomUploadTypeValidatorOptions {
   fileType: string[];
@@ -17,7 +18,10 @@ export class CustomUploadFileTypeValidatorOptions extends FileValidator {
   isValid(file?: Express.Multer.File): boolean {
     if (!file || !file.mimetype) return false;
 
-    return this.allowedMimeTypes.includes(file.mimetype);
+    return (
+      this.allowedMimeTypes.includes(file.mimetype) &&
+      detectMediaKind(file.buffer) === file.mimetype.split('/')[0]
+    );
   }
 
   buildErrorMessage(): string {

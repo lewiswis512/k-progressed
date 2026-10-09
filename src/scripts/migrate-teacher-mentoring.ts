@@ -1,11 +1,15 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
+import {
+  Teacher,
+  TeacherSchema,
+} from '../modules/learning/schemas/teachers/teacher.schema';
 
 const DEFAULT_HOURLY_RATE = 50;
 
 const migrate = async (): Promise<void> => {
   await mongoose.connect(process.env.MONGO_URI);
-  const teachers = mongoose.connection.collection('teachers');
+  const teachers = mongoose.model(Teacher.name, TeacherSchema);
 
   const mentors = await teachers.updateMany(
     { tchr_is_mentor: { $exists: false } },

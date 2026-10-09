@@ -55,6 +55,23 @@ export class BookingRepository extends AbstractRepository<Booking> {
     return booking !== null;
   }
 
+  async findCompetingHold(
+    teacherId: string,
+    date: string,
+    time: string,
+    bookingId: Types.ObjectId,
+  ): Promise<boolean> {
+    const competing = await this.bookingModel.exists({
+      _id: { $lt: bookingId },
+      teacher: new Types.ObjectId(teacherId),
+      bkng_date: date,
+      bkng_time: time,
+      ...this.activeFilter(),
+    });
+
+    return competing !== null;
+  }
+
   async releasePendingHolds(teacherId: string, bookerId: string) {
     await this.bookingModel.deleteMany({
       teacher: new Types.ObjectId(teacherId),

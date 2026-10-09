@@ -50,3 +50,8 @@ export class Course extends AbstractDocument {
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
+
+CourseSchema.index({ crs_slug: 1 });
+CourseSchema.index({ crs_status: 1, created_at: -1 });
+CourseSchema.index({ author: 1 });
+CourseSchema.index({ category: 1 });

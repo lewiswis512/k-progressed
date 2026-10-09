@@ -21,9 +21,10 @@ import {
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { TeachersService } from '../services/teachers.service';
-import { AuthGuard } from 'src/common/guards/auth.guard';
+import { AuthGuard } from '../../../common/guards/auth.guard';
 import { AddTeacher } from '../dtos/teachers/add-teacher.dto';
-import { SaveTeacher } from '../dtos/teachers/save-teacher.dto';
+import { EditTeacher } from '../dtos/teachers/edit-teacher.dto';
+import { AuthenticatedRequest } from '../../../common/auth/authenticated-request';
 
 @Controller('teachers')
 export class TeachersController {
@@ -87,7 +88,7 @@ export class TeachersController {
   @ApiBadRequestResponse({
     description: 'Bad request.',
   })
-  async add(@Req() req: any, @Body() addTeacher: AddTeacher) {
+  async add(@Req() req: AuthenticatedRequest, @Body() addTeacher: AddTeacher) {
     return await this.teachersService.store(req.user.id, addTeacher);
   }
 
@@ -105,10 +106,10 @@ export class TeachersController {
   })
   async update(
     @Param('id') id: string,
-    @Req() req: any,
-    @Body() saveTeacher: SaveTeacher,
+    @Req() req: AuthenticatedRequest,
+    @Body() editTeacher: EditTeacher,
   ) {
-    return await this.teachersService.update(id, saveTeacher, req.user);
+    return await this.teachersService.update(id, editTeacher, req.user);
   }
 
   @Delete(':id')
@@ -118,7 +119,7 @@ export class TeachersController {
   @ApiNoContentResponse({
     description: 'The teacher has been successfully deleted.',
   })
-  async delete(@Param('id') id: string) {
-    await this.teachersService.delete(id);
+  async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    await this.teachersService.delete(id, req.user);
   }
 }

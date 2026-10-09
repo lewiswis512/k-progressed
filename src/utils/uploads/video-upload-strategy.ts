@@ -1,4 +1,4 @@
-import { IVideoUploader } from './video-upload.interface';
+import { IUploadedVideo, IVideoUploader } from './video-upload.interface';
 
 export class VideoUploadStrategy {
   constructor(private strategy: IVideoUploader) {}
@@ -10,9 +10,7 @@ export class VideoUploadStrategy {
   async upload(
     file: Express.Multer.File,
     destination: string,
-  ): Promise<{
-    path: string;
-  }> {
+  ): Promise<IUploadedVideo> {
     return await this.strategy.upload(file, destination);
   }
 }

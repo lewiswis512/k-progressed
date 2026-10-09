@@ -1,62 +1,128 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { User } from '../../../modules/users/schemas/user.schema';
-import { UserRepository } from '../../../modules/users/repository/user.repository';
-import { studentBookingNotificationTemplate } from '../../../templates/student-booking-notification';
-import { teacherBookingNotificationTemplate } from '../../../templates/teacher-booking-notification';
-import { MENTORING_BOOKING_CONFIRMATION_EMAIL } from '../../../utils/constants/mailing/email';
-import { UserTypeEnum } from '../../../utils/enums/user-type.enum';
+import {
+  bookingCancelledTemplate,
+  bookingConfirmedTemplate,
+} from '../../../templates/booking-notifications';
+import {
+  MENTORING_BOOKING_CANCELLED_EMAIL,
+  MENTORING_BOOKING_CONFIRMATION_EMAIL,
+} from '../../../utils/constants/mailing/email';
+import { formatZonedDateTime } from '../../../utils/dates/zoned-date-time';
+import { MENTORING_TIMEZONE } from '../constants/mentoring';
+import { errorStack } from '../../../utils/errors';
 
-export interface IBookingInformation {
-  date: Date;
-  time: string;
-  bookerLastname: string;
-  bookerFirstname: string;
-  bookerEmail: string;
-  teacherLastname: string;
-  teacherFirstname: string;
-  teacherEmail: string;
+export interface IBookingParty {
+  usr_username: string;
+  usr_firstname?: string;
+  usr_lastname?: string;
+  usr_email: string;
 }
+
+export interface IBookingForEmail {
+  bkng_starts_at?: Date;
+  bkng_meeting_url?: string;
+  bkng_amount?: number;
+  booker: IBookingParty;
+  teacherUser: IBookingParty;
+}
+
+const displayName = (user: IBookingParty): string =>
+  [user.usr_firstname, user.usr_lastname].filter(Boolean).join(' ') ||
+  user.usr_username;
 
 @Injectable()
 export class MentorBookingNotificationService {
-  constructor(
-    private userRepository: UserRepository,
-    private mailerService: MailerService,
-  ) {}
+  private readonly logger = new Logger(MentorBookingNotificationService.name);
 
-  async send(bookingInformation: IBookingInformation) {
-    await this.sendTo(bookingInformation, UserTypeEnum.STUDENT);
-    await this.sendTo(bookingInformation, UserTypeEnum.TEACHER);
+  constructor(private mailerService: MailerService) {}
+
+  private bookingsLink(): string {
+    return `${process.env.FRONTEND_URL}/bookings`;
   }
 
-  async sendTo(
-    bookingInformation: IBookingInformation,
-    userType: UserTypeEnum,
-  ) {
-    const user: User = await this.userRepository.findOne({
-      usr_email:
-        userType === UserTypeEnum.STUDENT
-          ? bookingInformation.bookerEmail
-          : bookingInformation.teacherEmail,
-    });
+  async sendConfirmed(booking: IBookingForEmail): Promise<void> {
+    const when = formatZonedDateTime(
+      booking.bkng_starts_at,
+      MENTORING_TIMEZONE,
+    );
 
-    user.usr_password = null;
-    const htmlTemplate =
-      userType === UserTypeEnum.STUDENT
-        ? studentBookingNotificationTemplate(bookingInformation)
-        : teacherBookingNotificationTemplate(bookingInformation);
+    await this.sendMail(
+      booking.booker.usr_email,
+      MENTORING_BOOKING_CONFIRMATION_EMAIL,
+      bookingConfirmedTemplate(
+        {
+          recipientName: displayName(booking.booker),
+          otherPartyName: displayName(booking.teacherUser),
+          when,
+          meetingUrl: booking.bkng_meeting_url,
+          bookingsLink: this.bookingsLink(),
+          amount: booking.bkng_amount,
+        },
+        'student',
+      ),
+    );
+    await this.sendMail(
+      booking.teacherUser.usr_email,
+      MENTORING_BOOKING_CONFIRMATION_EMAIL,
+      bookingConfirmedTemplate(
+        {
+          recipientName: displayName(booking.teacherUser),
+          otherPartyName: displayName(booking.booker),
+          when,
+          meetingUrl: booking.bkng_meeting_url,
+          bookingsLink: this.bookingsLink(),
+        },
+        'teacher',
+      ),
+    );
+  }
 
+  async sendCancelled(
+    booking: IBookingForEmail,
+    refunded: boolean,
+  ): Promise<void> {
+    const when = formatZonedDateTime(
+      booking.bkng_starts_at,
+      MENTORING_TIMEZONE,
+    );
+
+    await this.sendMail(
+      booking.booker.usr_email,
+      MENTORING_BOOKING_CANCELLED_EMAIL,
+      bookingCancelledTemplate({
+        recipientName: displayName(booking.booker),
+        otherPartyName: displayName(booking.teacherUser),
+        when,
+        bookingsLink: this.bookingsLink(),
+        refunded,
+      }),
+    );
+    await this.sendMail(
+      booking.teacherUser.usr_email,
+      MENTORING_BOOKING_CANCELLED_EMAIL,
+      bookingCancelledTemplate({
+        recipientName: displayName(booking.teacherUser),
+        otherPartyName: displayName(booking.booker),
+        when,
+        bookingsLink: this.bookingsLink(),
+      }),
+    );
+  }
+
+  private async sendMail(to: string, subject: string, html: string) {
     try {
       await this.mailerService.sendMail({
         from: process.env.EMAIL_FROM,
-        to: user.usr_email,
-        subject: MENTORING_BOOKING_CONFIRMATION_EMAIL,
-        html: htmlTemplate,
+        to,
+        subject,
+        html,
       });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      throw new InternalServerErrorException();
+    } catch (error: unknown) {
+      this.logger.error(
+        `Failed to send "${subject}" to ${to}`,
+        errorStack(error),
+      );
     }
   }
 }

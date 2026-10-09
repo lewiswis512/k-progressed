@@ -1,76 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
-import * as fs from 'fs';
+import { IAccessUser } from '../../../../common/access/course-access.service';
 import { Lesson } from '../../schemas/lesson.schema';
 import { AuthorLessonService } from './author.service';
 import { LessonRepository } from '../../repositories/lesson.repository';
-import { CloudinaryUploadStrategy } from '../../../../utils/uploads/cloudinary-upload-strategy';
-import {
-  PATH_UPLOAD_LESSON_PHOTOS,
-  PATH_UPLOAD_LESSON_VIDEOS,
-} from '../../../../utils/constants/uploads/path-upload';
+import { deleteLessonMedia } from '../../../../utils/uploads/delete-lesson-media';
 import { LessonService } from './find-one-by-id.service';
+import { errorStack } from '../../../../utils/errors';
 
 @Injectable()
 export class DeleteLessonService {
+  private readonly logger = new Logger(DeleteLessonService.name);
+
   constructor(
     private lessonService: LessonService,
     private lessonRepository: LessonRepository,
-    private cloudinaryUploadStrategy: CloudinaryUploadStrategy,
   ) {}
 
-  async delete(id: string, authorId: string): Promise<void> {
+  async delete(id: string, user: IAccessUser): Promise<void> {
     const lesson: Lesson = await this.lessonService.byId(id);
 
-    AuthorLessonService.isAuthor(
-      lesson.section.course.author._id.toString(),
-      authorId,
-    );
-    this.deleteVideoLesson(lesson);
-    this.deleteLessonPhoto(lesson);
+    const course = lesson.section.course;
 
+    AuthorLessonService.isAuthor(String(course.author._id), user);
+
+    await this.deleteMedia(lesson);
     await this.lessonRepository.findByIdAndDelete(new Types.ObjectId(id));
   }
 
-  async deleteVideoLesson(lesson: Lesson): Promise<void> {
-    if (
-      lesson.lssn_video_link.startsWith('https') ||
-      lesson.lssn_video_link.startsWith('http')
-    ) {
-      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-        lesson.lssn_video_link,
-      );
-
-      await this.cloudinaryUploadStrategy.delete(publicId);
-    } else {
-      const videoPath = `${PATH_UPLOAD_LESSON_VIDEOS}/${lesson.lssn_video_link}`;
-      fs.unlink(videoPath, (err) => {
-        if (err) {
-          console.error('Failed to delete video:', err);
-          return;
-        }
-      });
-    }
-  }
-
-  async deleteLessonPhoto(lesson: Lesson): Promise<void> {
-    if (
-      lesson.lssn_video_photo.startsWith('https') ||
-      lesson.lssn_video_photo.startsWith('http')
-    ) {
-      const publicId = this.cloudinaryUploadStrategy.getPublicIdFromUrl(
-        lesson.lssn_video_photo,
-      );
-
-      await this.cloudinaryUploadStrategy.delete(publicId);
-    } else {
-      const videoPath = `${PATH_UPLOAD_LESSON_PHOTOS}/${lesson.lssn_video_link}`;
-      fs.unlink(videoPath, (err) => {
-        if (err) {
-          console.error('Failed to delete photo:', err);
-          return;
-        }
-      });
+  async deleteMedia(
+    lesson: Pick<Lesson, 'lssn_video_link' | 'lssn_video_photo'>,
+  ): Promise<void> {
+    try {
+      await deleteLessonMedia(lesson);
+    } catch (error: unknown) {
+      this.logger.error('Failed to delete the lesson media', errorStack(error));
     }
   }
 }

@@ -1,7 +1,7 @@
 import { HttpStatus, ParseFilePipeBuilder } from '@nestjs/common';
-import { CustomUploadFileTypeValidatorOptions } from 'src/common/validators/files/CustomUploadFileTypeValidator';
-import { VALID_VIDEO_MIME_TYPES } from 'src/utils/constants/files/mime-types';
-import { MAX_SIZE_IN_BYTES_UPLOAD_VIDEO } from 'src/utils/constants/uploads/max-size-upload';
+import { CustomUploadFileTypeValidatorOptions } from '../../../common/validators/files/CustomUploadFileTypeValidator';
+import { VALID_VIDEO_MIME_TYPES } from '../../../utils/constants/files/mime-types';
+import { MAX_SIZE_IN_BYTES_UPLOAD_VIDEO } from '../../../utils/constants/uploads/max-size-upload';
 
 interface IUploadVideoOptions {
   fileIsRequired?: boolean;

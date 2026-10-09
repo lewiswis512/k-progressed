@@ -8,23 +8,20 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { AuthGuard } from '../../../common/guards/auth.guard';
-import { AddSection } from '../dtos/sections/add-section.dto';
-import { EditSection } from '../dtos/sections/edit-section.dto';
-import { Lesson } from '../schemas/lesson.schema';
-import { Section } from '../schemas/section.schema';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
+import { RoleEnum } from '../../../utils/enums/role.enum';
 import { CategoryService } from '../services/category.service';
 import { Category } from '../schemas/category.schema';
 import { SaveCategory } from '../dtos/category/save-category.dto';
@@ -54,7 +51,8 @@ export class CategoriesController {
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiCreatedResponse({
     description: 'The category has been successfully created.',
   })
@@ -64,7 +62,8 @@ export class CategoriesController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiOkResponse({
     description: 'The category has been successfully updated.',
   })
@@ -84,11 +83,12 @@ export class CategoriesController {
   @Delete(':id')
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiNoContentResponse({
     description: 'The category have been successfully deleted.',
   })
-  async delete(@Param('id') id: string, @Req() req: any): Promise<void> {
-    await this.categoryService.delete(id, req.user.id);
+  async delete(@Param('id') id: string): Promise<void> {
+    await this.categoryService.delete(id);
   }
 }

@@ -1,9 +1,13 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
+import {
+  Section,
+  SectionSchema,
+} from '../modules/learning/schemas/section.schema';
 
 const migrate = async (): Promise<void> => {
   await mongoose.connect(process.env.MONGO_URI);
-  const sections = mongoose.connection.collection('sections');
+  const sections = mongoose.model(Section.name, SectionSchema);
 
   const courseIds = await sections.distinct('course', {
     sect_order: { $exists: false },
@@ -15,8 +19,8 @@ const migrate = async (): Promise<void> => {
     const courseSections = await sections
       .find({ course: courseId })
       .sort({ sect_order: 1, created_at: -1, _id: 1 })
-      .project({ _id: 1 })
-      .toArray();
+      .select('_id')
+      .lean();
 
     const result = await sections.bulkWrite(
       courseSections.map((section, index) => ({
