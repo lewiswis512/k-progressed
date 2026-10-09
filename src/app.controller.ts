@@ -1,14 +1,19 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ApiExcludeController } from '@nestjs/swagger';
+import { UserRepository } from './modules/users/repository/user.repository';
 
 @Controller()
 @ApiExcludeController()
+@SkipThrottle()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Get('health')
+  health(): { status: string; database: string } {
+    return {
+      status: 'ok',
+      database: this.userRepository.isDatabaseUp() ? 'up' : 'down',
+    };
   }
 }
