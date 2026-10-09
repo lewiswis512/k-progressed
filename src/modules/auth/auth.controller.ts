@@ -16,6 +16,7 @@ import { SignIn } from './dto/singIn.dto';
 import { ForgotPasswordService } from './services/forgot-password.service';
 import { RefreshSession } from './dto/refresh-session.dto';
 import { ISession, SessionService } from './services/session.service';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 
 const AUTH_THROTTLE = { default: { limit: 5, ttl: 60000 } };
 
@@ -35,6 +36,7 @@ export class AuthController {
   }
 
   @Post('refresh-token')
+  @ApiExcludeEndpoint()
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   refreshToken(@Body() { refreshToken }: RefreshSession): Promise<ISession> {

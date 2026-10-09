@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeController } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -8,6 +8,7 @@ import { LoadData } from './dto/load-data.dto';
 import { LoadDataService } from './load-data.service';
 
 @Controller('load-data')
+@ApiExcludeController()
 @ApiBearerAuth()
 @UseGuards(AuthGuard, RolesGuard)
 @Roles(RoleEnum.SUPERADMIN)
