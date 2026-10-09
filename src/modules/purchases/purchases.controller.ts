@@ -3,44 +3,57 @@ import {
   Controller,
   Get,
   Param,
-  Patch,
   Post,
+  Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
-import { SavePurchase } from './dto/save-purchase.dto';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { PaginationDto } from '../../shared/pagination/pagination.dto';
+import { SearchDto } from '../../shared/search/search.dto';
+import { RoleEnum } from '../../utils/enums/role.enum';
+import { CreatePurchase } from './dto/create-purchase.dto';
 import { PurchasesService } from './purchases.service';
+import { AuthenticatedRequest } from '../../common/auth/authenticated-request';
 
 @Controller('purchases')
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 export class PurchasesController {
   constructor(private purchaseService: PurchasesService) {}
 
   @Get()
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard)
-  async list() {
-    return await this.purchaseService.findAll();
+  async list(@Req() req: AuthenticatedRequest) {
+    return await this.purchaseService.findMine(req.user.id);
+  }
+
+  @Get('admin')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.SUPERADMIN)
+  async listForAdmin(
+    @Query() search: SearchDto,
+    @Query() pagination: PaginationDto,
+  ) {
+    return await this.purchaseService.findForAdmin(
+      search.q,
+      pagination.page,
+      pagination.limit,
+    );
   }
 
   @Get(':id')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard)
-  async show(@Param('id') id: string) {
-    return await this.purchaseService.findById(id);
+  async show(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return await this.purchaseService.findOwned(id, req.user);
   }
 
   @Post()
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard)
-  async add(@Body() savePurchaseDto: SavePurchase) {
-    return await this.purchaseService.store(savePurchaseDto);
-  }
-
-  @Patch(':id/validate')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard)
-  async validatePurchase(@Param('id') id: string) {
-    return await this.purchaseService.validatePurchase(id);
+  async add(
+    @Body() createPurchase: CreatePurchase,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return await this.purchaseService.store(createPurchase, req.user);
   }
 }
