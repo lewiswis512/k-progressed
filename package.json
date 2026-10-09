@@ -1,5 +1,5 @@
 {
-  "name": "learn-nest",
+  "name": "api-k-progressed",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -17,14 +17,13 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed:users": "ts-node src/scripts/seed-users.ts",
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
     "migrate:course-status": "ts-node src/scripts/migrate-course-status.ts",
     "migrate:section-order": "ts-node src/scripts/migrate-section-order.ts",
-    "migrate:teacher-mentoring": "ts-node src/scripts/migrate-teacher-mentoring.ts"
+    "migrate:teacher-mentoring": "ts-node src/scripts/migrate-teacher-mentoring.ts",
+    "seed": "ts-node -r tsconfig-paths/register src/scripts/seed.ts"
   },
   "dependencies": {
-    "@faker-js/faker": "^9.8.0",
     "@nestjs-modules/mailer": "^1.11.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.2",
@@ -32,22 +31,19 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/mongoose": "^10.0.6",
     "@nestjs/platform-express": "^10.0.0",
-    "@nestjs/serve-static": "^4.0.2",
     "@nestjs/swagger": "^8.1.0",
+    "@nestjs/throttler": "^6",
     "@types/bcrypt": "^5.0.2",
     "@types/multer": "^1.4.11",
     "@types/nodemailer": "^6.4.14",
-    "@vimeo/vimeo": "^3.0.3",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cloudinary": "^2.6.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "ffmpeg": "^0.0.4",
-    "fluent-ffmpeg": "^2.1.3",
+    "helmet": "^7",
     "mongoose": "^8.3.1",
-    "nestjs-command": "^3.1.5",
     "nodemailer": "^6.9.13",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
@@ -55,21 +51,21 @@
     "stripe": "^15.9.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
     "@types/express": "^4.17.17",
-    "@types/fluent-ffmpeg": "^2.1.27",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
     "@types/supertest": "^6.0.0",
-    "@types/vimeo__vimeo": "^3.0.1",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.5.0",
+    "mongodb-memory-server": "^11.3.0",
     "prettier": "^3.0.0",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.3",
@@ -87,7 +83,6 @@
     ],
     "rootDir": ".",
     "roots": [
-      "<rootDir>/src",
       "<rootDir>/test"
     ],
     "testRegex": ".*\\.spec\\.ts$",
@@ -101,6 +96,9 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/src/$1"
-    }
+    },
+    "setupFiles": [
+      "<rootDir>/test/setup/unit-env.ts"
+    ]
   }
 }
