@@ -3,4 +3,5 @@ export interface IRegistration {
   usr_username: string;
   usr_slug: string;
   usr_email: string;
+  usr_email_verified: boolean;
 }

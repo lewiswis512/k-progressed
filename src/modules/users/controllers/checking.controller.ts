@@ -1,9 +1,11 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { UsersService } from '../users.service';
 import { ApiExcludeController } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiExcludeController()
 @Controller()
+@Throttle({ default: { limit: 30, ttl: 60000 } })
 export class CheckingController {
   public constructor(private usersService: UsersService) {}
 

@@ -1,26 +1,17 @@
-import { LOGO } from '../utils/constants/app';
 import { User } from '../modules/users/schemas/user.schema';
+import { escapeHtml } from '../utils/string/escape-html';
+import { emailButton, emailLayout } from './layout';
 
 export const resetPasswordTemplate = (
   user: User,
   forgotPasswordLink: string,
-) => {
-  return `
-        <!DOCTYPE html>
-            <html>
-                <head>
-                    <style> 
-                      .greeting {
-                        color: gray;
-                        font-weight: bold;
-                      }
-                    </style>
-                </head>
-                <body>
-                    <img src="${LOGO}" width="100" height="100" />
-                    <p><span class="greeting">Hello</span> ${user.usr_username},</p>
-                    <p>To reset your password, click on this link <a href=${forgotPasswordLink}>${forgotPasswordLink}</a></p>
-                </body>
-            </html>
-    `;
-};
+) =>
+  emailLayout(
+    'Reset your password',
+    `
+      <p>Hello ${escapeHtml(user.usr_username)},</p>
+      <p>We received a request to reset your password. This link is valid for 1 hour.</p>
+      ${emailButton('Choose a new password', forgotPasswordLink)}
+      <p>If you did not ask for this, you can ignore this email: your password stays the same.</p>
+    `,
+  );

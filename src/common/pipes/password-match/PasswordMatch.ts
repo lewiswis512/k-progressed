@@ -5,7 +5,7 @@ export function PasswordMatch(
   property: string,
   validationOptions?: ValidationOptions,
 ) {
-  return function (object: Record<string, any>, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,

@@ -1,62 +1,59 @@
-import {
-  GoneException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { Response } from 'express';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ForgotPassword } from '../dto/forgot-password.dto';
-import { UserReset } from '../../../modules/users/schemas/user-reset.schema';
-import { User } from '../../../modules/users/schemas/user.schema';
-import { formatDateTime } from '../../../utils/dates/format-datetime';
 import { UserRepository } from '../../../modules/users/repository/user.repository';
 import { UserResetRepository } from '../../../modules/users/repository/user-reset.repository';
+import { UserTokenTypeEnum } from '../../../modules/users/schemas/user-reset.schema';
 import { hashPassword } from '../../../utils/auths/hashPassword';
+import { hashToken } from '../../../utils/randoms/generateToken';
+import { SessionService } from './session.service';
 
 @Injectable()
 export class ForgotPasswordService {
   public constructor(
     private userRepository: UserRepository,
     private userResetRepository: UserResetRepository,
+    private sessionService: SessionService,
   ) {}
 
   async forgotPassword(
     token: string,
     forgotPasswordDto: ForgotPassword,
-    res: Response,
-  ): Promise<Response> {
-    const { email, password } = forgotPasswordDto;
-    const isTokenValid: UserReset = await this.checkTokenValidity(email, token);
-    const user: User = await this.userRepository.findOne({ usr_email: email });
-
-    this.checkTokenExpiration(isTokenValid.usr_rest_expired_at);
-
-    await this.userRepository.findByIdAndUpdate(user._id, {
-      usr_password: await hashPassword(password),
-    });
-    await this.userResetRepository.findOneAndDelete({
-      usr_rest_email: email,
-      usr_rest_token: token,
+  ): Promise<{ status: string }> {
+    const userToken = await this.userResetRepository.findOneOrNull({
+      usr_rest_token: hashToken(token),
+      usr_rest_type: UserTokenTypeEnum.RESET_PASSWORD,
+      usr_rest_expired_at: { $gt: new Date() },
     });
 
-    return res.status(200).json({ status: 'success' });
-  }
-
-  async checkTokenValidity(email: string, token: string) {
-    const isTokenValid = await this.userResetRepository.findOne({
-      usr_rest_email: email,
-      usr_rest_token: token,
-    });
-
-    if (isTokenValid === null) {
-      throw new InternalServerErrorException('Token may be not valid');
+    if (!userToken) {
+      throw new BadRequestException(
+        'This reset link is invalid or has expired',
+      );
     }
 
-    return isTokenValid;
-  }
+    const user = await this.userRepository.findOneAndUpdate(
+      { usr_email: userToken.usr_rest_email },
+      {
+        usr_password: await hashPassword(forgotPasswordDto.password),
+        usr_password_changed_at: new Date(),
+        usr_email_verified: true,
+        $inc: { usr_token_version: 1 },
+      },
+    );
 
-  checkTokenExpiration(usr_rest_expired_at: Date) {
-    if (formatDateTime(new Date()) > formatDateTime(usr_rest_expired_at)) {
-      throw new GoneException('the reset token has expired');
+    await this.userResetRepository.deleteMany({
+      usr_rest_email: userToken.usr_rest_email,
+      usr_rest_type: UserTokenTypeEnum.RESET_PASSWORD,
+    });
+
+    if (!user) {
+      throw new BadRequestException(
+        'This reset link is invalid or has expired',
+      );
     }
+
+    await this.sessionService.revokeAll(user._id);
+
+    return { status: 'success' };
   }
 }

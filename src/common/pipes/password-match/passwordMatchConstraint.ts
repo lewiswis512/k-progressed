@@ -1,10 +1,13 @@
-import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from "class-validator";
+import {
+  ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
 
 @ValidatorConstraint({ name: 'passwordMatch', async: false })
 export class PasswordMatchConstraint implements ValidatorConstraintInterface {
-  validate(value: any, validationArguments?: ValidationArguments): boolean {
-    let bodyForgotPassword = {...validationArguments.object};
-    const { password } = Object(bodyForgotPassword);
+  validate(value: unknown, validationArguments?: ValidationArguments): boolean {
+    const { password } = validationArguments.object as { password?: unknown };
 
     return value === password;
   }

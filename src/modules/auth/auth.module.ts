@@ -15,6 +15,12 @@ import { AuthService } from './services/auth.service';
 import { StripeCustomerRepository } from '../../modules/users/repository/stripe-customer.repository';
 import { UserResetRepository } from '../../modules/users/repository/user-reset.repository';
 import { ForgotPasswordService } from './services/forgot-password.service';
+import { SessionService } from './services/session.service';
+import { RefreshTokenRepository } from './repositories/refresh-token.repository';
+import {
+  RefreshToken,
+  RefreshTokenSchema,
+} from './schemas/refresh-token.schema';
 
 @Module({
   imports: [
@@ -29,6 +35,7 @@ import { ForgotPasswordService } from './services/forgot-password.service';
       { name: User.name, schema: UserSchema },
       { name: UserReset.name, schema: UserResetSchema },
       { name: StripeCustomer.name, schema: StripeCustomerSchema },
+      { name: RefreshToken.name, schema: RefreshTokenSchema },
     ]),
     SendMailModule,
   ],
@@ -40,7 +47,9 @@ import { ForgotPasswordService } from './services/forgot-password.service';
     UserRepository,
     StripeCustomerRepository,
     UserResetRepository,
+    SessionService,
+    RefreshTokenRepository,
   ],
-  exports: [JwtModule, AuthService],
+  exports: [JwtModule, AuthService, SessionService],
 })
 export class AuthModule {}

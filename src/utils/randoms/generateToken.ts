@@ -1,11 +1,9 @@
-export function generateToken(length: number): string {
-  const characters: string =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let token: string = '';
+import { createHash, randomBytes } from 'crypto';
 
-  for (let i = 0; i < length; i++) {
-    token += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
+export function generateToken(bytes: number = 32): string {
+  return randomBytes(bytes).toString('hex');
+}
 
-  return token;
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
