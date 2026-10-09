@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { User } from 'src/modules/users/schemas/user.schema';
-import { hashPassword } from 'src/utils/auths/hashPassword';
-import { RoleEnum } from 'src/utils/enums/role.enum';
-import { UserTypeEnum } from 'src/utils/enums/user-type.enum';
+import { User } from '../../modules/users/schemas/user.schema';
+import { hashPassword } from '../../utils/auths/hashPassword';
+import { RoleEnum } from '../../utils/enums/role.enum';
+import { UserTypeEnum } from '../../utils/enums/user-type.enum';
 
 export const getStudentUsers = async () => {
   const users: Partial<User>[] = [];
@@ -17,7 +17,7 @@ export const getStudentUsers = async () => {
       usr_lastname: lastname,
       usr_slug: `${firstname}-${lastname}`,
       usr_email: `${firstname}.${lastname}@gmail.com`,
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.STUDENT,
       usr_role: RoleEnum.USER,
       usr_photo: faker.image.avatar(),

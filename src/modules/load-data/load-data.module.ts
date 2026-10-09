@@ -23,5 +23,6 @@ import { LoadDataService } from './load-data.service';
   ],
   controllers: [LoadDataController],
   providers: [LoadDataService],
+  exports: [LoadDataService],
 })
 export class LoadDataModule {}

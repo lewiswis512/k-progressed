@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { FINANCE_LESSONS } from '../../data/lessons/finance-lesson';
 import { COURSE_DOMAIN } from '../../data/courses/course-domain';
@@ -33,6 +37,7 @@ import { Teacher } from '../learning/schemas/teachers/teacher.schema';
 import { UserRepository } from '../users/repository/user.repository';
 import { User } from '../users/schemas/user.schema';
 import { CoursesByCategoryService } from '../learning/services/courses/get-by-category.service';
+import { Lesson } from '../learning/schemas/lesson.schema';
 
 const CATEGORIES_DESIGNATION = ['Finance', 'Marketing'];
 
@@ -50,38 +55,62 @@ export class LoadDataService {
     private faqRepository: FaqRepository,
   ) {}
 
-  async loadData() {
-    await this.userRepository.deleteMany({});
-    await this.categoryRepository.deleteMany({});
-    await this.teacherRepository.deleteMany({});
-    await this.courseRepository.deleteMany({});
-    await this.sectionRepository.deleteMany({});
-    await this.lessonRepository.deleteMany({});
-    await this.faqRepository.deleteMany({});
+  private isLoading = false;
 
-    await this.loadUsers();
-    await this.loadCategories();
-    await this.loadTeachers();
-    await this.loadMarketingCourses();
-    await this.loadFinanceCourses();
-    await this.loadMarketingSections();
-    await this.loadFinanceSections();
+  async loadData(): Promise<{ status: string; superAdminEmail: string }> {
+    if (this.isLoading) {
+      throw new ConflictException('Data is already being loaded');
+    }
 
-    await this.loadMarketingLessons();
-    await this.loadFinanceLessons();
+    this.isLoading = true;
 
-    await this.loadFaqs();
+    try {
+      const users = await this.buildUsers();
+
+      await this.userRepository.deleteMany({});
+      await this.categoryRepository.deleteMany({});
+      await this.teacherRepository.deleteMany({});
+      await this.courseRepository.deleteMany({});
+      await this.sectionRepository.deleteMany({});
+      await this.lessonRepository.deleteMany({});
+      await this.faqRepository.deleteMany({});
+
+      await this.loadUsers(users);
+      await this.loadCategories();
+      await this.loadTeachers();
+      await this.loadMarketingCourses();
+      await this.loadFinanceCourses();
+      await this.loadMarketingSections();
+      await this.loadFinanceSections();
+
+      await this.loadMarketingLessons();
+      await this.loadFinanceLessons();
+
+      await this.loadFaqs();
+
+      return { status: 'success', superAdminEmail: users[0].usr_email };
+    } finally {
+      this.isLoading = false;
+    }
   }
 
-  async loadUsers() {
-    let users: Partial<User>[] = [];
+  async buildUsers(): Promise<Partial<User>[]> {
+    const password = process.env.SEED_PASSWORD;
+
+    if (!password || password.length < 12) {
+      throw new InternalServerErrorException(
+        'SEED_PASSWORD must be set and contain at least 12 characters',
+      );
+    }
 
     const userSuperAdmin: Partial<User> = await superAdminUser();
     const studentUsers: Partial<User>[] = await getStudentUsers();
     const teacherUsers: Partial<User>[] = await getTeacherUsers();
 
-    users = [...users, userSuperAdmin, ...studentUsers, ...teacherUsers];
+    return [userSuperAdmin, ...studentUsers, ...teacherUsers];
+  }
 
+  async loadUsers(users: Partial<User>[]) {
     const usersCreated = await this.userRepository.insertMany(users);
 
     await Promise.all(
@@ -165,7 +194,7 @@ export class LoadDataService {
       const teacher: Teacher = await this.teacherRepository.findById(
         new Types.ObjectId(teacherId),
       );
-      const author: User = teacher.author;
+      const author = teacher.author;
       const baseDate: Date = new Date();
       const createdAt: Date = new Date(baseDate);
       const updatedAt: Date = new Date(baseDate);
@@ -238,7 +267,7 @@ export class LoadDataService {
   async loadLessons(categoryName: string, lessonDomain: LESSON_DOMAIN) {
     const courses: Course[] =
       await this.coursesByCategoryService.findBy(categoryName);
-    const data = [];
+    const data: Partial<Lesson>[] = [];
 
     await Promise.all(
       courses.map(async (course) => {

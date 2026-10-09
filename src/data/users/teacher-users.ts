@@ -10,7 +10,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Martin',
       usr_slug: 'alice-martin',
       usr_email: 'alice.martin@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -25,7 +25,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Dupont',
       usr_slug: 'john-dupont',
       usr_email: 'john.dupont@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -40,7 +40,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Bernard',
       usr_slug: 'carla-bernard',
       usr_email: 'carla.bernard@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -55,7 +55,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Moreau',
       usr_slug: 'david-moreau',
       usr_email: 'david.moreau@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -70,7 +70,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Garcia',
       usr_slug: 'emma-garcia',
       usr_email: 'emma.garcia@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -85,7 +85,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Petit',
       usr_slug: 'fabien-petit',
       usr_email: 'fabien.petit@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -100,7 +100,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Roux',
       usr_slug: 'hélène-roux',
       usr_email: 'helene.roux@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -115,7 +115,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Guerin',
       usr_slug: 'julien-guerin',
       usr_email: 'julien.guerin@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -130,7 +130,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Lemoine',
       usr_slug: 'laura-lemoine',
       usr_email: 'laura.lemoine@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:
@@ -145,7 +145,7 @@ export const getTeacherUsers = async () => {
       usr_lastname: 'Blanc',
       usr_slug: 'marc-blanc',
       usr_email: 'marc.blanc@gmail.com',
-      usr_password: await hashPassword('password'),
+      usr_password: await hashPassword(process.env.SEED_PASSWORD),
       usr_type: UserTypeEnum.TEACHER,
       usr_role: RoleEnum.ADMIN,
       usr_photo:

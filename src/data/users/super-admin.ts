@@ -1,7 +1,7 @@
-import { User } from 'src/modules/users/schemas/user.schema';
-import { hashPassword } from 'src/utils/auths/hashPassword';
-import { RoleEnum } from 'src/utils/enums/role.enum';
-import { UserTypeEnum } from 'src/utils/enums/user-type.enum';
+import { User } from '../../modules/users/schemas/user.schema';
+import { hashPassword } from '../../utils/auths/hashPassword';
+import { RoleEnum } from '../../utils/enums/role.enum';
+import { UserTypeEnum } from '../../utils/enums/user-type.enum';
 
 export const superAdminUser = async () => {
   const users: Partial<User> = {
@@ -9,8 +9,8 @@ export const superAdminUser = async () => {
     usr_firstname: 'Lewis',
     usr_lastname: 'Rabarison',
     usr_slug: 'lewis-rabarison',
-    usr_email: 'rabarilewis@gmail.com',
-    usr_password: await hashPassword('password'),
+    usr_email: process.env.SEED_SUPERADMIN_EMAIL || 'rabarilewis@gmail.com',
+    usr_password: await hashPassword(process.env.SEED_PASSWORD),
     usr_type: UserTypeEnum.TEACHER,
     usr_role: RoleEnum.SUPERADMIN,
     usr_photo:
