@@ -32,7 +32,7 @@ export class StripeCustomer extends AbstractDocument {
   @Prop({ type: String })
   strp_cus_postal_address_line2?: string;
 
-  @Prop({ type: Date, default: new Date().toISOString() })
+  @Prop({ type: Date, default: () => new Date() })
   strp_cus_created: Date;
 }
 

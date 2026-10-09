@@ -10,41 +10,34 @@ import { PaymentIntentController } from './controller/payment-intent.controller'
 import { StripePaymentIntentRepository } from './repository/stripePaymentIntent.repository';
 import { PaymentService } from './service/payment.service';
 import { WebhookController } from './controller/webhook.controller';
-import { PurchasesService } from '../purchases/purchases.service';
-import { PurchaseRepository } from '../purchases/repository/purchase.repository';
-import { Purchase, PurchaseSchema } from '../purchases/schemas/purchase.schema';
-import { MentorBookingNotificationService } from '../learning/services/mentor-booking-notification.service';
-import { UserRepository } from '../users/repository/user.repository';
-import { User, UserSchema } from '../users/schemas/user.schema';
 import { AuthModule } from '../auth/auth.module';
 import { MentoringModule } from '../learning/modules/mentoring.module';
-import { TeacherRepository } from '../learning/repositories/teacher.repository';
-import {
-  Teacher,
-  TeacherSchema,
-} from '../learning/schemas/teachers/teacher.schema';
+import { TeachersModule } from '../learning/modules/teachers.module';
+import { PurchasesModule } from '../purchases/purchases.module';
+import { StripeEventRepository } from './repository/stripe-event.repository';
+import { StripeEvent, StripeEventSchema } from './schemas/stripe-event.schema';
+import { User, UserSchema } from '../users/schemas/user.schema';
+import { UserRepository } from '../users/repository/user.repository';
 
 @Module({
   imports: [
     AuthModule,
     MentoringModule,
+    TeachersModule,
+    PurchasesModule,
     MongooseModule.forFeature([
       { name: StripePaymentIntent.name, schema: StripePaymentIntentSchema },
-      { name: Purchase.name, schema: PurchaseSchema },
+      { name: StripeEvent.name, schema: StripeEventSchema },
       { name: User.name, schema: UserSchema },
-      { name: Teacher.name, schema: TeacherSchema },
     ]),
   ],
   controllers: [PaymentIntentController, ConfigController, WebhookController],
   providers: [
     StripeService,
     StripePaymentIntentRepository,
+    StripeEventRepository,
     PaymentService,
-    PurchasesService,
-    MentorBookingNotificationService,
-    PurchaseRepository,
     UserRepository,
-    TeacherRepository,
   ],
 })
 export class PaymentModule {}

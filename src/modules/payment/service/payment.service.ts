@@ -1,71 +1,126 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
-import { StripeService } from '../../../modules/payment/service/stripe.service';
-import { StripePaymentIntentRepository } from '../repository/stripePaymentIntent.repository';
-import { IBillingDetail } from '../schemas/stripe-payment-intent.schema';
 import Stripe from 'stripe';
+import { IRequestUser } from '../../../common/auth/authenticated-request';
+import { StripeService } from '../../../modules/payment/service/stripe.service';
+import { StripeEventRepository } from '../repository/stripe-event.repository';
+import { StripePaymentIntentRepository } from '../repository/stripePaymentIntent.repository';
 import { TeacherRepository } from '../../../modules/learning/repositories/teacher.repository';
 import { CreateMentoringPaymentIntent } from '../dto/create-mentoring-payment-intent.dto';
 import { BookingsService } from '../../../modules/learning/services/bookings.service';
-import { PurchasesService } from '../../../modules/purchases/purchases.service';
 import {
-  IBookingInformation,
-  MentorBookingNotificationService,
-} from '../../../modules/learning/services/mentor-booking-notification.service';
+  PurchasesService,
+  toCents,
+} from '../../../modules/purchases/purchases.service';
+import {
+  errorMessage,
+  errorStack,
+  isDuplicateKeyError,
+} from '../../../utils/errors';
 
-interface IPayInfoData {
-  strp_paym_amount: number;
-  strp_paym_currency: string;
-  strp_paym_status: string;
-  strp_paym_type: string;
-  strp_paym_exp_month: number;
-  strp_paym_exp_year: number;
-  strp_paym_billing_details: IBillingDetail;
-  strp_customer_id: string;
-}
-
-export interface IBooker {
-  id: string;
-  username: string;
-  firstname?: string;
-  lastname?: string;
-  email: string;
-  customerId?: string;
-}
+const REUSABLE_INTENT_STATUSES: Stripe.PaymentIntent.Status[] = [
+  'requires_payment_method',
+  'requires_confirmation',
+  'requires_action',
+];
 
 @Injectable()
-export class PaymentService extends StripeService {
+export class PaymentService {
+  private readonly logger = new Logger(PaymentService.name);
+
   constructor(
+    private stripeService: StripeService,
     private stripePaymentIntentRepository: StripePaymentIntentRepository,
     private purchaseService: PurchasesService,
-    private mentorBookingNotificationService: MentorBookingNotificationService,
     private teacherRepository: TeacherRepository,
     private bookingsService: BookingsService,
-  ) {
-    super();
+    private stripeEventRepository: StripeEventRepository,
+  ) {}
+
+  private get stripe(): Stripe {
+    return this.stripeService.stripe;
   }
 
-  async createPaymentIntent(data: any) {
-    try {
-      return await this.stripe.paymentIntents.create(data);
-    } catch (error) {
-      console.error('Error creating payment intent:', error);
-      throw error;
+  async createPurchasePaymentIntent(
+    purchaseId: string,
+    user: IRequestUser,
+  ): Promise<{ client_secret: string; amount: number }> {
+    const purchase = await this.purchaseService.findOwned(purchaseId, user);
+
+    if (purchase.user.id !== user.id) {
+      throw new ForbiddenException("You can't pay this order");
     }
+
+    if (purchase.purch_is_paid) {
+      throw new BadRequestException('This order has already been paid');
+    }
+
+    const amount = toCents(purchase.purch_total);
+
+    if (amount < 50) {
+      throw new BadRequestException(
+        'The order total is too low to be paid by card',
+      );
+    }
+
+    if (purchase.purch_payment_intent_id) {
+      const existing = await this.stripe.paymentIntents.retrieve(
+        purchase.purch_payment_intent_id,
+      );
+
+      if (
+        REUSABLE_INTENT_STATUSES.includes(existing.status) &&
+        existing.amount === amount
+      ) {
+        return {
+          client_secret: existing.client_secret,
+          amount: purchase.purch_total,
+        };
+      }
+
+      if (existing.status === 'succeeded' || existing.status === 'processing') {
+        throw new BadRequestException('This order is already being paid');
+      }
+    }
+
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount,
+      currency: purchase.purch_currency,
+      customer: user.customerId || undefined,
+      receipt_email: purchase.user.email,
+      description: `K-Progressed order ${purchase.purch_reference}`,
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        purchaseId: String(purchase._id),
+        userId: user.id,
+        reference: purchase.purch_reference,
+      },
+    });
+
+    await this.purchaseService.attachPaymentIntent(
+      purchase._id,
+      paymentIntent.id,
+    );
+
+    return {
+      client_secret: paymentIntent.client_secret,
+      amount: purchase.purch_total,
+    };
   }
 
   async createMentoringPaymentIntent(
     bookingRequest: CreateMentoringPaymentIntent,
-    booker: IBooker,
+    booker: IRequestUser,
   ): Promise<{ client_secret: string; amount: number }> {
     const teacher = await this.teacherRepository.findById(
       new Types.ObjectId(bookingRequest.teacherId),
-      {
-        populate: {
-          path: 'author',
-          select: 'usr_username usr_firstname usr_lastname usr_email',
-        },
-      },
     );
 
     if (!teacher.tchr_is_mentor || !(teacher.tchr_hourly_rate > 0)) {
@@ -73,29 +128,23 @@ export class PaymentService extends StripeService {
     }
 
     const booking = await this.bookingsService.hold({
-      teacherId: teacher._id.toString(),
+      teacher,
       bookerId: booker.id,
       date: bookingRequest.date,
       time: bookingRequest.time,
     });
 
-    const author = teacher.author;
     const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: Math.round(teacher.tchr_hourly_rate * 100),
+      amount: toCents(teacher.tchr_hourly_rate),
       currency: 'eur',
       customer: booker.customerId || undefined,
+      receipt_email: booker.email,
+      description: `K-Progressed mentoring call ${bookingRequest.date} ${bookingRequest.time}`,
       automatic_payment_methods: { enabled: true },
       metadata: {
         teacherId: teacher._id.toString(),
         bookingId: booking._id.toString(),
-        date: bookingRequest.date,
-        time: bookingRequest.time,
-        bookerFirstname: booker.firstname || booker.username,
-        bookerLastname: booker.lastname || booker.username,
-        bookerEmail: booker.email,
-        teacherFirstname: author.usr_firstname || author.usr_username,
-        teacherLastname: author.usr_lastname || author.usr_username,
-        teacherEmail: author.usr_email,
+        userId: booker.id,
       },
     });
 
@@ -110,117 +159,174 @@ export class PaymentService extends StripeService {
     };
   }
 
-  async savePaymentInformation(charge: Stripe.Charge) {
-    try {
-      const payInfoData: IPayInfoData = {
-        strp_paym_amount: charge.amount / 100,
-        strp_paym_currency: charge.currency,
-        strp_paym_status: charge.status,
-        strp_paym_type: charge.payment_method_details.type,
-        strp_paym_exp_month: charge.payment_method_details.card.exp_month,
-        strp_paym_exp_year: charge.payment_method_details.card.exp_year,
-        strp_paym_billing_details: charge.billing_details,
-        strp_customer_id: charge.customer as string,
-      };
+  async refundPurchase(purchaseId: string): Promise<{ status: string }> {
+    const purchase = await this.purchaseService.findById(purchaseId);
 
-      return await this.stripePaymentIntentRepository.create(payInfoData);
-    } catch (error) {
-      console.error('Error saving payment information:', error);
-      throw error;
+    if (!purchase.purch_is_paid) {
+      throw new BadRequestException('Only paid orders can be refunded');
+    }
+
+    if (!purchase.purch_payment_intent_id) {
+      await this.purchaseService.markRefundedWithoutPayment(purchase._id);
+
+      return { status: 'refunded' };
+    }
+
+    try {
+      await this.stripe.refunds.create({
+        payment_intent: purchase.purch_payment_intent_id,
+      });
+    } catch (error: unknown) {
+      this.logger.error('Failed to refund the order', errorStack(error));
+      throw new BadRequestException(errorMessage(error) ?? 'The refund failed');
+    }
+
+    await this.purchaseService.markRefunded(purchase.purch_payment_intent_id);
+
+    return { status: 'refunded' };
+  }
+
+  private async savePaymentInformation(intent: Stripe.PaymentIntent) {
+    if (!intent.latest_charge) {
+      return;
+    }
+
+    const charge =
+      typeof intent.latest_charge === 'string'
+        ? await this.stripe.charges.retrieve(intent.latest_charge)
+        : intent.latest_charge;
+
+    await this.stripePaymentIntentRepository.create({
+      strp_paym_amount: charge.amount / 100,
+      strp_paym_currency: charge.currency,
+      strp_paym_status: charge.status,
+      strp_paym_type: charge.payment_method_details?.type ?? 'unknown',
+      strp_paym_exp_month: charge.payment_method_details?.card?.exp_month,
+      strp_paym_exp_year: charge.payment_method_details?.card?.exp_year,
+      strp_paym_billing_details: charge.billing_details,
+      strp_customer_id: (charge.customer as string) ?? undefined,
+      strp_payment_intent_id: intent.id,
+      purchase_id: intent.metadata?.purchaseId,
+      booking_id: intent.metadata?.bookingId,
+    });
+  }
+
+  constructEvent(
+    payload: string | Buffer,
+    header: string | Buffer | Array<string>,
+  ): Stripe.Event {
+    const webhookSecret = process.env.WEBHOOK_STRIPE_SECRET;
+
+    if (!webhookSecret) {
+      this.logger.error('WEBHOOK_STRIPE_SECRET is not configured');
+      throw new InternalServerErrorException('Webhook is not configured');
+    }
+
+    try {
+      return this.stripe.webhooks.constructEvent(
+        payload,
+        header,
+        webhookSecret,
+      );
+    } catch (error: unknown) {
+      this.logger.warn(
+        `Webhook signature verification failed: ${errorMessage(error)}`,
+      );
+      throw new BadRequestException('Invalid signature');
     }
   }
 
   async webhook(
     payload: string | Buffer,
     header: string | Buffer | Array<string>,
-    webhookSecret: string,
-  ): Promise<void> {
-    let event: Stripe.Event;
+  ): Promise<{ received: boolean }> {
+    const event = this.constructEvent(payload, header);
 
-    if (webhookSecret) {
-      try {
-        event = this.stripe.webhooks.constructEvent(
-          payload,
-          header,
-          webhookSecret,
-        );
-      } catch (error: any) {
-        console.error(
-          `Webhook signature verification failed. ${error.message}`,
-        );
-        return;
+    try {
+      await this.stripeEventRepository.create({
+        event_id: event.id,
+        event_type: event.type,
+      });
+    } catch (error: unknown) {
+      if (isDuplicateKeyError(error)) {
+        return { received: true };
       }
-    } else {
-      throw new Error('Failed to fetch the webhook secret');
+
+      throw error;
     }
 
+    try {
+      await this.handleEvent(event);
+    } catch (error) {
+      await this.stripeEventRepository.findOneAndDelete({ event_id: event.id });
+      throw error;
+    }
+
+    return { received: true };
+  }
+
+  private async handleEvent(event: Stripe.Event): Promise<void> {
     switch (event.type) {
-      case 'payment_intent.created':
-        console.info('Payment intent created');
-        break;
       case 'payment_intent.succeeded':
-        console.info('Payment intent succeeded');
+        await this.onPaymentSucceeded(event.data.object);
         break;
-      case 'charge.succeeded':
-        const charge: Stripe.Charge = event.data.object;
-        const { metadata } = charge;
-
-        await this.savePaymentInformation(charge).catch(() => null);
-
-        if (metadata.purchaseId) {
-          await this.purchaseService.validatePurchase(metadata.purchaseId);
-        }
-
-        if (metadata.bookingId) {
-          try {
-            await this.bookingsService.confirm(metadata.bookingId);
-          } catch (error) {
-            console.error('Error confirming booking:', error);
-          }
-        }
-
-        if (
-          metadata.date &&
-          metadata.time &&
-          metadata.bookerLastname &&
-          metadata.bookerFirstname &&
-          metadata.bookerEmail &&
-          metadata.teacherLastname &&
-          metadata.teacherFirstname &&
-          metadata.teacherEmail
-        ) {
-          const bookingInfo: IBookingInformation = {
-            date: new Date(metadata.date),
-            time: metadata.time,
-            bookerLastname: metadata.bookerLastname,
-            bookerFirstname: metadata.bookerFirstname,
-            bookerEmail: metadata.bookerEmail,
-            teacherLastname: metadata.teacherLastname,
-            teacherFirstname: metadata.teacherFirstname,
-            teacherEmail: metadata.teacherEmail,
-          };
-
-          await this.mentorBookingNotificationService
-            .send(bookingInfo)
-            .catch((error) =>
-              console.error('Error sending booking notification:', error),
-            );
-        }
-
-        console.info('Charge succeeded');
+      case 'payment_intent.payment_failed':
+      case 'payment_intent.canceled':
+        await this.onPaymentFailed(event.data.object);
         break;
-      case 'charge.updated':
-        console.info('Charge updated');
+      case 'charge.refunded':
+        await this.onChargeRefunded(event.data.object);
         break;
-      case 'customer.created':
-        console.info('customer created');
-        break;
-      case 'charge.failed':
-        throw new Error(
-          `Charge failed: ${JSON.stringify(event.data.object, null, 2)}`,
-        );
       default:
-        throw new Error(`Unhandled event type ${event.type}`);
+        break;
     }
+  }
+
+  private async onPaymentSucceeded(intent: Stripe.PaymentIntent) {
+    const { purchaseId, bookingId } = intent.metadata ?? {};
+
+    await this.savePaymentInformation(intent).catch((error) =>
+      this.logger.error(
+        'Failed to save the payment information',
+        errorStack(error),
+      ),
+    );
+
+    if (purchaseId) {
+      await this.purchaseService.markPaid(
+        purchaseId,
+        intent.id,
+        intent.amount_received,
+        intent.currency,
+      );
+    }
+
+    if (bookingId) {
+      try {
+        await this.bookingsService.confirm(bookingId);
+      } catch (error) {
+        if (error instanceof ConflictException) {
+          this.logger.warn(`Slot conflict for booking ${bookingId}, refunding`);
+          await this.bookingsService.cancelAfterPaymentConflict(bookingId);
+        } else {
+          throw error;
+        }
+      }
+    }
+  }
+
+  private async onPaymentFailed(intent: Stripe.PaymentIntent) {
+    if (intent.metadata?.bookingId) {
+      await this.bookingsService.releaseHold(intent.metadata.bookingId);
+    }
+  }
+
+  private async onChargeRefunded(charge: Stripe.Charge) {
+    if (!charge.refunded || typeof charge.payment_intent !== 'string') {
+      return;
+    }
+
+    await this.purchaseService.markRefunded(charge.payment_intent);
+    await this.bookingsService.markRefunded(charge.payment_intent);
   }
 }

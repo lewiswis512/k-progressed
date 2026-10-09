@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Res } from '@nestjs/common';
+import { Controller, Get, InternalServerErrorException } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 
 @Controller('config')
@@ -9,7 +9,7 @@ export class ConfigController {
     const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
 
     if (!publishableKey) {
-      throw new Error('Publishable key not found');
+      throw new InternalServerErrorException('Publishable key not found');
     }
 
     return { publishable_key: publishableKey };

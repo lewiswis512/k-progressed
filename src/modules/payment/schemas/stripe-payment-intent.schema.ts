@@ -12,15 +12,18 @@ export interface IBillingDetail {
   };
 }
 
-export const BillingDetailsSchema = new MongooseSchema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  address: {
-    city: { type: String, required: true },
-    line1: { type: String, required: true },
-    postal_code: { type: String, required: true },
+export const BillingDetailsSchema = new MongooseSchema(
+  {
+    name: { type: String },
+    email: { type: String },
+    address: {
+      city: { type: String },
+      line1: { type: String },
+      postal_code: { type: String },
+    },
   },
-});
+  { _id: false },
+);
 
 @Schema({
   collection: 'stripe-payment-intents',
@@ -38,14 +41,20 @@ export class StripePaymentIntent extends AbstractDocument {
   @Prop({ type: String, required: true })
   strp_paym_type: string;
 
-  @Prop({ type: Number, required: true })
-  strp_paym_exp_month: number;
+  @Prop({ type: Number })
+  strp_paym_exp_month?: number;
 
-  @Prop({ type: Number, required: true })
-  strp_paym_exp_year: number;
+  @Prop({ type: Number })
+  strp_paym_exp_year?: number;
 
-  @Prop({ type: BillingDetailsSchema, required: true })
-  strp_paym_billing_details: IBillingDetail;
+  @Prop({ type: BillingDetailsSchema })
+  strp_paym_billing_details?: IBillingDetail;
+
+  @Prop({ type: String })
+  strp_payment_intent_id?: string;
+
+  @Prop({ type: String })
+  booking_id?: string;
 
   @Prop({ type: String })
   strp_customer_id: string;
