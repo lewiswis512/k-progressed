@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -22,6 +23,11 @@ import {
 } from '@nestjs/swagger';
 import { CommentEnum } from '../../utils/enums/comment.enum';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../../utils/enums/role.enum';
+import { PaginationDto } from '../../shared/pagination/pagination.dto';
+import { SearchDto } from '../../shared/search/search.dto';
 import { CommentsService } from './comments.service';
 import { AddCommentCourse } from './dto/add-comment-course.dto';
 import { AddCommentLesson } from './dto/add-comment-lesson.dto';
@@ -30,10 +36,27 @@ import { EditCommentLesson } from './dto/edit-comment-lesson.dto';
 import { ICommentResponse } from '../../interfaces/comments/ICommentResponse';
 import { ICommentBySource } from '../../interfaces/comments/ICommentBySource';
 import { Comment } from './schemas/comment.schema';
+import { AuthenticatedRequest } from '../../common/auth/authenticated-request';
 
 @Controller('comments')
 export class CommentsController {
   constructor(private commentsService: CommentsService) {}
+
+  @Get('admin')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(RoleEnum.SUPERADMIN)
+  @ApiOkResponse({ description: 'Latest comments for moderation.' })
+  async listForModeration(
+    @Query() search: SearchDto,
+    @Query() pagination: PaginationDto,
+  ) {
+    return this.commentsService.listForModeration(
+      search.q,
+      pagination.page,
+      pagination.limit,
+    );
+  }
 
   @Get(':id')
   @ApiOkResponse({
@@ -70,11 +93,11 @@ export class CommentsController {
     description: 'The comment of a course has been successfully created.',
   })
   async addCourse(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() addCommentCourse: AddCommentCourse,
   ): Promise<ICommentResponse> {
     return await this.commentsService.store(
-      req.user.id,
+      req.user,
       addCommentCourse,
       CommentEnum.COURSE,
     );
@@ -87,11 +110,11 @@ export class CommentsController {
     description: 'The comment of a lesson has been successfully created.',
   })
   async addLesson(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Body() addCommentLesson: AddCommentLesson,
   ): Promise<ICommentResponse> {
     return await this.commentsService.store(
-      req.user.id,
+      req.user,
       addCommentLesson,
       CommentEnum.LESSON,
     );
@@ -115,8 +138,9 @@ export class CommentsController {
   async updateCourse(
     @Param('id') id: string,
     @Body() editCommentDto: EditCommentCourse,
+    @Req() req: AuthenticatedRequest,
   ): Promise<Comment> {
-    return await this.commentsService.update(id, editCommentDto);
+    return await this.commentsService.update(id, editCommentDto, req.user.id);
   }
 
   @Patch('lesson/:id')
@@ -137,8 +161,9 @@ export class CommentsController {
   async update(
     @Param('id') id: string,
     @Body() editCommentDto: EditCommentLesson,
+    @Req() req: AuthenticatedRequest,
   ): Promise<Comment> {
-    return await this.commentsService.update(id, editCommentDto);
+    return await this.commentsService.update(id, editCommentDto, req.user.id);
   }
 
   @Delete(':id')
@@ -148,8 +173,11 @@ export class CommentsController {
   @ApiNoContentResponse({
     description: 'The comment have been successfully deleted.',
   })
-  async delete(@Req() req: any, @Param('id') id: string): Promise<void> {
-    return await this.commentsService.delete(id, req.user.id);
+  async delete(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return await this.commentsService.delete(id, req.user);
   }
 
   @Patch('like/:id')
@@ -158,7 +186,10 @@ export class CommentsController {
   @ApiOkResponse({
     description: 'The comment has been successfully liked.',
   })
-  async like(@Param('id') id: string, @Req() req: any): Promise<Comment> {
+  async like(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Comment> {
     return await this.commentsService.like(id, req.user.id);
   }
 
@@ -168,7 +199,10 @@ export class CommentsController {
   @ApiOkResponse({
     description: 'The comment has been successfully disliked.',
   })
-  async dislike(@Param('id') id: string, @Req() req: any): Promise<Comment> {
+  async dislike(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Comment> {
     return await this.commentsService.dislike(id, req.user.id);
   }
 }

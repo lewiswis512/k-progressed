@@ -29,7 +29,7 @@ export class Comment extends AbstractDocument {
   lesson: Lesson;
 
   @Prop({ type: Types.ObjectId, ref: 'Comment', default: null })
-  parent_comment: Types.ObjectId;
+  parent_comment: Comment;
 
   @Prop({ type: [mongoose.Schema.ObjectId], ref: 'Comment' })
   replies: Comment[];
@@ -48,3 +48,7 @@ export class Comment extends AbstractDocument {
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);
+
+CommentSchema.index({ course: 1, parent_comment: 1 });
+CommentSchema.index({ lesson: 1, parent_comment: 1 });
+CommentSchema.index({ author: 1 });

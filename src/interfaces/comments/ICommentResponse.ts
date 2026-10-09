@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { Comment } from '../../modules/comments/schemas/comment.schema';
 import { User } from '../../modules/users/schemas/user.schema';
 import { CommentEnum } from '../../utils/enums/comment.enum';
 
@@ -16,7 +17,7 @@ export interface ICommentResponse {
     _id: Types.ObjectId;
     lssn_title: string;
   };
-  parent_comment: Types.ObjectId;
+  parent_comment: Comment;
   replies: ICommentResponse[];
   comm_count_like: number;
   comm_liked_by: User[];

@@ -1,16 +1,31 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import { FilterQuery } from 'mongoose';
+import {
+  CourseAccessService,
+  IAccessUser,
+} from '../../common/access/course-access.service';
+import { RoleEnum } from '../../utils/enums/role.enum';
+import { escapeRegex } from '../../utils/string/escape-regex';
 import { Types } from 'mongoose';
 import { ICommentResponse } from '../../interfaces/comments/ICommentResponse';
 import { IAddCommentDto } from '../../interfaces/comments/IAddCommentDto';
 import { ICommentBySource } from '../../interfaces/comments/ICommentBySource';
-import { IReactionTypeAndReacter } from '../../interfaces/comments/IReactionTypeAndReacter';
+import {
+  IReactionCounts,
+  IReactionTypeAndReacter,
+} from '../../interfaces/comments/IReactionTypeAndReacter';
 import { CommentEnum } from '../../utils/enums/comment.enum';
 import { CourseRepository } from '../learning/repositories/course.repository';
 import { LessonRepository } from '../learning/repositories/lesson.repository';
 import { Course } from '../learning/schemas/course.schema';
 import { Lesson } from '../learning/schemas/lesson.schema';
-import { UserRepository } from '../users/repository/user.repository';
 import { User } from '../users/schemas/user.schema';
+import { UserRepository } from '../users/repository/user.repository';
 import { EditCommentCourse } from './dto/edit-comment-course.dto';
 import { EditCommentLesson } from './dto/edit-comment-lesson.dto';
 import { CommentRepository } from './repository/comment.repository';
@@ -24,6 +39,7 @@ export class CommentsService {
     private userRepository: UserRepository,
     private courseRepository: CourseRepository,
     private lessonRepository: LessonRepository,
+    private courseAccessService: CourseAccessService,
   ) {}
 
   async findById(id: string): Promise<Comment> {
@@ -38,7 +54,11 @@ export class CommentsService {
     return await this.findByCommentSource(String(CommentEnum.LESSON), lessonId);
   }
 
-  private getCriteriaBySource(source: string, id: string, criteria: any) {
+  private getCriteriaBySource(
+    source: string,
+    id: string,
+    criteria: FilterQuery<Comment>,
+  ): FilterQuery<Comment> {
     if (Number(source) === Number(CommentEnum.COURSE)) {
       criteria.course = id;
     } else if (Number(source) === Number(CommentEnum.LESSON)) {
@@ -49,11 +69,9 @@ export class CommentsService {
   }
 
   async findByCommentSource(source: string, id: string) {
-    let criteria: any = {
+    const criteria = this.getCriteriaBySource(source, id, {
       parent_comment: null,
-    };
-
-    criteria = this.getCriteriaBySource(source, id, criteria);
+    });
 
     const parentComments: Comment[] =
       await this.commentRepository.find(criteria);
@@ -73,107 +91,164 @@ export class CommentsService {
   }
 
   async store(
-    authorId: string,
+    user: IAccessUser,
     commentDto: IAddCommentDto,
     source: CommentEnum,
   ): Promise<ICommentResponse> {
-    const commentId: Types.ObjectId = commentDto.comment_id;
-    const parentComment: Comment = await this.getParentComment(commentId);
-    const course: Course = await this.getCourse(source, commentDto.course_id);
-    const lesson: Lesson = await this.getLesson(source, commentDto.lesson_id);
+    const parentComment: Comment | null = commentDto.comment_id
+      ? await this.findById(commentDto.comment_id)
+      : null;
 
-    const author: User = await this.userRepository.findById(
-      new Types.ObjectId(authorId),
-    );
+    if (parentComment && parentComment.parent_comment) {
+      throw new BadRequestException(
+        'You can only reply to a top level comment',
+      );
+    }
 
-    let data = {
-      ...commentDto,
-      author,
+    let course: Course = null;
+    let lesson: Lesson = null;
+
+    if (source === CommentEnum.COURSE) {
+      course = await this.courseRepository.findById(
+        new Types.ObjectId(commentDto.course_id),
+      );
+
+      if (
+        parentComment &&
+        String(parentComment.course) !== String(course._id)
+      ) {
+        throw new BadRequestException(
+          'The parent comment belongs to another course',
+        );
+      }
+
+      await this.assertCanReviewCourse(
+        user,
+        course,
+        !!parentComment,
+        commentDto,
+      );
+    } else {
+      lesson = await this.lessonRepository.findById(
+        new Types.ObjectId(commentDto.lesson_id),
+        {
+          populate: {
+            path: 'section',
+            select: 'course',
+            populate: { path: 'course', select: '_id author' },
+          },
+        },
+      );
+
+      if (
+        parentComment &&
+        String(parentComment.lesson) !== String(lesson._id)
+      ) {
+        throw new BadRequestException(
+          'The parent comment belongs to another lesson',
+        );
+      }
+
+      await this.courseAccessService.assertAccess(user, lesson.section.course);
+    }
+
+    const comment: Comment = await this.commentRepository.create({
+      comm_content: commentDto.comm_content.trim(),
+      comm_rating:
+        source === CommentEnum.COURSE && !parentComment
+          ? commentDto.comm_rating
+          : null,
+      author: await this.userRepository.findPublicById(
+        new Types.ObjectId(user.id),
+      ),
       comm_source: source,
-      course: source == CommentEnum.COURSE ? course : null,
-      lesson: source == CommentEnum.LESSON ? lesson : null,
+      course,
+      lesson,
       comm_count_like: 0,
       comm_liked_by: [],
       comm_count_dislike: 0,
       comm_disliked_by: [],
       replies: [],
-      ...(parentComment
-        ? { parent_comment: parentComment._id }
-        : { parent_comment: null }),
-    };
-
-    let comment: Comment = await this.commentRepository.create(data);
-    let commentToReturn = null;
+      parent_comment: parentComment,
+    });
 
     if (parentComment) {
-      const childComment: Comment = await this.commentRepository.findById(
-        comment._id,
-      );
-
-      parentComment.replies.push(childComment);
-
       await this.commentRepository.findByIdAndUpdate(parentComment._id, {
-        replies: parentComment.replies,
+        $push: { replies: comment._id },
       });
-
-      commentToReturn = childComment;
-    } else {
-      commentToReturn = comment;
     }
 
-    return this.mapperComment(commentToReturn);
+    return this.mapperComment(
+      await this.commentRepository.findById(comment._id),
+    );
   }
 
-  private async getParentComment(commentId: Types.ObjectId): Promise<Comment> {
-    let parentComment: Comment = null;
+  private async assertCanReviewCourse(
+    user: IAccessUser,
+    course: Course,
+    isReply: boolean,
+    commentDto: IAddCommentDto,
+  ): Promise<void> {
+    const isManager = this.courseAccessService.canManage(user, course);
 
-    if (null !== commentId) {
-      parentComment = await this.findById(String(commentId));
+    if (isReply) {
+      if (
+        !isManager &&
+        !(await this.courseAccessService.hasPurchased(
+          user.id,
+          String(course._id),
+        ))
+      ) {
+        throw new ForbiddenException(
+          'Only students and the teacher can reply to reviews',
+        );
+      }
+
+      return;
     }
 
-    return parentComment;
-  }
+    if (String(course.author?._id ?? course.author) === user.id) {
+      throw new ForbiddenException("You can't review your own course");
+    }
 
-  private async getCourse(
-    source: CommentEnum,
-    courseId: Types.ObjectId | null,
-  ): Promise<Course> {
-    let course: Course = null;
-
-    if (source == CommentEnum.COURSE) {
-      course = await this.courseRepository.findById(
-        new Types.ObjectId(courseId),
+    if (
+      !(await this.courseAccessService.hasPurchased(
+        user.id,
+        String(course._id),
+      ))
+    ) {
+      throw new ForbiddenException(
+        'Only students who purchased this course can review it',
       );
     }
 
-    return course;
-  }
-
-  private async getLesson(
-    source: CommentEnum,
-    lessonId: Types.ObjectId | null,
-  ): Promise<Lesson> {
-    let lesson: Lesson = null;
-
-    if (source == CommentEnum.LESSON) {
-      lesson = await this.lessonRepository.findById(
-        new Types.ObjectId(lessonId),
-      );
+    if (!commentDto.comm_rating) {
+      throw new BadRequestException([
+        { field: 'comm_rating', error: 'Rating is required' },
+      ]);
     }
 
-    return lesson;
+    const existingReview = await this.commentRepository.findOneOrNull({
+      course: course._id,
+      author: new Types.ObjectId(user.id),
+      parent_comment: null,
+    });
+
+    if (existingReview) {
+      throw new ConflictException('You have already reviewed this course');
+    }
   }
 
   private async mapperComment(comment: Comment): Promise<ICommentResponse> {
-    let author = comment.author;
-    let lesson = null;
-    let course = null;
-
-    if (comment.author instanceof Types.ObjectId) {
-      author = await this.userRepository.findById(comment.author._id, {
-        select: 'author _id usr_photo usr_username usr_firstname usr_lastname',
-      });
-    }
+    const author: User =
+      comment.author instanceof Types.ObjectId
+        ? await this.userRepository.findById(comment.author, {
+            select:
+              'author _id usr_photo usr_username usr_firstname usr_lastname',
+          })
+        : comment.author;
+    let lesson: Lesson = null;
+    let course: Course = null;
 
     if (comment.lesson) {
       lesson = await this.lessonRepository.findById(comment.lesson._id, {
@@ -187,29 +262,25 @@ export class CommentsService {
       });
     }
 
-    let replies: Comment[] = comment.replies;
+    const replies: Comment[] = await Promise.all(
+      comment.replies.map(async (replyId) => {
+        const reply = await this.commentRepository.findById(
+          new Types.ObjectId(String(replyId)),
+        );
 
-    if (comment.replies.length > 0) {
-      replies = await Promise.all(
-        replies.map(async (replyId) => {
-          const reply = await this.commentRepository.findById(
-            new Types.ObjectId(String(replyId)),
-          );
+        const author = await this.userRepository.findById(
+          new Types.ObjectId(String(reply.author)),
+          {
+            select:
+              'author _id usr_photo usr_username usr_firstname usr_lastname',
+          },
+        );
 
-          const author = await this.userRepository.findById(
-            new Types.ObjectId(String(reply.author)),
-            {
-              select:
-                'author _id usr_photo usr_username usr_firstname usr_lastname',
-            },
-          );
+        reply.author = author;
 
-          reply.author = author;
-
-          return reply;
-        }),
-      );
-    }
+        return reply;
+      }),
+    );
 
     return {
       _id: comment._id,
@@ -233,32 +304,72 @@ export class CommentsService {
   async update(
     id: string,
     editCommentDto: EditCommentCourse | EditCommentLesson,
+    userId: string,
   ): Promise<Comment> {
-    await this.findById(id);
+    const comment = await this.findById(id);
 
-    return await this.commentRepository.findByIdAndUpdate(
-      new Types.ObjectId(id),
-      editCommentDto,
-    );
-  }
-
-  async delete(id: string, authorId: string): Promise<void> {
-    let comment: Comment = await this.findById(id);
-
-    if (String(comment.author._id) !== authorId) {
+    if (String(comment.author?._id ?? comment.author) !== userId) {
       throw new ForbiddenException(
-        "You can't remove a comment who don't belong to you",
+        "You can't update a comment that doesn't belong to you",
       );
     }
 
-    if (comment.parent_comment) {
-      await this.commentRepository.deleteMany({ parent_comment: comment._id });
+    const data: Partial<Comment> = {
+      comm_content: editCommentDto.comm_content.trim(),
+      updated_at: new Date(),
+    };
+    const rating = (editCommentDto as EditCommentCourse).comm_rating;
 
-      return await this.commentRepository.findByIdAndDelete(comment._id);
-    } else {
-      await this.commentRepository.deleteMany({ parent_comment: comment._id });
-      return this.commentRepository.findByIdAndDelete(new Types.ObjectId(id));
+    if (
+      comment.comm_source === CommentEnum.COURSE &&
+      !comment.parent_comment &&
+      rating !== undefined
+    ) {
+      data.comm_rating = rating;
     }
+
+    return await this.commentRepository.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      data,
+    );
+  }
+
+  async delete(id: string, user: IAccessUser): Promise<void> {
+    const comment: Comment = await this.findById(id);
+
+    if (
+      String(comment.author?._id ?? comment.author) !== user.id &&
+      user.role !== RoleEnum.SUPERADMIN
+    ) {
+      throw new ForbiddenException(
+        "You can't remove a comment that doesn't belong to you",
+      );
+    }
+
+    await this.commentRepository.deleteMany({ parent_comment: comment._id });
+
+    if (comment.parent_comment) {
+      await this.commentRepository.findByIdAndUpdate(
+        comment.parent_comment._id,
+        {
+          $pull: { replies: comment._id },
+        },
+      );
+    }
+
+    await this.commentRepository.findByIdAndDelete(comment._id);
+  }
+
+  async listForModeration(
+    keyword: string | undefined,
+    page: number,
+    limit: number,
+  ) {
+    const filter = keyword?.trim()
+      ? { comm_content: new RegExp(escapeRegex(keyword.trim()), 'i') }
+      : {};
+
+    return this.commentRepository.paginate(filter, page, limit);
   }
 
   async like(id: string, likeByUserId: string): Promise<Comment> {
@@ -274,25 +385,25 @@ export class CommentsService {
     userId: string,
     reactionType: ReactionComment,
   ): Promise<Comment> {
-    await this.userRepository.findById(new Types.ObjectId(userId));
+    const user = await this.userRepository.findPublicById(
+      new Types.ObjectId(userId),
+    );
 
     let comment: Comment = await this.findById(commentId);
-    let updateReactionAndReacter = this.updateReactionAndReacter(
+    const updateReactionAndReacter = this.updateReactionAndReacter(
       comment,
-      userId,
+      user,
       reactionType,
     );
 
-    let data = {
+    const data = {
       comm_count_like:
         updateReactionAndReacter.comm_count_like ?? comment.comm_count_like,
-      comm_liked_by:
-        updateReactionAndReacter.comm_liked_by ?? comment.comm_liked_by,
+      comm_liked_by: comment.comm_liked_by,
       comm_count_dislike:
         updateReactionAndReacter.comm_count_dislike ??
         comment.comm_count_dislike,
-      comm_disliked_by:
-        updateReactionAndReacter.comm_disliked_by ?? comment.comm_disliked_by,
+      comm_disliked_by: comment.comm_disliked_by,
     };
 
     return await this.commentRepository.findByIdAndUpdate(
@@ -303,18 +414,21 @@ export class CommentsService {
 
   updateReactionAndReacter = (
     comment: Comment,
-    userId: string,
+    user: User,
     reactionType: ReactionComment,
-  ) => {
+  ): IReactionCounts => {
+    const userId = String(user._id);
     const reactionTypeAndReacter: IReactionTypeAndReacter = {
       like: { count: 'comm_count_like', users: 'comm_liked_by' },
       dislike: { count: 'comm_count_dislike', users: 'comm_disliked_by' },
     };
 
     const currentReaction = reactionTypeAndReacter[reactionType];
-    const hasReacted = comment[currentReaction.users].includes(userId);
+    const hasReacted = comment[currentReaction.users].some(
+      (reacter) => String(reacter._id) === userId,
+    );
 
-    const updateReactionAndReacter: any = {
+    const updateReactionAndReacter: IReactionCounts = {
       [currentReaction.count]: hasReacted
         ? comment[currentReaction.count] - 1
         : comment[currentReaction.count] + 1,
@@ -323,17 +437,19 @@ export class CommentsService {
     if (hasReacted) {
       comment[currentReaction.users] = [
         ...comment[currentReaction.users],
-      ].filter((reacter) => String(reacter) !== userId);
+      ].filter((reacter) => String(reacter._id) !== userId);
     } else {
       comment[currentReaction.users] = [
         ...comment[currentReaction.users],
-        userId,
+        user,
       ];
     }
 
     const oppositeReaction =
       reactionTypeAndReacter[reactionType === 'like' ? 'dislike' : 'like'];
-    const hasOppositeReacted = comment[oppositeReaction.users].includes(userId);
+    const hasOppositeReacted = comment[oppositeReaction.users].some(
+      (reacter) => String(reacter._id) === userId,
+    );
 
     if (hasOppositeReacted) {
       updateReactionAndReacter[oppositeReaction.count] =
@@ -341,7 +457,7 @@ export class CommentsService {
 
       comment[oppositeReaction.users] = [
         ...comment[oppositeReaction.users],
-      ].filter((reacter) => String(reacter) !== userId);
+      ].filter((reacter) => String(reacter._id) !== userId);
     }
 
     return updateReactionAndReacter;

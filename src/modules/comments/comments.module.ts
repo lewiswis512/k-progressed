@@ -11,10 +11,16 @@ import { CourseRepository } from '../learning/repositories/course.repository';
 import { Course, CourseSchema } from '../learning/schemas/course.schema';
 import { Lesson, LessonSchema } from '../learning/schemas/lesson.schema';
 import { LessonRepository } from '../learning/repositories/lesson.repository';
+import { CourseAccessService } from '../../common/access/course-access.service';
+import { Purchase, PurchaseSchema } from '../purchases/schemas/purchase.schema';
+import { PurchaseRepository } from '../purchases/repository/purchase.repository';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
+    MongooseModule.forFeature([
+      { name: Comment.name, schema: CommentSchema },
+      { name: Purchase.name, schema: PurchaseSchema },
+    ]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     MongooseModule.forFeature([{ name: Course.name, schema: CourseSchema }]),
     MongooseModule.forFeature([{ name: Lesson.name, schema: LessonSchema }]),
@@ -32,6 +38,8 @@ import { LessonRepository } from '../learning/repositories/lesson.repository';
     UserRepository,
     CourseRepository,
     LessonRepository,
+    CourseAccessService,
+    PurchaseRepository,
   ],
   controllers: [CommentsController],
 })
