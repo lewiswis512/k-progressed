@@ -31,6 +31,7 @@ import { MAX_SIZE_IN_BYTES_UPLOAD_PHOTO } from '../../../utils/constants/uploads
 import { ImageFile } from '../../../common/decorators/image-file.decorator';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { AuthGuard } from '../../../common/guards/auth.guard';
+import { OptionalAuthGuard } from '../../../common/guards/optional-auth.guard';
 import { CourseAccessService } from '../../../common/access/course-access.service';
 import { PublicCourseFilter } from '../dtos/courses/public-course-filter.dto';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -129,7 +130,7 @@ export class CoursesController {
   }
 
   @Get('show/:id')
-  @UseGuards(AuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @ApiOkResponse({
     description: 'The course have been successfully retrieved.',
   })
