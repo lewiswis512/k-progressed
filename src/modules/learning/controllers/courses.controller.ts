@@ -145,7 +145,6 @@ export class CoursesController {
   }
 
   @Get('view/:slug')
-  @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The course have been successfully retrieved.',
   })
