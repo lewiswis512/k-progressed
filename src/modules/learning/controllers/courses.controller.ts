@@ -159,7 +159,6 @@ export class CoursesController {
   }
 
   @Get('contents/:id')
-  @UseGuards(AuthGuard)
   @ApiOkResponse({
     description: 'The course content have been successfully retrieved.',
   })
