@@ -31,9 +31,9 @@ const migrate = async (): Promise<void> => {
     { strict: false },
   );
 
-  console.log(`Validated: ${validated.modifiedCount}`);
-  console.log(`Pending: ${pending.modifiedCount}`);
-  console.log(`Old fields removed: ${cleaned.modifiedCount}`);
+  console.info(`Validated: ${validated.modifiedCount}`);
+  console.info(`Pending: ${pending.modifiedCount}`);
+  console.info(`Old fields removed: ${cleaned.modifiedCount}`);
 
   await mongoose.disconnect();
 };

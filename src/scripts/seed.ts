@@ -31,7 +31,7 @@ const seed = async (): Promise<void> => {
   await app.get(LoadDataService).loadData();
   await app.close();
 
-  console.log('Database seeded');
+  console.info('Database seeded');
 };
 
 seed().catch((error) => {

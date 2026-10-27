@@ -7,7 +7,6 @@ import { SectionsModule } from '../learning/modules/sections.module';
 import { TeachersModule } from '../learning/modules/teachers.module';
 import { UsersModule } from '../users/users.module';
 import { FaqModule } from '../faq/faq.module';
-import { LoadDataController } from './load-data.controller';
 import { LoadDataService } from './load-data.service';
 
 @Module({
@@ -21,7 +20,7 @@ import { LoadDataService } from './load-data.service';
     LessonsModule,
     FaqModule,
   ],
-  controllers: [LoadDataController],
+  controllers: [],
   providers: [LoadDataService],
   exports: [LoadDataService],
 })

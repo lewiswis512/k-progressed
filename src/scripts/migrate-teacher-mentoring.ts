@@ -21,8 +21,8 @@ const migrate = async (): Promise<void> => {
     { $set: { tchr_hourly_rate: DEFAULT_HOURLY_RATE } },
   );
 
-  console.log(`Teachers set as mentors: ${mentors.modifiedCount}`);
-  console.log(
+  console.info(`Teachers set as mentors: ${mentors.modifiedCount}`);
+  console.info(
     `Hourly rates set to ${DEFAULT_HOURLY_RATE}: ${rates.modifiedCount}`,
   );
 

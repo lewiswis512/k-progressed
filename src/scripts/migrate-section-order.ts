@@ -34,8 +34,8 @@ const migrate = async (): Promise<void> => {
     updated += result.modifiedCount;
   }
 
-  console.log(`Courses: ${courseIds.length}`);
-  console.log(`Sections ordered: ${updated}`);
+  console.info(`Courses: ${courseIds.length}`);
+  console.info(`Sections ordered: ${updated}`);
 
   await mongoose.disconnect();
 };
