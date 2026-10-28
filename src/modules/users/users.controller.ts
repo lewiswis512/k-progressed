@@ -110,12 +110,6 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('account/export')
-  async exportData(@Req() req: AuthenticatedRequest) {
-    return this.usersService.exportData(req.user.id);
-  }
-
-  @UseGuards(AuthGuard)
   @Delete('account')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteAccount(

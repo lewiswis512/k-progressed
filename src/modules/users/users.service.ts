@@ -223,33 +223,6 @@ export class UsersService {
     };
   }
 
-  async exportData(id: string): Promise<Record<string, unknown>> {
-    const userId = new Types.ObjectId(id);
-    const user = await this.userRepository.findById(userId, {
-      select: '-stripe_customer_id',
-    });
-    const [purchases, comments, bookings, progress, certificates] =
-      await Promise.all([
-        this.purchaseRepository.find({ 'user.id': id }),
-        this.commentRepository.find(
-          { author: userId },
-          { select: 'comm_content comm_rating course lesson created_at' },
-        ),
-        this.bookingRepository.find({ booker: userId }),
-        this.lessonProgressRepository.find({ user: userId }),
-        this.certificateRepository.find({ user: userId }),
-      ]);
-
-    return {
-      exportedAt: new Date(),
-      profile: user,
-      purchases,
-      comments,
-      bookings,
-      progress,
-      certificates,
-    };
-  }
 
   async deleteAccount(id: string, password: string): Promise<void> {
     const userId = new Types.ObjectId(id);
